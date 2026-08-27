@@ -115,18 +115,20 @@ hardening.
    `tsc --noEmit` + lint on every PR. Protect `main`. Feature-flag module
    (`app/lib/flags.ts`). *(CI file + flags: DONE. Branch protection needs the
    GitHub repo.)*
-3. **Design tokens + fonts + wallpaper engine.** Token block in
-   `app/app/globals.css` (DONE). Self-host fonts with `next/font` (DONE).
-   `app/components/wallpaper/` — `Wallpaper` component + registry of 6–8
-   procedural SVG wallpapers, each token-driven so it themes automatically.
-4. **Supabase project + complete schema.** `supabase init`; write the **entire**
-   schema as SQL migrations in `supabase/migrations/`: `profiles`,
-   `node_progress`, `xp_events`, `heatmap_activity`, `daily_log`, `notes`,
-   `chapter_reads`, `bookmarks`, `video_catalog`, `video_watches`, `watch_queue`,
-   `case_submissions`, `pm_ai_messages`, `pm_ai_declines`, `canvases`,
-   `game_scores`, `game_attempts`, `review_items`, `diagnostic_results`,
-   `tool_installs`. Row Level Security on every table (`user_id = auth.uid()`).
-   Get it reviewed before building against it.
+3. **Design tokens + fonts + wallpaper engine.** DONE. Tokens in
+   `app/app/globals.css`, fonts via `next/font`. `app/components/wallpaper/`:
+   `Wallpaper` component + registry of 8 procedural SVG wallpapers (starfield,
+   dot-grid, nebula, orbital, star-chart, aurora, grid-horizon, contour), each
+   token-driven and reduced-motion aware, with `kind: 'svg' | 'image'` slots
+   for user art. Preview at `/wallpapers`.
+4. **Supabase project + complete schema.** Schema WRITTEN:
+   `supabase/migrations/0001_init.sql` — all 21 tables, RLS on every one,
+   `own_rows` policy, auto-profile trigger, `updated_at` triggers,
+   `video_catalog` world-readable. Supabase clients written
+   (`app/lib/supabase/{client,server,admin}.ts`). **TO DO (account owner):**
+   apply the migration (SQL Editor paste or `supabase db push` — see
+   `supabase/README.md`), set OTP expiry + Resend SMTP in the dashboard, then
+   `supabase gen types` to replace the `database.types.ts` stub.
 5. **Resend as Supabase SMTP, then auth.** Resend account, verify domain (3 DNS
    records), paste SMTP creds into Supabase Auth. Then build signup / 6-digit
    OTP / login / forgot-password / guest from Userflow Flows 1–3.
