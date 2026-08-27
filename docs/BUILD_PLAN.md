@@ -121,14 +121,13 @@ hardening.
    dot-grid, nebula, orbital, star-chart, aurora, grid-horizon, contour), each
    token-driven and reduced-motion aware, with `kind: 'svg' | 'image'` slots
    for user art. Preview at `/wallpapers`.
-4. **Supabase project + complete schema.** Schema WRITTEN:
-   `supabase/migrations/0001_init.sql` — all 21 tables, RLS on every one,
-   `own_rows` policy, auto-profile trigger, `updated_at` triggers,
-   `video_catalog` world-readable. Supabase clients written
-   (`app/lib/supabase/{client,server,admin}.ts`). **TO DO (account owner):**
-   apply the migration (SQL Editor paste or `supabase db push` — see
-   `supabase/README.md`), set OTP expiry + Resend SMTP in the dashboard, then
-   `supabase gen types` to replace the `database.types.ts` stub.
+4. **Supabase project + complete schema.** DONE. `supabase/migrations/0001_init.sql`
+   (20 tables, RLS on every one, `own_rows` policy, auto-profile trigger,
+   `updated_at` triggers, `video_catalog` world-readable) APPLIED to project
+   `txyvxlgianhrffumdxnu` via `supabase db push`. `database.types.ts` generated
+   from the live schema. Clients: `app/lib/supabase/{client,server,admin}.ts`.
+   **Still TO DO (dashboard-only):** Resend custom SMTP + confirm-email + OTP
+   expiry — deferred to the auth-screens step (step 5).
 5. **Resend as Supabase SMTP, then auth.** Resend account, verify domain (3 DNS
    records), paste SMTP creds into Supabase Auth. Then build signup / 6-digit
    OTP / login / forgot-password / guest from Userflow Flows 1–3.
