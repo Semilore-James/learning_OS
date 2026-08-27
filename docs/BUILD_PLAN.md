@@ -37,7 +37,7 @@ end because integration happens continuously.
 | AI rate limiting | Upstash Redis free tier | One script shouldn't drain the LLM quota. |
 | Errors | Sentry free tier | — |
 | Cron | Vercel Cron -> Supabase query -> Resend | Daily streak-reminder email. |
-| Hosting | Vercel hobby | 10s serverless ceiling. Stream the PM-AI response or move to Pro. |
+| Hosting | Vercel hobby, `*.vercel.app` URL (no custom domain this build) | 10s serverless ceiling. Stream the PM-AI response or move to Pro. |
 
 **Monthly cost:** $0 to build and launch. $25–75/mo once real, swing line is the
 AI (Grok free vs. ~$15/mo paid model). That one decision is deferred to launch
@@ -107,11 +107,10 @@ hardening.
 
 ### Phase 0 — Foundations (sequential, then freeze)
 
-1. **Domain + repo + scaffold + hosting.** Register the domain (Namecheap or
-   Cloudflare, ~$12/yr). `create-next-app` in `learning_OS/app` (TS, App Router,
-   no Tailwind). `git init` at the `learning_OS` root. GitHub repo. Import into
-   Vercel, point the domain. *(scaffold + local git: DONE. Domain + GitHub +
-   Vercel need account owner.)*
+1. **Repo + scaffold + hosting.** `create-next-app` in `learning_OS/app` (TS,
+   App Router, no Tailwind). `git init` at the `learning_OS` root. GitHub repo.
+   Import into Vercel — the app runs at its `*.vercel.app` URL, no custom domain
+   this build. *(scaffold + local git: DONE. GitHub + Vercel need account owner.)*
 2. **CI + branch protection.** `.github/workflows/ci.yml` runs `next build` +
    `tsc --noEmit` + lint on every PR. Protect `main`. Feature-flag module
    (`app/lib/flags.ts`). *(CI file + flags: DONE. Branch protection needs the
@@ -206,5 +205,5 @@ time, each merged green, unfinished behind a flag.**
 30. Upgrade Supabase to Pro (no pause, backups). Make the PM-AI provider call
     (Grok free vs. ~$15/mo paid). One file either way.
 31. Smoke test as fresh guest, then fresh account, then returning account with
-    data. Confirm guest -> account migration loses nothing. Point the domain,
-    announce.
+    data. Confirm guest -> account migration loses nothing. Announce the
+    `*.vercel.app` URL.
