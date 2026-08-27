@@ -1,0 +1,350 @@
+/* ============================================================================
+   DA // LEARNING OS  —  Curriculum graph (FROZEN CONTRACT)
+   ----------------------------------------------------------------------------
+   Single source of truth for the constellation map, the node drawer, the
+   textbook cross-links, the onboarding diagnostic, and the spaced-repetition
+   review queue. Everything reads from here.
+
+   A curriculum is a directed graph: nodes are skills, edges are prerequisites.
+   Node state (locked / available / active / completed / needs-review) is
+   DERIVED from progress + this graph by lib/graph.ts — never stored as truth
+   anywhere else.
+
+   STATUS: topics fully defined. Sub-nodes fully defined for SQL (reference
+   track) and GIT (new track). Other topics carry `plannedSubNodes` from the
+   PRD; they get positioned + wired in Phase 1 step 11 following the SQL mold.
+   ========================================================================== */
+
+export type NodeState =
+  | "locked"
+  | "available"
+  | "active"
+  | "completed"
+  | "needs-review";
+
+export type Cluster = "foundations" | "analysis" | "output";
+
+export interface SubNode {
+  id: string;
+  label: string;
+  /** ids of sub-nodes (within the same topic) that must be completed first */
+  prerequisites: string[];
+  /** textbook chapter slugs this sub-node maps to (content/textbook/<topic>/<slug>.md) */
+  chapters: string[];
+  estHours: number;
+  /** svg position within the sub-constellation canvas */
+  pos: { x: number; y: number; r: number };
+}
+
+export interface TopicNode {
+  id: string;
+  label: string;
+  blurb: string;
+  cluster: Cluster;
+  /** ids of other topics that must be completed first (soft-gate: shows a hint, never hard-blocks) */
+  prerequisites: string[];
+  /** svg position on the level-1 map */
+  pos: { x: number; y: number; r: number };
+  /** the topic book in the Textbook window, if any */
+  book?: string;
+  subNodes: SubNode[];
+  /** PRD sub-node list, pending positioning + prereq wiring */
+  plannedSubNodes?: string[];
+  special?: "textbooks";
+}
+
+/* ----------------------------------------------------------------------------
+   SQL — the reference track. Fully wired.
+   PRD section 6.3 "SQL (deep track)" + section 6.1 two-level structure.
+   Clusters within SQL: core -> relationships -> advanced -> performance
+   -------------------------------------------------------------------------- */
+const SQL_SUBNODES: SubNode[] = [
+  // --- core ---------------------------------------------------------------
+  { id: "db-basics", label: "What databases are", prerequisites: [], chapters: ["01-what-is-a-database"], estHours: 1, pos: { x: 60, y: 300, r: 12 } },
+  { id: "select-from", label: "SELECT and FROM", prerequisites: ["db-basics"], chapters: ["02-select-and-from"], estHours: 1.5, pos: { x: 120, y: 250, r: 12 } },
+  { id: "where", label: "WHERE and filtering", prerequisites: ["select-from"], chapters: ["03-where-and-filtering"], estHours: 2, pos: { x: 180, y: 300, r: 12 } },
+  { id: "order-limit", label: "ORDER BY and LIMIT", prerequisites: ["where"], chapters: ["04-order-by-and-limit"], estHours: 1, pos: { x: 240, y: 250, r: 11 } },
+  { id: "aggregates", label: "Aggregate functions", prerequisites: ["where"], chapters: ["05-aggregate-functions"], estHours: 2, pos: { x: 240, y: 355, r: 12 } },
+  { id: "group-having", label: "GROUP BY and HAVING", prerequisites: ["aggregates"], chapters: ["06-group-by-and-having"], estHours: 2.5, pos: { x: 310, y: 300, r: 13 } },
+  { id: "distinct-alias", label: "DISTINCT and aliases", prerequisites: ["select-from"], chapters: ["07-distinct-and-aliases"], estHours: 1, pos: { x: 180, y: 400, r: 10 } },
+  // --- relationships -----------------------------------------------------
+  { id: "joins", label: "JOINs (INNER, LEFT, RIGHT, FULL)", prerequisites: ["group-having", "distinct-alias"], chapters: ["08-joins"], estHours: 4, pos: { x: 390, y: 250, r: 14 } },
+  { id: "union", label: "UNION and UNION ALL", prerequisites: ["joins"], chapters: ["09-union"], estHours: 1.5, pos: { x: 450, y: 320, r: 10 } },
+  // --- advanced querying ------------------------------------------------
+  { id: "subqueries", label: "Subqueries", prerequisites: ["joins"], chapters: ["10-subqueries"], estHours: 3, pos: { x: 470, y: 210, r: 12 } },
+  { id: "ctes", label: "CTEs (WITH)", prerequisites: ["subqueries"], chapters: ["11-ctes"], estHours: 2.5, pos: { x: 540, y: 170, r: 12 } },
+  { id: "window-ranking", label: "Window functions: ROW_NUMBER, RANK, DENSE_RANK", prerequisites: ["ctes"], chapters: ["12-window-ranking"], estHours: 3, pos: { x: 610, y: 200, r: 12 } },
+  { id: "window-offset", label: "Window functions: LAG, LEAD, FIRST_VALUE", prerequisites: ["window-ranking"], chapters: ["13-window-offset"], estHours: 2.5, pos: { x: 660, y: 250, r: 11 } },
+  { id: "window-agg", label: "Window functions: SUM OVER, AVG OVER, PARTITION BY", prerequisites: ["window-ranking"], chapters: ["14-window-aggregate"], estHours: 2.5, pos: { x: 680, y: 160, r: 11 } },
+  { id: "string-fns", label: "String functions", prerequisites: ["group-having"], chapters: ["15-string-functions"], estHours: 1.5, pos: { x: 400, y: 400, r: 10 } },
+  { id: "date-fns", label: "Date and time functions", prerequisites: ["group-having"], chapters: ["16-date-functions"], estHours: 2, pos: { x: 470, y: 420, r: 10 } },
+  { id: "case", label: "CASE statements", prerequisites: ["group-having"], chapters: ["17-case-statements"], estHours: 1.5, pos: { x: 340, y: 420, r: 10 } },
+  { id: "nulls", label: "NULL handling (IS NULL, COALESCE, NULLIF)", prerequisites: ["case"], chapters: ["18-null-handling"], estHours: 1.5, pos: { x: 400, y: 480, r: 10 } },
+  // --- performance and patterns ---------------------------------------
+  { id: "data-types", label: "Data types and casting", prerequisites: ["nulls"], chapters: ["19-data-types-and-casting"], estHours: 1.5, pos: { x: 560, y: 380, r: 10 } },
+  { id: "indexes", label: "Indexes and query performance", prerequisites: ["data-types"], chapters: ["20-indexes-and-performance"], estHours: 2, pos: { x: 640, y: 350, r: 11 } },
+  { id: "temp-views", label: "Temporary tables and views", prerequisites: ["ctes"], chapters: ["21-temp-tables-and-views"], estHours: 2, pos: { x: 620, y: 300, r: 10 } },
+  { id: "stored-procs", label: "Stored procedures (awareness)", prerequisites: ["temp-views"], chapters: ["22-stored-procedures"], estHours: 1, pos: { x: 700, y: 320, r: 9 } },
+  { id: "real-world-patterns", label: "Real-world query patterns (cohort, retention, funnels)", prerequisites: ["window-offset", "window-agg", "date-fns"], chapters: ["23-real-world-patterns"], estHours: 5, pos: { x: 760, y: 230, r: 13 } },
+  { id: "sql-reporting", label: "SQL for reporting", prerequisites: ["real-world-patterns"], chapters: ["24-sql-for-reporting"], estHours: 3, pos: { x: 810, y: 280, r: 11 } },
+  { id: "clean-sql", label: "Writing clean readable SQL (formatting standards)", prerequisites: ["joins"], chapters: ["25-clean-readable-sql"], estHours: 1, pos: { x: 520, y: 470, r: 10 } },
+  { id: "query-plans", label: "Reading query plans (EXPLAIN)", prerequisites: ["indexes"], chapters: ["26-reading-query-plans"], estHours: 2, pos: { x: 710, y: 400, r: 10 } },
+];
+
+/* ----------------------------------------------------------------------------
+   GIT & VERSION CONTROL — NEW track (user request).
+   Built to the same depth as SQL. Pairs with the Toolkit window: the
+   "install Git" sub-node deep-links to the Toolkit entry with OS steps and
+   the common-problems list.
+   -------------------------------------------------------------------------- */
+const GIT_SUBNODES: SubNode[] = [
+  { id: "why-version-control", label: "Why version control exists", prerequisites: [], chapters: ["01-why-version-control"], estHours: 0.75, pos: { x: 70, y: 280, r: 12 } },
+  { id: "install-git", label: "Installing Git and first-run config", prerequisites: ["why-version-control"], chapters: ["02-installing-and-configuring-git"], estHours: 1, pos: { x: 140, y: 240, r: 12 } },
+  { id: "repo-init-clone", label: "Repositories: init and clone", prerequisites: ["install-git"], chapters: ["03-repositories"], estHours: 1, pos: { x: 210, y: 290, r: 12 } },
+  { id: "staging-area", label: "The staging area (git add)", prerequisites: ["repo-init-clone"], chapters: ["04-the-staging-area"], estHours: 1, pos: { x: 280, y: 250, r: 11 } },
+  { id: "commits", label: "Commits and commit messages", prerequisites: ["staging-area"], chapters: ["05-commits"], estHours: 1.25, pos: { x: 350, y: 300, r: 13 } },
+  { id: "status-log-diff", label: "Inspecting history: status, log, diff", prerequisites: ["commits"], chapters: ["06-status-log-diff"], estHours: 1, pos: { x: 420, y: 260, r: 11 } },
+  { id: "gitignore", label: ".gitignore and what not to commit", prerequisites: ["commits"], chapters: ["07-gitignore-and-secrets"], estHours: 1, pos: { x: 350, y: 380, r: 11 } },
+  { id: "branches", label: "Branches", prerequisites: ["status-log-diff"], chapters: ["08-branches"], estHours: 1.5, pos: { x: 500, y: 300, r: 13 } },
+  { id: "merging", label: "Merging", prerequisites: ["branches"], chapters: ["09-merging"], estHours: 1.5, pos: { x: 560, y: 260, r: 12 } },
+  { id: "merge-conflicts", label: "Resolving merge conflicts", prerequisites: ["merging"], chapters: ["10-merge-conflicts"], estHours: 2, pos: { x: 620, y: 300, r: 12 } },
+  { id: "remotes", label: "Remotes and GitHub", prerequisites: ["branches"], chapters: ["11-remotes-and-github"], estHours: 1.5, pos: { x: 560, y: 370, r: 12 } },
+  { id: "push-pull-fetch", label: "push, pull, fetch", prerequisites: ["remotes"], chapters: ["12-push-pull-fetch"], estHours: 1.5, pos: { x: 640, y: 400, r: 11 } },
+  { id: "pull-requests", label: "Pull requests and review", prerequisites: ["push-pull-fetch", "merge-conflicts"], chapters: ["13-pull-requests"], estHours: 1.5, pos: { x: 710, y: 350, r: 11 } },
+  { id: "undoing-things", label: "Undoing things: checkout, restore, reset, revert", prerequisites: ["status-log-diff"], chapters: ["14-undoing-things"], estHours: 2, pos: { x: 470, y: 420, r: 12 } },
+  { id: "git-for-analysts", label: "Git for analysts: versioning SQL, notebooks, never data", prerequisites: ["gitignore", "pull-requests", "undoing-things"], chapters: ["15-git-for-analysts"], estHours: 1.5, pos: { x: 640, y: 470, r: 12 } },
+];
+
+/* ----------------------------------------------------------------------------
+   LEVEL 1 — topic nodes
+   Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
+   Clusters: FOUNDATIONS (bottom-left) / ANALYSIS (center) / OUTPUT (top-right)
+   -------------------------------------------------------------------------- */
+export const TOPICS: TopicNode[] = [
+  {
+    id: "excel",
+    label: "Excel and Spreadsheets",
+    blurb: "Where every analyst starts and where half the work still happens.",
+    cluster: "foundations",
+    prerequisites: [],
+    pos: { x: 130, y: 440, r: 21 },
+    book: "excel-mastery",
+    subNodes: [],
+    plannedSubNodes: [
+      "Navigation and keyboard shortcuts",
+      "Cell referencing (relative, absolute, mixed)",
+      "Formulas and functions (SUM, IF, VLOOKUP, INDEX-MATCH)",
+      "Pivot tables",
+      "Data validation",
+      "Conditional formatting",
+      "Charts (bar, line, scatter, combo)",
+      "Power Query basics",
+      "Named ranges",
+      "Data cleaning in Excel",
+    ],
+  },
+  {
+    id: "sql",
+    label: "SQL",
+    blurb: "The deep track. Drilled, revisited, and embedded everywhere else.",
+    cluster: "foundations",
+    prerequisites: ["excel"],
+    pos: { x: 270, y: 390, r: 22 },
+    book: "sql-the-complete-playbook",
+    subNodes: SQL_SUBNODES,
+  },
+  {
+    id: "python",
+    label: "Python",
+    blurb: "When the spreadsheet runs out of room.",
+    cluster: "foundations",
+    prerequisites: ["sql"],
+    pos: { x: 190, y: 310, r: 18 },
+    book: "python-for-analysts",
+    subNodes: [],
+    plannedSubNodes: [
+      "Why Python for data",
+      "Setting up environment (Jupyter, VS Code)",
+      "Variables and data types",
+      "Lists, tuples, dictionaries",
+      "Control flow (if, for, while)",
+      "Functions and scope",
+      "Importing libraries",
+      "NumPy basics",
+      "Pandas: loading data",
+      "Pandas: exploring data (head, info, describe)",
+      "Pandas: selecting and filtering",
+      "Pandas: groupby and aggregation",
+      "Pandas: merging and joining",
+      "Pandas: cleaning data",
+      "Matplotlib basics",
+      "Seaborn for statistical charts",
+      "Plotly for interactive charts",
+      "Reading CSVs and Excel files",
+      "Writing cleaned data to file",
+      "End-to-end mini project structure",
+    ],
+  },
+  {
+    id: "statistics",
+    label: "Statistics and Probability",
+    blurb: "The difference between a number and an insight.",
+    cluster: "foundations",
+    prerequisites: ["python"],
+    pos: { x: 90, y: 270, r: 19 },
+    book: "statistics-without-fear",
+    subNodes: [],
+    plannedSubNodes: [
+      "Types of data (nominal, ordinal, interval, ratio)",
+      "Measures of central tendency",
+      "Measures of spread (variance, standard deviation, IQR)",
+      "Distributions (normal, skewed, uniform)",
+      "Probability basics",
+      "Conditional probability",
+      "Sampling and sampling bias",
+      "Hypothesis testing (what it is and why)",
+      "T-tests",
+      "Chi-square tests",
+      "Correlation vs causation",
+      "Regression basics (linear)",
+      "Interpreting p-values",
+      "Confidence intervals",
+      "A/B testing fundamentals",
+    ],
+  },
+  {
+    id: "data-cleaning",
+    label: "Data Cleaning",
+    blurb: "The 80 percent of the job nobody puts on a slide.",
+    cluster: "analysis",
+    prerequisites: ["sql"],
+    pos: { x: 430, y: 320, r: 16 },
+    subNodes: [],
+    plannedSubNodes: [
+      "What dirty data looks like",
+      "Identifying missing values",
+      "Strategies for handling nulls",
+      "Duplicate detection and removal",
+      "Standardizing formats (dates, strings, numbers)",
+      "Outlier detection",
+      "Data type correction",
+      "Validation rules",
+      "Documenting cleaning decisions",
+      "Reproducible cleaning pipelines",
+    ],
+  },
+  {
+    id: "visualization",
+    label: "Data Visualization",
+    blurb: "Make the chart the argument, not the decoration.",
+    cluster: "analysis",
+    prerequisites: ["data-cleaning"],
+    pos: { x: 520, y: 250, r: 15 },
+    book: "data-visualization-field-manual",
+    subNodes: [],
+    plannedSubNodes: [
+      "Choosing the right chart type",
+      "Principles of visual hierarchy",
+      "Color use in charts",
+      "Avoiding misleading charts",
+      "Bar charts done right",
+      "Line charts done right",
+      "Scatter plots and correlation",
+      "Heatmaps for data",
+      "Tables as visualization",
+      "Annotations and callouts",
+      "Dashboard layout principles",
+      "Accessibility in charts",
+    ],
+  },
+  {
+    id: "power-bi",
+    label: "Power BI and Dashboards",
+    blurb: "From one-off analysis to something a team refreshes every Monday.",
+    cluster: "analysis",
+    prerequisites: ["visualization"],
+    pos: { x: 460, y: 180, r: 14 },
+    subNodes: [],
+    plannedSubNodes: [
+      "Power BI interface orientation",
+      "Connecting to data sources",
+      "Data model basics (tables, relationships)",
+      "DAX basics (calculated columns, measures)",
+      "DAX intermediate (CALCULATE, FILTER, ALL)",
+      "Building visuals in Power BI",
+      "Slicers and filters",
+      "Drill-through and report navigation",
+      "Publishing and sharing",
+      "Dashboard design principles",
+    ],
+  },
+  {
+    id: "git",
+    label: "Git and Version Control",
+    blurb: "How analysts keep their work, share it, and prove they did it.",
+    cluster: "output",
+    prerequisites: ["python"],
+    pos: { x: 400, y: 120, r: 15 },
+    book: "git-for-analysts",
+    subNodes: GIT_SUBNODES,
+  },
+  {
+    id: "storytelling",
+    label: "Storytelling with Data",
+    blurb: "The analysis is worthless if the room does not act on it.",
+    cluster: "output",
+    prerequisites: ["visualization"],
+    pos: { x: 670, y: 160, r: 13 },
+    subNodes: [],
+    plannedSubNodes: [
+      "Who is your audience",
+      "What is the one insight",
+      "Structuring a data narrative",
+      "Slide design for data",
+      "Executive summary writing",
+      "Choosing what NOT to show",
+      "Annotation and context",
+      "Presenting uncertainty",
+      "Before and after: chart rewrites",
+      "Case study: real presentation deconstruction",
+    ],
+  },
+  {
+    id: "textbooks",
+    label: "Textbooks",
+    blurb: "The connective tissue. The DA Field Guide and five topic books.",
+    cluster: "output",
+    prerequisites: [],
+    pos: { x: 730, y: 100, r: 12 },
+    special: "textbooks",
+    subNodes: [],
+  },
+  {
+    id: "portfolio",
+    label: "Portfolio and Capstone",
+    blurb: "The thing you actually show an employer.",
+    cluster: "output",
+    prerequisites: ["git", "storytelling"],
+    pos: { x: 770, y: 150, r: 13 },
+    subNodes: [],
+    plannedSubNodes: [
+      "What makes a strong DA portfolio",
+      "Project structure and documentation",
+      "Writing a case study in plain English",
+      "GitHub for analysts",
+      "Building a portfolio site (optional)",
+      "Capstone project brief",
+      "Submission and self-review",
+      "Peer review framework",
+    ],
+  },
+];
+
+export const TOPICS_BY_ID: Record<string, TopicNode> = Object.fromEntries(
+  TOPICS.map((t) => [t.id, t]),
+);
+
+/** Level-1 connection edges for the map (prerequisite -> topic). */
+export const TOPIC_EDGES: Array<{ from: string; to: string }> = TOPICS.flatMap(
+  (t) => t.prerequisites.map((p) => ({ from: p, to: t.id })),
+);

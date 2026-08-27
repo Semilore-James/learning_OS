@@ -1,0 +1,84 @@
+/* ============================================================================
+   DA // LEARNING OS  —  design tokens
+   Dark mode is the default (bare :root). Light mode is opt-in via
+   <html data-theme="light">. The neobrutalist chrome (hard black borders,
+   flat offset shadows, zero radius) does NOT soften between themes.
+   Source: docs/DA_Learning_OS_Design_Prompt_v2.md section "Color Tokens"
+   ========================================================================== */
+
+:root {
+  /* dark mode (default) */
+  --bg: #080b14;            /* desktop wallpaper, window body */
+  --surface: #111a28;       /* taskbar, sidebar, window chrome */
+  --surface-raised: #1a2637;/* cards, panels, hover states */
+  --primary: #5b8dee;       /* active borders, CTAs, glow, logo */
+  --accent-1: #eebc5b;      /* XP, streak, alerts (amber) */
+  --accent-2: #5beeb0;      /* completed states, node glow (green) */
+  --accent-3: #8d5bee;      /* available states, secondary highlights (violet) */
+  --text: #e8ecf4;          /* all readable text */
+  --muted: #63718c;         /* labels, metadata, disabled */
+  --border: #26344a;        /* all borders and dividers */
+
+  /* neobrutalist chrome — identical in both themes */
+  --chrome-border: #000000;
+  --chrome-shadow: 6px 6px 0 #000000;
+  --chrome-shadow-sm: 4px 4px 0 #000000;
+  --chrome-shadow-xs: 3px 3px 0 #000000;
+  --radius: 0px;
+
+  /* type */
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
+  --font-body: var(--font-outfit), "Outfit", system-ui, sans-serif;
+}
+
+:root[data-theme="light"] {
+  /* light mode — warm off-white, science-backed for sustained reading */
+  --bg: #f5f2eb;
+  --surface: #edeae0;
+  --surface-raised: #e4e0d4;
+  --primary: #3a6fd4;
+  --accent-1: #c48a10;
+  --accent-2: #1a9e6e;
+  --accent-3: #6b3ec4;
+  --text: #1a1f2e;
+  --muted: #6b6a62;
+  --border: #c8c4b8;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body { overflow: hidden; } /* the desktop owns the viewport */
+
+a { color: var(--primary); }
+a:hover { color: var(--accent-1); }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ---- motion ---------------------------------------------------------------
+   Every ambient animation in the constellation references one of these.
+   prefers-reduced-motion freezes all of them (accessibility, not optional).
+   ------------------------------------------------------------------------- */
+@keyframes breathe { 0%,100% { transform: scale(1); opacity: .35 } 50% { transform: scale(1.14); opacity: .75 } }
+@keyframes pulse   { 0% { transform: scale(1); opacity: .6 } 100% { transform: scale(2.5); opacity: 0 } }
+@keyframes twinkle { 0%,100% { opacity: .03 } 50% { opacity: .09 } }
+@keyframes fadeIn  { from { opacity: 0; transform: scale(.98) } to { opacity: 1; transform: scale(1) } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

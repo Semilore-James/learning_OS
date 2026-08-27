@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=1440">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;overflow:hidden;background:#080b14;cursor:default}
+:root{--bg:#080b14;--surface:#111a28;--sr:#1a2637;--primary:#5b8dee;--a1:#eebc5b;--a2:#5beeb0;--a3:#8d5bee;--text:#e8ecf4;--muted:#63718c;--border:#26344a}
+:root.lm{--bg:#f5f2eb;--surface:#edeae0;--sr:#e4e0d4;--primary:#3a6fd4;--a1:#c48a10;--a2:#1a9e6e;--a3:#6b3ec4;--text:#1a1f2e;--muted:#6b6a62;--border:#c8c4b8}
+body.lm{background:#f5f2eb}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.14);opacity:.75}}
+@keyframes pulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.5);opacity:0}}
+@keyframes twinkle{0%,100%{opacity:.03}50%{opacity:.09}}
+@keyframes fadeIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+a{color:var(--primary)}a:hover{color:var(--a1)}
+*::-webkit-scrollbar{width:6px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--border)}
+</style>
+</helmet>
+
+<div style="width:1440px;height:900px;position:relative;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;margin:0 auto">
+
+<!-- FRAME NAV -->
+<div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;gap:1px;padding:3px 4px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.06)">
+<sc-for list="{{ frameButtons }}" as="fb" hint-placeholder-count="10">
+<div onClick="{{ fb.go }}" style="width:26px;height:22px;display:flex;align-items:center;justify-content:center;font:700 9px 'JetBrains Mono';color:rgba(255,255,255,0.3);cursor:pointer" style-hover="color:#5b8dee;background:rgba(255,255,255,0.05)">{{ fb.num }}</div>
+</sc-for>
+</div>
+
+<!-- LOGIN (F1) -->
+<sc-if value="{{ showLogin }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.4s ease">
+{{ wallpaper }}
+<div style="width:380px;padding:48px 40px;background:var(--surface);border:3px solid black;box-shadow:6px 6px 0 black;position:relative;z-index:1">
+<div style="font:700 24px/1 'JetBrains Mono';color:var(--primary);margin-bottom:8px;letter-spacing:-0.5px">DA // LEARNING OS</div>
+<div style="font:300 13px 'Outfit';color:var(--muted);margin-bottom:36px">Data Analyst Operating System</div>
+<div style="margin-bottom:16px">
+<div style="font:400 10px/1 'JetBrains Mono';color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.15em">Email</div>
+<div style="width:100%;height:42px;background:var(--sr);border:2px solid var(--border);padding:0 12px;display:flex;align-items:center;font:400 14px 'Outfit';color:var(--text);box-sizing:border-box">analyst@example.com</div>
+</div>
+<div style="margin-bottom:28px">
+<div style="font:400 10px/1 'JetBrains Mono';color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.15em">Password</div>
+<div style="width:100%;height:42px;background:var(--sr);border:2px solid var(--border);padding:0 12px;display:flex;align-items:center;font:400 14px 'Outfit';color:var(--muted);box-sizing:border-box">••••••••</div>
+</div>
+<div onClick="{{ login }}" style="width:100%;height:44px;background:var(--primary);border:2px solid black;box-shadow:4px 4px 0 black;display:flex;align-items:center;justify-content:center;font:600 13px 'Space Grotesk';color:white;cursor:pointer;text-transform:uppercase;letter-spacing:0.1em;box-sizing:border-box" style-hover="filter:brightness(1.1)" style-active="box-shadow:2px 2px 0 black;transform:translate(2px,2px)">Sign In</div>
+<div style="text-align:center;margin-top:20px;font:400 13px 'Outfit';color:var(--primary);cursor:pointer" style-hover="text-decoration:underline">Create account</div>
+<div style="text-align:center;margin-top:8px;font:400 12px 'Outfit';color:var(--muted);cursor:pointer" style-hover="text-decoration:underline">Forgot password?</div>
+</div>
+</div>
+</sc-if>
+
+<!-- DESKTOP -->
+<sc-if value="{{ showDesktop }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;animation:fadeIn 0.5s ease">
+{{ wallpaper }}
+
+<!-- Icon Grid -->
+<div style="position:absolute;top:24px;left:24px;display:grid;grid-template-columns:repeat(2,80px);gap:16px;z-index:5">
+<sc-for list="{{ icons }}" as="icon" hint-placeholder-count="9">
+<div onClick="{{ icon.open }}" style="--ico:var(--muted);width:80px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer" style-hover="--ico:var(--primary)">
+<div style="width:80px;height:80px;background:var(--surface);border:2px solid {{ icon.borderColor }};box-shadow:5px 5px 0 black;display:flex;align-items:center;justify-content:center">{{ icon.glyph }}</div>
+<div style="font:400 10px/1.2 'JetBrains Mono';color:var(--muted);text-align:center;white-space:pre-line">{{ icon.label }}</div>
+<sc-if value="{{ icon.isOpen }}"><div style="width:6px;height:6px;background:var(--primary);border-radius:50%;margin-top:-2px"></div></sc-if>
+</div>
+</sc-for>
+</div>
+
+<!-- CONSTELLATION MAP WINDOW (F4) -->
+<sc-if value="{{ showConstellation }}" hint-placeholder-val="{{ false }}">
+<div id="win-constellation" onMouseDown="{{ focusConstellation }}" style="position:absolute;left:280px;top:30px;width:860px;height:640px;z-index:{{ zConstellation }};display:flex;flex-direction:column;border:3px solid black;box-shadow:6px 6px 0 black;background:var(--bg)">
+<div onMouseDown="{{ dragConstellation }}" style="height:44px;min-height:44px;background:var(--surface);border-bottom:3px solid black;display:flex;align-items:center;padding:0 12px;gap:8px;cursor:grab">
+<div style="width:3px;height:24px;background:var(--primary)"></div>
+<span style="font:600 14px 'Space Grotesk';color:var(--text);flex:1">Constellation Map</span>
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted)">TRACK 01</span>
+<div style="display:flex;gap:4px">
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div onClick="{{ closeConstellation }}" style="width:18px;height:18px;background:var(--sr);border:2px solid black;display:flex;align-items:center;justify-content:center;font:700 10px monospace;color:var(--muted);cursor:pointer" style-hover="background:#e5484d;color:white">×</div>
+</div>
+</div>
+<div style="flex:1;position:relative;overflow:hidden">
+{{ constellationSvg }}
+<div style="position:absolute;top:12px;right:12px;background:var(--surface);border:2px solid black;box-shadow:4px 4px 0 black;padding:10px 14px;display:flex;flex-direction:column;gap:6px;z-index:2">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;background:var(--a2);border-radius:50%"></div><span style="font:400 10px 'JetBrains Mono';color:var(--text)">Completed</span></div>
+<div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;background:var(--primary);border-radius:50%"></div><span style="font:400 10px 'JetBrains Mono';color:var(--text)">Active</span></div>
+<div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border:1.5px solid var(--a3);border-radius:50%"></div><span style="font:400 10px 'JetBrains Mono';color:var(--text)">Available</span></div>
+<div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border:1px dashed var(--muted);border-radius:50%"></div><span style="font:400 10px 'JetBrains Mono';color:var(--text)">Locked</span></div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<!-- SUB-CONSTELLATION WINDOW (F5) -->
+<sc-if value="{{ showSubConstellation }}" hint-placeholder-val="{{ false }}">
+<div id="win-subconstellation" onMouseDown="{{ focusSubConstellation }}" style="position:absolute;left:260px;top:40px;width:860px;height:640px;z-index:{{ zSubConstellation }};display:flex;flex-direction:column;border:3px solid black;box-shadow:6px 6px 0 black;background:var(--bg)">
+<div onMouseDown="{{ dragSubConstellation }}" style="height:44px;min-height:44px;background:var(--surface);border-bottom:3px solid black;display:flex;align-items:center;padding:0 12px;gap:8px;cursor:grab">
+<div style="width:3px;height:24px;background:var(--primary)"></div>
+<span style="font:600 14px 'Space Grotesk';color:var(--text);flex:1">SQL // Sub-constellation</span>
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted)">26 NODES</span>
+<div style="display:flex;gap:4px">
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div onClick="{{ closeSubConstellation }}" style="width:18px;height:18px;background:var(--sr);border:2px solid black;display:flex;align-items:center;justify-content:center;font:700 10px monospace;color:var(--muted);cursor:pointer" style-hover="background:#e5484d;color:white">×</div>
+</div>
+</div>
+<div style="flex:1;position:relative;overflow:hidden;display:flex">
+<div style="flex:1;position:relative">{{ subConstellationSvg }}</div>
+<sc-if value="{{ showDrawer }}" hint-placeholder-val="{{ false }}">
+<div style="width:280px;background:var(--surface);border-left:3px solid black;display:flex;flex-direction:column;overflow:auto;animation:fadeIn 0.2s ease">
+<div style="padding:14px 16px;border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+<span style="font:600 13px 'Space Grotesk';color:var(--text)">Window Functions:<br/>LAG and LEAD</span>
+<div onClick="{{ closeDrawer }}" style="font:700 12px monospace;color:var(--muted);cursor:pointer" style-hover="color:var(--text)">×</div>
+</div>
+<div style="display:flex;border-bottom:2px solid var(--border)">
+<div style="flex:1;padding:8px 0;text-align:center;font:600 10px 'Space Grotesk';color:var(--primary);border-bottom:2px solid var(--primary)">Resources</div>
+<div style="flex:1;padding:8px 0;text-align:center;font:600 10px 'Space Grotesk';color:var(--muted)">Tasks</div>
+<div style="flex:1;padding:8px 0;text-align:center;font:600 10px 'Space Grotesk';color:var(--muted)">Notes</div>
+</div>
+<div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ drawerVideos }}" as="dv" hint-placeholder-count="3">
+<div style="background:var(--sr);border:2px solid black;box-shadow:3px 3px 0 black;padding:10px;display:flex;flex-direction:column;gap:6px">
+<div style="font:600 12px/1.3 'Space Grotesk';color:var(--text)">{{ dv.title }}</div>
+<div style="display:flex;align-items:center;justify-content:space-between">
+<span style="font:300 10px 'Outfit';color:var(--muted)">{{ dv.channel }}</span>
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted);padding:2px 6px;background:var(--bg);border:1px solid var(--border)">{{ dv.dur }}</span>
+</div>
+<div style="display:flex;gap:6px;margin-top:2px">
+<div style="flex:1;padding:5px 0;background:var(--primary);border:2px solid black;text-align:center;font:600 9px 'Space Grotesk';color:white;cursor:pointer">Play in app</div>
+<div style="flex:1;padding:5px 0;background:var(--sr);border:2px solid black;text-align:center;font:600 9px 'Space Grotesk';color:var(--text);cursor:pointer">YouTube</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<!-- VIDEO LIBRARY WINDOW (F6) -->
+<sc-if value="{{ showVideo }}" hint-placeholder-val="{{ false }}">
+<div id="win-video" onMouseDown="{{ focusVideo }}" style="position:absolute;left:500px;top:70px;width:720px;height:580px;z-index:{{ zVideo }};display:flex;flex-direction:column;border:3px solid black;box-shadow:6px 6px 0 black;background:var(--bg)">
+<div onMouseDown="{{ dragVideo }}" style="height:44px;min-height:44px;background:var(--surface);border-bottom:3px solid black;display:flex;align-items:center;padding:0 12px;gap:8px;cursor:grab">
+<div style="width:3px;height:24px;background:var(--primary)"></div>
+<span style="font:600 14px 'Space Grotesk';color:var(--text);flex:1">Video Library</span>
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted)">WATCHED 12 / 67</span>
+<div style="display:flex;gap:4px">
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div onClick="{{ closeVideo }}" style="width:18px;height:18px;background:var(--sr);border:2px solid black;display:flex;align-items:center;justify-content:center;font:700 10px monospace;color:var(--muted);cursor:pointer" style-hover="background:#e5484d;color:white">×</div>
+</div>
+</div>
+<div style="flex:1;display:flex;overflow:hidden">
+<div style="width:140px;background:var(--surface);border-right:2px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:14px;overflow:auto">
+<div>
+<div style="font:700 9px 'JetBrains Mono';color:var(--muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:8px">Topic</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font:400 11px 'Outfit';color:var(--primary);cursor:pointer">All Topics</div>
+<div style="font:400 11px 'Outfit';color:var(--muted);cursor:pointer" style-hover="color:var(--text)">SQL</div>
+<div style="font:400 11px 'Outfit';color:var(--muted);cursor:pointer" style-hover="color:var(--text)">Excel</div>
+<div style="font:400 11px 'Outfit';color:var(--muted);cursor:pointer" style-hover="color:var(--text)">Python</div>
+<div style="font:400 11px 'Outfit';color:var(--muted);cursor:pointer" style-hover="color:var(--text)">Statistics</div>
+</div>
+</div>
+<div>
+<div style="font:700 9px 'JetBrains Mono';color:var(--muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:8px">Duration</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px">
+<div style="padding:3px 8px;font:400 10px 'JetBrains Mono';background:var(--sr);border:1px solid var(--border);color:var(--muted);cursor:pointer" style-hover="border-color:var(--primary);color:var(--text)">< 10m</div>
+<div style="padding:3px 8px;font:400 10px 'JetBrains Mono';background:var(--sr);border:1px solid var(--border);color:var(--muted);cursor:pointer" style-hover="border-color:var(--primary);color:var(--text)">10-20m</div>
+<div style="padding:3px 8px;font:400 10px 'JetBrains Mono';background:var(--sr);border:1px solid var(--border);color:var(--muted);cursor:pointer" style-hover="border-color:var(--primary);color:var(--text)">> 20m</div>
+</div>
+</div>
+<div>
+<div style="font:700 9px 'JetBrains Mono';color:var(--muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:8px">Status</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font:400 11px 'Outfit';color:var(--primary);cursor:pointer">All</div>
+<div style="font:400 11px 'Outfit';color:var(--muted);cursor:pointer" style-hover="color:var(--text)">Unwatched</div>
+<div style="font:400 11px 'Outfit';color:var(--muted);cursor:pointer" style-hover="color:var(--text)">Watched</div>
+</div>
+</div>
+</div>
+<div style="flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ videos }}" as="v" hint-placeholder-count="4">
+<div style="background:var(--sr);border:2px solid {{ v.isPlaying }};box-shadow:3px 3px 0 black;display:flex;gap:12px;padding:0;position:relative;overflow:hidden">
+<sc-if value="{{ v.playing }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary)"></div></sc-if>
+<div style="width:120px;min-height:80px;background:var(--bg);display:flex;align-items:center;justify-content:center;font:400 20px 'Outfit';color:var(--muted)">▶</div>
+<div style="flex:1;padding:10px 12px 10px 0;display:flex;flex-direction:column;gap:4px;justify-content:center">
+<div style="font:600 13px/1.3 'Space Grotesk';color:var(--text)">{{ v.title }}</div>
+<div style="font:300 11px 'Outfit';color:var(--muted)">{{ v.channel }}</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted);padding:2px 6px;background:var(--bg);border:1px solid var(--border)">{{ v.dur }}</span>
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted);padding:2px 6px;background:var(--bg);border:1px solid var(--border)">{{ v.difficulty }}</span>
+</div>
+<div style="display:flex;gap:6px;margin-top:4px">
+<div style="padding:4px 10px;background:var(--primary);border:2px solid black;font:600 10px 'Space Grotesk';color:white;cursor:pointer">Play in app</div>
+<div style="padding:4px 10px;background:var(--sr);border:2px solid black;font:600 10px 'Space Grotesk';color:var(--text);cursor:pointer" style-hover="border-color:var(--primary)">Open in YouTube</div>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<!-- CHEATCODES WINDOW (F7) -->
+<sc-if value="{{ showCheatcodes }}" hint-placeholder-val="{{ false }}">
+<div id="win-cheatcodes" onMouseDown="{{ focusCheatcodes }}" style="position:absolute;left:340px;top:50px;width:760px;height:600px;z-index:{{ zCheatcodes }};display:flex;flex-direction:column;border:3px solid black;box-shadow:6px 6px 0 black;background:var(--bg)">
+<div onMouseDown="{{ dragCheatcodes }}" style="height:44px;min-height:44px;background:var(--surface);border-bottom:3px solid black;display:flex;align-items:center;padding:0 12px;gap:8px;cursor:grab">
+<div style="width:3px;height:24px;background:var(--primary)"></div>
+<span style="font:600 14px 'Space Grotesk';color:var(--text);flex:1">Cheatcodes // Quick Reference</span>
+<div style="display:flex;gap:4px">
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div onClick="{{ closeCheatcodes }}" style="width:18px;height:18px;background:var(--sr);border:2px solid black;display:flex;align-items:center;justify-content:center;font:700 10px monospace;color:var(--muted);cursor:pointer" style-hover="background:#e5484d;color:white">×</div>
+</div>
+</div>
+<div style="display:flex;gap:0;padding:10px 12px;border-bottom:2px solid var(--border)">
+<div style="padding:6px 16px;background:var(--primary);border:2px solid black;font:600 11px 'Space Grotesk';color:white;cursor:pointer">SQL</div>
+<div style="padding:6px 16px;background:var(--sr);border:2px solid black;border-left:0;font:600 11px 'Space Grotesk';color:var(--text);cursor:pointer" style-hover="background:var(--surface)">Excel</div>
+</div>
+<div style="flex:1;display:flex;overflow:hidden">
+<div style="width:170px;background:var(--surface);border-right:2px solid var(--border);padding:12px;overflow:auto;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ cheatSectionBtns }}" as="cs" hint-placeholder-count="8">
+<div onClick="{{ cs.select }}" style="padding:7px 10px;font:400 12px 'Outfit';color:{{ cs.labelColor }};cursor:pointer;background:{{ cs.bg }};border-left:2px solid {{ cs.accent }}" style-hover="color:var(--text);background:var(--sr)">{{ cs.label }}</div>
+</sc-for>
+</div>
+<div style="flex:1;overflow:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+<div style="font:600 16px 'Space Grotesk';color:var(--text)">{{ cheatContent.title }}</div>
+<sc-for list="{{ cheatContent.blocks }}" as="cb" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font:400 12px 'Outfit';color:var(--muted)">{{ cb.label }}</div>
+<div style="background:var(--bg);border:1px solid var(--border);padding:12px 14px;position:relative">
+<pre style="margin:0;font:400 12px/1.5 'JetBrains Mono';color:var(--a2);white-space:pre-wrap">{{ cb.code }}</pre>
+<div style="position:absolute;top:6px;right:6px;padding:3px 8px;background:var(--sr);border:1px solid var(--border);font:400 9px 'JetBrains Mono';color:var(--muted);cursor:pointer" style-hover="color:var(--text);border-color:var(--primary)">Copy</div>
+</div>
+</div>
+</sc-for>
+<sc-if value="{{ showJoinDiagrams }}" hint-placeholder-val="{{ false }}">
+{{ joinDiagrams }}
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+
+<!-- TEXTBOOK WINDOW (F8) -->
+<sc-if value="{{ showTextbook }}" hint-placeholder-val="{{ false }}">
+<div id="win-textbook" onMouseDown="{{ focusTextbook }}" style="position:absolute;left:240px;top:30px;width:900px;height:680px;z-index:{{ zTextbook }};display:flex;flex-direction:column;border:3px solid black;box-shadow:6px 6px 0 black;background:var(--bg)">
+<div onMouseDown="{{ dragTextbook }}" style="height:44px;min-height:44px;background:var(--surface);border-bottom:3px solid black;display:flex;align-items:center;padding:0 12px;gap:8px;cursor:grab">
+<div style="width:3px;height:24px;background:var(--primary)"></div>
+<span style="font:600 14px 'Space Grotesk';color:var(--text);flex:1">DA // Field Guide</span>
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted)">{{ breadcrumb }}</span>
+<div style="display:flex;gap:4px">
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div onClick="{{ closeTextbook }}" style="width:18px;height:18px;background:var(--sr);border:2px solid black;display:flex;align-items:center;justify-content:center;font:700 10px monospace;color:var(--muted);cursor:pointer" style-hover="background:#e5484d;color:white">×</div>
+</div>
+</div>
+<div style="flex:1;display:flex;overflow:hidden">
+<div style="width:200px;background:var(--surface);border-right:2px solid var(--border);display:flex;flex-direction:column;overflow:auto">
+<div style="padding:12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:4px">
+<div style="font:700 9px 'JetBrains Mono';color:var(--muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:4px">Books</div>
+<sc-for list="{{ bookButtons }}" as="bb" hint-placeholder-count="3">
+<div onClick="{{ bb.select }}" style="padding:6px 10px;font:400 12px 'Outfit';color:{{ bb.labelColor }};cursor:pointer;background:{{ bb.bg }}" style-hover="color:var(--text);background:var(--sr)">{{ bb.label }}</div>
+</sc-for>
+</div>
+<div style="padding:12px;display:flex;flex-direction:column;gap:2px">
+<div style="font:700 9px 'JetBrains Mono';color:var(--muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:6px">Chapters</div>
+<sc-for list="{{ chapters }}" as="ch" hint-placeholder-count="5">
+<div onClick="{{ ch.select }}" style="padding:6px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;background:{{ ch.bg }}" style-hover="background:var(--sr)">
+<div style="width:6px;height:6px;border-radius:50%;background:{{ ch.dotColor }}"></div>
+<span style="font:400 12px 'Outfit';color:{{ ch.labelColor }}">{{ ch.label }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="flex:1;overflow:auto;padding:32px 40px;display:flex;justify-content:center">
+<div style="max-width:560px">
+<div style="font:600 22px/1.3 'Space Grotesk';color:var(--text);margin-bottom:8px">{{ activeChapterTitle }}</div>
+<div style="font:400 10px 'JetBrains Mono';color:var(--muted);margin-bottom:24px;text-transform:uppercase;letter-spacing:0.1em">{{ activeBookTitle }} — Chapter {{ chapterNum }}</div>
+<div style="font:400 16px/1.7 'Outfit';color:var(--text)">{{ chapterBody }}</div>
+<div style="margin-top:24px;background:var(--bg);border:1px solid var(--border);padding:14px 16px">
+<pre style="margin:0;font:400 12px/1.5 'JetBrains Mono';color:var(--a2);white-space:pre-wrap">{{ chapterCode }}</pre>
+</div>
+<div style="margin-top:24px;background:var(--sr);border-left:3px solid var(--a3);padding:14px 16px">
+<div style="font:600 12px 'Space Grotesk';color:var(--a3);margin-bottom:6px">Try This</div>
+<div style="font:400 13px/1.5 'Outfit';color:var(--text)">{{ tryThis }}</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<!-- CASE FILES WINDOW (F9) -->
+<sc-if value="{{ showCaseFiles }}" hint-placeholder-val="{{ false }}">
+<div id="win-casefiles" onMouseDown="{{ focusCaseFiles }}" style="position:absolute;left:620px;top:90px;width:600px;height:560px;z-index:{{ zCaseFiles }};display:flex;flex-direction:column;border:3px solid black;box-shadow:6px 6px 0 black;background:var(--bg)">
+<div onMouseDown="{{ dragCaseFiles }}" style="height:44px;min-height:44px;background:var(--surface);border-bottom:3px solid black;display:flex;align-items:center;padding:0 12px;gap:8px;cursor:grab">
+<div style="width:3px;height:24px;background:var(--primary)"></div>
+<span style="font:600 14px 'Space Grotesk';color:var(--text);flex:1">Case Files // 20 Missions</span>
+<div style="display:flex;gap:4px">
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div style="width:18px;height:18px;background:var(--sr);border:2px solid black"></div>
+<div onClick="{{ closeCaseFiles }}" style="width:18px;height:18px;background:var(--sr);border:2px solid black;display:flex;align-items:center;justify-content:center;font:700 10px monospace;color:var(--muted);cursor:pointer" style-hover="background:#e5484d;color:white">×</div>
+</div>
+</div>
+<div style="flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ cases }}" as="c" hint-placeholder-count="5">
+<div style="background:var(--sr);border:2px solid black;box-shadow:3px 3px 0 black;display:flex;overflow:hidden">
+<div style="width:4px;background:{{ c.diffColor }};flex-shrink:0"></div>
+<div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<span style="font:400 9px 'JetBrains Mono';color:var(--muted)">{{ c.num }}</span>
+<span style="font:400 9px 'JetBrains Mono';padding:2px 8px;border:1px solid {{ c.statusBorder }};color:{{ c.statusColor }}">{{ c.status }}</span>
+</div>
+<div style="font:600 14px 'Space Grotesk';color:var(--text)">{{ c.title }}</div>
+<div style="font:300 12px 'Outfit';color:var(--muted)">{{ c.desc }}</div>
+<div style="font:400 9px 'JetBrains Mono';color:{{ c.diffColor }};margin-top:2px">{{ c.difficulty }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="padding:10px 14px;border-top:2px solid var(--border);display:flex;align-items:center;gap:10px">
+<div style="flex:1;height:4px;background:var(--sr);overflow:hidden"><div style="width:30%;height:100%;background:var(--a2)"></div></div>
+<span style="font:400 10px 'JetBrains Mono';color:var(--a2)">6 of 20 cases touched</span>
+</div>
+</div>
+</sc-if>
+
+<!-- TASKBAR -->
+<div style="position:absolute;bottom:0;left:0;right:0;height:44px;background:var(--surface);border-top:2px solid black;display:flex;align-items:center;padding:0 20px;z-index:200;justify-content:space-between">
+<div style="font:700 13px 'JetBrains Mono';color:var(--primary);letter-spacing:-0.3px">DA // OS</div>
+<div style="font:400 13px 'JetBrains Mono';color:var(--text)">{{ clockTime }}</div>
+<div style="display:flex;align-items:center;gap:16px">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font:700 11px 'Space Grotesk';color:var(--a1)">1,240 XP</span>
+<div style="width:60px;height:4px;background:var(--sr)"><div style="width:65%;height:100%;background:var(--a1)"></div></div>
+</div>
+<div style="display:flex;align-items:center;gap:4px;font:700 11px 'Space Grotesk';color:var(--a1)">🔥 7</div>
+<div onClick="{{ toggleTheme }}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--text)" style-hover="background:var(--sr)">{{ themeIcon }}</div>
+<div style="width:28px;height:28px;background:var(--a3);border:2px solid black;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 10px 'Space Grotesk';color:white;cursor:pointer">A</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<!-- COMPARISON OVERLAY (F10) -->
+<sc-if value="{{ compareMode }}" hint-placeholder-val="{{ false }}">
+{{ comparisonEl }}
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;darkMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Theme&quot;},&quot;startFrame&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Login&quot;,&quot;Desktop Dark&quot;,&quot;Desktop Light&quot;,&quot;Constellation&quot;,&quot;Sub-Constellation&quot;,&quot;Video Library&quot;,&quot;Cheatcodes&quot;,&quot;Textbook&quot;,&quot;Case Files&quot;,&quot;Compare&quot;],&quot;default&quot;:&quot;Login&quot;,&quot;section&quot;:&quot;Navigation&quot;}}">
+class Component extends DCLogic {
+  state = {
+    loggedIn: false, darkMode: true, openWindows: {}, windowStack: [],
+    clockTime: '09:41', compareMode: false,
+    cheatTab: 'sql', cheatSection: 'select',
+    activeBook: 0, activeChapter: 0,
+    selectedSubNode: null,
+  };
+  componentDidMount() {
+    this._updateTheme();
+    this._clock = setInterval(() => {
+      const n = new Date();
+      this.setState({ clockTime: n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0') });
+    }, 10000);
+    this._onMM = (e) => {
+      if (!this._dw) return;
+      const el = document.getElementById('win-' + this._dw);
+      if (el) { el.style.left = (e.clientX - this._dx) + 'px'; el.style.top = (e.clientY - this._dy) + 'px'; }
+    };
+    this._onMU = () => { this._dw = null; document.body.style.cursor = ''; document.body.style.userSelect = ''; };
+    document.addEventListener('mousemove', this._onMM);
+    document.addEventListener('mouseup', this._onMU);
+  }
+  componentDidUpdate(pp, ps) { if (ps.darkMode !== this.state.darkMode) this._updateTheme(); }
+  componentWillUnmount() {
+    clearInterval(this._clock);
+    document.removeEventListener('mousemove', this._onMM);
+    document.removeEventListener('mouseup', this._onMU);
+    document.documentElement.classList.remove('lm'); document.body.classList.remove('lm');
+  }
+  _updateTheme() {
+    const m = this.state.darkMode ? 'remove' : 'add';
+    document.documentElement.classList[m]('lm'); document.body.classList[m]('lm');
+  }
+  _open(id) { this.setState(s => ({ openWindows: { ...s.openWindows, [id]: true }, windowStack: [...s.windowStack.filter(w => w !== id), id] })); }
+  _close(id) { this.setState(s => { const ow = { ...s.openWindows }; delete ow[id]; return { openWindows: ow, windowStack: s.windowStack.filter(w => w !== id) }; }); }
+  _focus(id) { this.setState(s => ({ windowStack: [...s.windowStack.filter(w => w !== id), id] })); }
+  _startDrag(id, e) {
+    e.preventDefault(); const el = document.getElementById('win-' + id);
+    if (!el) return; this._dw = id; this._dx = e.clientX - el.offsetLeft; this._dy = e.clientY - el.offsetTop;
+    document.body.style.cursor = 'grabbing'; document.body.style.userSelect = 'none'; this._focus(id);
+  }
+  _goToFrame(n) {
+    const base = { openWindows: {}, compareMode: false, selectedSubNode: null, windowStack: [] };
+    const f = {
+      1: { ...base, loggedIn: false, darkMode: true },
+      2: { ...base, loggedIn: true, darkMode: true },
+      3: { ...base, loggedIn: true, darkMode: false },
+      4: { ...base, loggedIn: true, darkMode: true, openWindows: { constellation: true }, windowStack: ['constellation'] },
+      5: { ...base, loggedIn: true, darkMode: true, openWindows: { subconstellation: true }, windowStack: ['subconstellation'], selectedSubNode: 'lag_lead' },
+      6: { ...base, loggedIn: true, darkMode: true, openWindows: { video: true }, windowStack: ['video'] },
+      7: { ...base, loggedIn: true, darkMode: true, openWindows: { cheatcodes: true }, windowStack: ['cheatcodes'] },
+      8: { ...base, loggedIn: true, darkMode: true, openWindows: { textbook: true }, windowStack: ['textbook'] },
+      9: { ...base, loggedIn: true, darkMode: true, openWindows: { constellation: true, casefiles: true }, windowStack: ['constellation', 'casefiles'] },
+      10: { ...base, loggedIn: true, darkMode: true, compareMode: true },
+    };
+    this.setState(f[n] || {});
+  }
+  renderVals() {
+    const { darkMode: dark, openWindows, windowStack, clockTime, compareMode } = this.state;
+    const ce = React.createElement;
+    const stars = []; for (let i = 0; i < 40; i++) stars.push({ x: ((i*37+13)%143)*10+(i%7)*3, y: ((i*53+7)%89)*10+(i%5)*4, r: 0.6+(i%5)*0.2, op: 0.02+(i%4)*0.015, dur: 5+(i%4)*2, delay: i*0.3 });
+    const dots = []; for (let x = 24; x < 1440; x += 24) for (let y = 24; y < 900; y += 24) dots.push({ x, y });
+    const wallpaper = dark
+      ? ce('svg', { style: { position:'absolute', inset:0, pointerEvents:'none' }, viewBox:'0 0 1440 900', key:'wp' },
+          ce('defs', null, ce('radialGradient', { id:'wg', cx:'50%', cy:'50%', r:'60%' },
+            ce('stop', { offset:'0%', stopColor:'#111a28', stopOpacity:0.4 }), ce('stop', { offset:'100%', stopColor:'#080b14', stopOpacity:0 }))),
+          ce('rect', { width:1440, height:900, fill:'url(#wg)' }),
+          ...stars.map((s,i) => ce('circle', { key:i, cx:s.x, cy:s.y, r:s.r, fill:'white', opacity:s.op, style:{ animation:`twinkle ${s.dur}s ease-in-out infinite`, animationDelay:`${s.delay}s` }})))
+      : ce('svg', { style: { position:'absolute', inset:0, pointerEvents:'none' }, viewBox:'0 0 1440 900', key:'wp' },
+          ...dots.map((d,i) => ce('circle', { key:i, cx:d.x, cy:d.y, r:0.8, fill:'var(--border)', opacity:0.5 })));
+    const svgI = (paths) => ce('svg', { width:28, height:28, viewBox:'0 0 24 24', fill:'none', stroke:'var(--ico, var(--muted))', strokeWidth:1.5, strokeLinecap:'round', strokeLinejoin:'round' }, ...paths);
+    const iconDefs = [
+      { id:'constellation', label:'Constellation\nMap', glyph: svgI([ce('circle',{cx:8,cy:6,r:2,key:'a'}),ce('circle',{cx:16,cy:6,r:2,key:'b'}),ce('circle',{cx:12,cy:14,r:2,key:'c'}),ce('line',{x1:8,y1:8,x2:12,y2:12,key:'d'}),ce('line',{x1:16,y1:8,x2:12,y2:12,key:'e'})]) },
+      { id:'video', label:'Video\nLibrary', glyph: svgI([ce('rect',{x:3,y:5,width:12,height:14,key:'a'}),ce('path',{d:'M15 10l6-3v10l-6-3z',key:'b'})]) },
+      { id:'casefiles', label:'Case\nFiles', glyph: svgI([ce('path',{d:'M4 4h6l2 2h8v14H4V4z',key:'a'})]) },
+      { id:'pmai', label:'PM-AI', glyph: svgI([ce('rect',{x:3,y:3,width:18,height:18,key:'a'}),ce('circle',{cx:9,cy:10,r:1.5,key:'b'}),ce('circle',{cx:15,cy:10,r:1.5,key:'c'}),ce('path',{d:'M9 15h6',key:'d'})]) },
+      { id:'heatmap', label:'Heatmap', glyph: svgI([ce('rect',{x:3,y:3,width:8,height:8,key:'a'}),ce('rect',{x:13,y:3,width:8,height:8,key:'b'}),ce('rect',{x:3,y:13,width:8,height:8,key:'c'}),ce('rect',{x:13,y:13,width:8,height:8,key:'d'})]) },
+      { id:'canvas', label:'Canvas', glyph: svgI([ce('rect',{x:3,y:3,width:18,height:18,key:'a'}),ce('path',{d:'M7 17l4-8 3 5 2-3 4 6',key:'b'})]) },
+      { id:'games', label:'Games', glyph: svgI([ce('path',{d:'M6 11h4M8 9v4M15 12h.01M18 10h.01',key:'a'}),ce('rect',{x:2,y:6,width:20,height:12,key:'b'})]) },
+      { id:'cheatcodes', label:'Cheatcodes', glyph: svgI([ce('path',{d:'M4 17l6-6-6-6',key:'a'}),ce('line',{x1:12,y1:19,x2:20,y2:19,key:'b'})]) },
+      { id:'dailylog', label:'Daily\nLog', glyph: svgI([ce('rect',{x:4,y:3,width:16,height:18,key:'a'}),ce('line',{x1:8,y1:8,x2:16,y2:8,key:'b'}),ce('line',{x1:8,y1:12,x2:16,y2:12,key:'c'}),ce('line',{x1:8,y1:16,x2:12,y2:16,key:'d'})]) },
+    ];
+    const icons = iconDefs.map(ic => ({ ...ic, isOpen: !!openWindows[ic.id], borderColor: openWindows[ic.id] ? 'var(--primary)' : 'black', open: () => this._open(ic.id) }));
+    const zOf = (id) => 10 + Math.max(windowStack.indexOf(id), 0);
+    const frameButtons = Array.from({length:10}, (_,i) => ({ num: String(i+1), go: () => this._goToFrame(i+1) }));
+    const dragH = (id) => (e) => this._startDrag(id, e);
+    const closeH = (id) => () => this._close(id);
+    const focusH = (id) => () => this._focus(id);
+    // Constellation
+    const cNodes = [
+      {id:'excel',label:'Excel',x:130,y:440,r:20,state:'completed'},{id:'sql',label:'SQL',x:270,y:390,r:22,state:'completed'},
+      {id:'python',label:'Python',x:190,y:310,r:18,state:'active'},{id:'stats',label:'Statistics',x:90,y:270,r:19,state:'available'},
+      {id:'cleaning',label:'Data Cleaning',x:430,y:320,r:16,state:'available'},{id:'viz',label:'Visualization',x:520,y:250,r:15,state:'available'},
+      {id:'powerbi',label:'Power BI',x:460,y:180,r:14,state:'locked'},{id:'story',label:'Storytelling',x:670,y:160,r:13,state:'locked'},
+      {id:'texts',label:'Textbooks',x:730,y:100,r:12,state:'locked'},{id:'portfolio',label:'Portfolio',x:770,y:150,r:13,state:'locked'},
+    ];
+    const cConns = [
+      {from:'excel',to:'sql',done:true},{from:'sql',to:'python',done:true},{from:'python',to:'stats',done:false},
+      {from:'sql',to:'cleaning',done:false},{from:'cleaning',to:'viz',done:false},{from:'viz',to:'powerbi',done:false},
+      {from:'powerbi',to:'story',done:false},{from:'story',to:'texts',done:false},{from:'story',to:'portfolio',done:false},
+    ];
+    const buildConstellation = (nodes, conns, w, h, prefix, onNodeClick) => {
+      const nMap = {}; nodes.forEach(n => nMap[n.id] = n);
+      return ce('svg', { width: w, height: h-44, viewBox: `0 0 ${w} ${h-44}`, style:{position:'absolute',top:0,left:0} },
+        ce('defs', null,
+          ce('radialGradient', { id: prefix+'g', cx:'45%', cy:'50%', r:'55%' },
+            ce('stop', { offset:'0%', stopColor: dark?'#111a28':'#edeae0', stopOpacity:0.5 }),
+            ce('stop', { offset:'100%', stopColor: dark?'#080b14':'#f5f2eb', stopOpacity:0 })),
+          ce('filter', { id: prefix+'glow' },
+            ce('feGaussianBlur', { stdDeviation:3, result:'b' }),
+            ce('feMerge', null, ce('feMergeNode',{in:'b'}), ce('feMergeNode',{in:'SourceGraphic'})))),
+        ce('rect', { width:w, height:h-44, fill: dark?'#080b14':'#f5f2eb' }),
+        ce('rect', { width:w, height:h-44, fill:'url(#'+prefix+'g)' }),
+        ...conns.map((c,i) => {
+          const f=nMap[c.from], t=nMap[c.to]; if(!f||!t) return null;
+          const mx=(f.x+t.x)/2, my=(f.y+t.y)/2-20;
+          const d=`M${f.x},${f.y} Q${mx},${my} ${t.x},${t.y}`;
+          const pid=prefix+'p'+i;
+          return ce('g',{key:'c'+i},
+            ce('path',{id:pid,d,fill:'none',stroke:c.done?'var(--a2)':'var(--border)',strokeWidth:c.done?1.2:0.8,strokeDasharray:c.done?'none':'4 6',opacity:c.done?0.6:0.3}),
+            c.done?ce('circle',{r:2,fill:'var(--a2)',opacity:0.8},ce('animateMotion',{dur:`${6+i*1.5}s`,repeatCount:'indefinite',begin:`${i*0.8}s`},ce('mpath',{href:'#'+pid}))):null);
+        }).filter(Boolean),
+        ...nodes.map((n,i) => {
+          const isC=n.state==='completed',isA=n.state==='active',isAv=n.state==='available',isL=n.state==='locked';
+          const fill=isC?'var(--a2)':isA?'var(--primary)':'var(--sr)';
+          const stroke=isC?'var(--a2)':isA?'var(--primary)':isAv?'var(--a3)':'var(--muted)';
+          const lc=(isC||isA)?'var(--text)':'var(--muted)';
+          return ce('g',{key:'n'+i,style:isC?{transformOrigin:`${n.x}px ${n.y}px`,animation:`breathe ${7+i}s ease-in-out infinite`}:undefined,
+            onClick: onNodeClick ? () => onNodeClick(n.id) : undefined, cursor: onNodeClick ? 'pointer' : undefined},
+            isC?ce('circle',{cx:n.x,cy:n.y,r:n.r+8,fill,opacity:0.15}):null,
+            isA?ce('circle',{cx:n.x,cy:n.y,r:n.r,fill:'none',stroke:'var(--primary)',strokeWidth:1,style:{transformOrigin:`${n.x}px ${n.y}px`,animation:'pulse 3.5s ease-out infinite'}}):null,
+            ce('circle',{cx:n.x,cy:n.y,r:n.r,fill,stroke,strokeWidth:isL?0.8:1.5,strokeDasharray:isL?'3 3':'none',filter:(isC||isA)?'url(#'+prefix+'glow)':undefined}),
+            isC?ce('g',{opacity:0.55},ce('line',{x1:n.x,y1:n.y-n.r*0.6,x2:n.x,y2:n.y+n.r*0.6,stroke:'white',strokeWidth:0.8}),ce('line',{x1:n.x-n.r*0.6,y1:n.y,x2:n.x+n.r*0.6,y2:n.y,stroke:'white',strokeWidth:0.8})):null,
+            isL?ce('text',{x:n.x,y:n.y+1,textAnchor:'middle',dominantBaseline:'central',fontSize:7,fill:'var(--muted)',fontFamily:'JetBrains Mono'},'⊘'):null,
+            ce('text',{x:n.x,y:n.y+n.r+14,textAnchor:'middle',fontFamily:'JetBrains Mono',fontSize:prefix==='c'?10:8,fill:lc},n.label));
+        }));
+    };
+    const constellationSvg = buildConstellation(cNodes, cConns, 860, 640, 'c', null);
+    // Sub-constellation
+    const subNodes = [
+      {id:'select',label:'SELECT',x:60,y:280,r:11,state:'completed'},{id:'where',label:'WHERE',x:130,y:230,r:11,state:'completed'},
+      {id:'orderby',label:'ORDER BY',x:200,y:290,r:10,state:'completed'},{id:'groupby',label:'GROUP BY',x:190,y:190,r:11,state:'completed'},
+      {id:'having',label:'HAVING',x:260,y:240,r:10,state:'active'},{id:'distinct',label:'DISTINCT',x:100,y:340,r:9,state:'completed'},
+      {id:'inner',label:'INNER JOIN',x:320,y:170,r:10,state:'available'},{id:'left_j',label:'LEFT JOIN',x:380,y:210,r:10,state:'available'},
+      {id:'right_j',label:'RIGHT JOIN',x:370,y:130,r:9,state:'available'},{id:'full_j',label:'FULL JOIN',x:430,y:160,r:9,state:'locked'},
+      {id:'union',label:'UNION',x:440,y:260,r:9,state:'locked'},
+      {id:'subq',label:'Subqueries',x:510,y:190,r:10,state:'locked'},{id:'cte',label:'CTEs',x:560,y:140,r:10,state:'locked'},
+      {id:'winfn',label:'Window Fns',x:580,y:230,r:10,state:'locked'},{id:'lag_lead',label:'LAG / LEAD',x:640,y:180,r:9,state:'locked'},
+      {id:'rank',label:'RANK',x:650,y:120,r:9,state:'locked'},
+      {id:'idx',label:'Indexes',x:710,y:160,r:9,state:'locked'},{id:'views',label:'Views',x:720,y:100,r:9,state:'locked'},
+      {id:'temp',label:'Temp Tables',x:770,y:140,r:9,state:'locked'},{id:'sproc',label:'Stored Procs',x:780,y:200,r:9,state:'locked'},
+      {id:'fmt',label:'Formatting',x:800,y:260,r:9,state:'locked'},
+      {id:'case_e',label:'CASE',x:280,y:310,r:9,state:'available'},{id:'coal',label:'COALESCE',x:340,y:340,r:9,state:'locked'},
+      {id:'strfn',label:'String Fns',x:460,y:320,r:9,state:'locked'},{id:'datefn',label:'Date Fns',x:530,y:300,r:9,state:'locked'},
+      {id:'aggfn',label:'Aggregate Fns',x:270,y:150,r:10,state:'available'},
+    ];
+    const subConns = [
+      {from:'select',to:'where',done:true},{from:'where',to:'orderby',done:true},{from:'where',to:'groupby',done:true},
+      {from:'groupby',to:'having',done:true},{from:'having',to:'inner',done:false},{from:'inner',to:'left_j',done:false},
+      {from:'inner',to:'right_j',done:false},{from:'left_j',to:'full_j',done:false},{from:'full_j',to:'union',done:false},
+      {from:'having',to:'subq',done:false},{from:'subq',to:'cte',done:false},{from:'cte',to:'winfn',done:false},
+      {from:'winfn',to:'lag_lead',done:false},{from:'winfn',to:'rank',done:false},
+      {from:'rank',to:'idx',done:false},{from:'idx',to:'views',done:false},{from:'views',to:'temp',done:false},
+      {from:'temp',to:'sproc',done:false},{from:'sproc',to:'fmt',done:false},
+      {from:'select',to:'distinct',done:true},{from:'having',to:'aggfn',done:false},
+      {from:'groupby',to:'case_e',done:false},{from:'case_e',to:'coal',done:false},
+      {from:'coal',to:'strfn',done:false},{from:'strfn',to:'datefn',done:false},
+    ];
+    const subConstellationSvg = buildConstellation(subNodes, subConns, 580, 640, 's', (id) => this.setState({ selectedSubNode: id === this.state.selectedSubNode ? null : id }));
+    const showDrawer = !!this.state.selectedSubNode;
+    const drawerVideos = [
+      { title: 'Window Functions: LAG & LEAD Explained', channel: 'DataWithDanny', dur: '18:32' },
+      { title: 'SQL LAG vs LEAD — When to Use Each', channel: 'TechWithTim', dur: '12:05' },
+      { title: 'Practical LAG/LEAD Examples', channel: 'SQLDaily', dur: '22:41' },
+    ];
+    // Videos
+    const videos = [
+      { title:'SQL for Beginners — Full Course', channel:'freeCodeCamp', dur:'4:20:18', difficulty:'Beginner', playing:true, isPlaying:'var(--primary)' },
+      { title:'Advanced SQL Tutorial', channel:'TechWithTim', dur:'1:45:30', difficulty:'Intermediate', playing:false, isPlaying:'black' },
+      { title:'Window Functions Explained', channel:'DataWithDanny', dur:'32:14', difficulty:'Advanced', playing:false, isPlaying:'black' },
+      { title:'CTEs and Recursive Queries', channel:'SQLDaily', dur:'18:45', difficulty:'Advanced', playing:false, isPlaying:'black' },
+      { title:'Database Indexing Deep Dive', channel:'HusseinNasser', dur:'55:20', difficulty:'Advanced', playing:false, isPlaying:'black' },
+    ];
+    // Cheatcodes
+    const cheatSections = [
+      {id:'select',label:'SELECT Patterns'},{id:'joins',label:'JOIN Patterns'},{id:'window',label:'Window Functions'},
+      {id:'ctes',label:'CTEs'},{id:'strings',label:'String Functions'},{id:'dates',label:'Date Functions'},
+      {id:'nulls',label:'NULL Handling'},{id:'formatting',label:'Formatting'},
+    ];
+    const cheatSectionBtns = cheatSections.map(s => ({
+      ...s, active: s.id === this.state.cheatSection,
+      labelColor: s.id === this.state.cheatSection ? 'var(--text)' : 'var(--muted)',
+      bg: s.id === this.state.cheatSection ? 'var(--sr)' : 'transparent',
+      accent: s.id === this.state.cheatSection ? 'var(--primary)' : 'transparent',
+      select: () => this.setState({ cheatSection: s.id }),
+    }));
+    const cheatContent = this.state.cheatSection === 'select' ? {
+      title: 'SELECT Patterns', blocks: [
+        { label:'Basic Select', code:'SELECT column1, column2\nFROM table_name\nWHERE condition;' },
+        { label:'Select with Alias', code:"SELECT first_name AS name,\n       salary * 12 AS annual_pay\nFROM employees;" },
+        { label:'Select Distinct', code:'SELECT DISTINCT department\nFROM employees\nORDER BY department;' },
+      ]
+    } : this.state.cheatSection === 'joins' ? {
+      title: 'JOIN Patterns', blocks: [
+        { label:'Inner Join', code:'SELECT a.*, b.name\nFROM orders a\nINNER JOIN customers b\n  ON a.customer_id = b.id;' },
+        { label:'Left Join', code:'SELECT a.*, b.name\nFROM orders a\nLEFT JOIN customers b\n  ON a.customer_id = b.id;' },
+      ]
+    } : this.state.cheatSection === 'window' ? {
+      title: 'Window Functions', blocks: [
+        { label:'ROW_NUMBER', code:'SELECT name, department,\n  ROW_NUMBER() OVER (\n    PARTITION BY department\n    ORDER BY salary DESC\n  ) AS rank\nFROM employees;' },
+        { label:'LAG / LEAD', code:'SELECT date, revenue,\n  LAG(revenue, 1) OVER (ORDER BY date) AS prev_rev,\n  revenue - LAG(revenue, 1) OVER (ORDER BY date) AS change\nFROM daily_sales;' },
+      ]
+    } : {
+      title: cheatSections.find(s=>s.id===this.state.cheatSection)?.label || '', blocks: [{ label:'Example', code:'-- Content for this section\n-- coming soon...' }]
+    };
+    const showJoinDiagrams = this.state.cheatSection === 'joins';
+    const joinDiagrams = ce('div', { style:{ display:'flex', gap:16, flexWrap:'wrap', marginTop:8 } },
+      ...['INNER','LEFT','RIGHT','FULL'].map((t,i) => {
+        const fills = { INNER:[false,false,true], LEFT:[true,false,true], RIGHT:[false,true,true], FULL:[true,true,true] };
+        const f = fills[t];
+        return ce('div', { key:i, style:{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 } },
+          ce('svg', { width:80, height:50, viewBox:'0 0 80 50' },
+            ce('circle',{cx:28,cy:25,r:18,fill:f[0]?'var(--primary)':'none',stroke:'var(--primary)',strokeWidth:1.5,opacity:0.4}),
+            ce('circle',{cx:52,cy:25,r:18,fill:f[1]?'var(--a3)':'none',stroke:'var(--a3)',strokeWidth:1.5,opacity:0.4}),
+            f[2]?ce('ellipse',{cx:40,cy:25,rx:8,ry:16,fill:'var(--a2)',opacity:0.5}):null),
+          ce('span', { style:{ font:"700 9px 'JetBrains Mono'", color:'var(--muted)' } }, t));
+      }));
+    // Cases
+    const cases = [
+      { num:'CASE-001',title:'The Missing Revenue',desc:"Find why Q3 numbers don't add up",difficulty:'ROOKIE',status:'COMPLETE',diffColor:'var(--a3)',statusBorder:'var(--a2)',statusColor:'var(--a2)' },
+      { num:'CASE-002',title:'Customer Churn Spiral',desc:'Identify patterns in subscription cancellations',difficulty:'ROOKIE',status:'COMPLETE',diffColor:'var(--a3)',statusBorder:'var(--a2)',statusColor:'var(--a2)' },
+      { num:'CASE-003',title:'The Marketing Attribution',desc:'Which campaigns actually drive conversions',difficulty:'ANALYST',status:'IN PROGRESS',diffColor:'var(--a1)',statusBorder:'var(--a1)',statusColor:'var(--a1)' },
+      { num:'CASE-004',title:'Supply Chain Bottleneck',desc:'Diagnose warehouse fulfillment delays',difficulty:'ANALYST',status:'OPEN',diffColor:'var(--a1)',statusBorder:'var(--muted)',statusColor:'var(--muted)' },
+      { num:'CASE-005',title:'The Pricing Paradox',desc:'Build a dynamic pricing recommendation model',difficulty:'SENIOR',status:'OPEN',diffColor:'var(--primary)',statusBorder:'var(--muted)',statusColor:'var(--muted)' },
+    ];
+    // Textbook
+    const books = [
+      { title:'DA Master Guide', chapters:['Introduction','The Analyst Mindset','Tools of the Trade','Your First Analysis','Communicating Results'] },
+      { title:'SQL Fundamentals', chapters:['Why SQL','SELECT & FROM','WHERE Clause','Aggregation','JOINs'] },
+      { title:'Excel Mastery', chapters:['Formulas 101','Pivot Tables','VLOOKUP vs INDEX','Data Validation','Dashboards'] },
+    ];
+    const ab = books[this.state.activeBook]||books[0];
+    const bookButtons = books.map((b,i) => ({ label:b.title, active:i===this.state.activeBook, labelColor:i===this.state.activeBook?'var(--text)':'var(--muted)', bg:i===this.state.activeBook?'var(--sr)':'transparent', select:()=>this.setState({activeBook:i,activeChapter:0}) }));
+    const chapters = ab.chapters.map((ch,i) => ({ label:ch, active:i===this.state.activeChapter, read:i<2, dotColor:i<2?'var(--a2)':i===this.state.activeChapter?'var(--primary)':'var(--muted)', labelColor:i===this.state.activeChapter?'var(--text)':'var(--muted)', bg:i===this.state.activeChapter?'var(--sr)':'transparent', select:()=>this.setState({activeChapter:i}) }));
+    const chapterBodies = {
+      'Introduction': 'Data analysis is the practice of inspecting, cleansing, transforming, and modeling data to discover useful information, inform conclusions, and support decision-making. In this chapter, we establish the foundation: what data analysis is, why it matters, and how to think like an analyst.\n\nThe modern data analyst sits at the intersection of business acumen, technical skill, and communication ability. You are not just running queries — you are translating numbers into narratives that drive action.',
+      'The Analyst Mindset': 'Before you touch a dataset, you need to understand the question. The best analysts spend more time framing problems than solving them. This chapter covers hypothesis-driven analysis, the art of asking "so what?", and building intuition for when data is lying to you.',
+      'Tools of the Trade': 'Your toolkit will evolve, but the foundations remain: SQL for querying, Excel for quick exploration, Python or R for deeper analysis, and a visualization tool for communication. This chapter maps each tool to its strengths.',
+    };
+    const chapterCodes = {
+      'Introduction': "-- Your first query\nSELECT COUNT(*) AS total_records,\n       MIN(created_at) AS earliest,\n       MAX(created_at) AS latest\nFROM transactions;",
+      'The Analyst Mindset': "-- Hypothesis: churn increases in month 3\nSELECT tenure_months,\n       COUNT(*) AS churned\nFROM customers\nWHERE status = 'cancelled'\nGROUP BY tenure_months\nORDER BY tenure_months;",
+      'Tools of the Trade': "# Python quick-start\nimport pandas as pd\ndf = pd.read_csv('sales.csv')\ndf.groupby('region')['revenue'].sum()",
+    };
+    const tryThisMap = {
+      'Introduction': 'Open the SQL console and run a SELECT COUNT(*) query on any table in the practice database. Note the total rows returned.',
+      'The Analyst Mindset': 'Write down three hypotheses about why customer churn might spike. Then write a query to test each one.',
+      'Tools of the Trade': 'Pick a dataset from the Case Files and try opening it in both Excel and Python. Note what feels faster in each tool.',
+    };
+    const activeChTitle = ab.chapters[this.state.activeChapter]||'Introduction';
+    const breadcrumb = ab.title + ' > ' + activeChTitle;
+    // Comparison (F10)
+    const miniDesktop = (bg, surface, primary, isDark) => {
+      const items = [];
+      for (let i=0;i<6;i++) items.push(ce('div',{key:'i'+i,style:{position:'absolute',left:10+(i%2)*42,top:10+Math.floor(i/2)*42,width:34,height:34,background:surface,border:'1px solid black',boxShadow:'2px 2px 0 black'}}));
+      items.push(ce('div',{key:'tb',style:{position:'absolute',bottom:0,left:0,right:0,height:18,background:surface,borderTop:'1px solid black',display:'flex',alignItems:'center',padding:'0 6px'}},ce('span',{style:{font:"700 5px 'JetBrains Mono'",color:primary}},'DA // OS')));
+      if (isDark) for (let i=0;i<5;i++) items.push(ce('div',{key:'s'+i,style:{position:'absolute',left:160+i*70,top:30+i*40,width:2,height:2,background:'white',opacity:0.06,borderRadius:'50%'}}));
+      return ce('div',{style:{width:480,height:300,background:bg,border:'2px solid '+(isDark?'#26344a':'#c8c4b8'),position:'relative',overflow:'hidden'}},...items);
+    };
+    const comparisonEl = ce('div',{style:{position:'absolute',inset:0,zIndex:500,background:'rgba(0,0,0,0.92)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:20,animation:'fadeIn 0.3s ease'}},
+      ce('div',{style:{font:"700 12px 'JetBrains Mono'",color:'#e8ecf4',letterSpacing:'0.2em'}},'DARK MODE   vs   LIGHT MODE'),
+      ce('div',{style:{display:'flex',gap:32,alignItems:'flex-start'}},
+        ce('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:8}},
+          ce('span',{style:{font:"700 9px 'JetBrains Mono'",color:'#63718c',letterSpacing:'0.15em'}},'DARK'),
+          miniDesktop('#080b14','#111a28','#5b8dee',true)),
+        ce('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:8}},
+          ce('span',{style:{font:"700 9px 'JetBrains Mono'",color:'#63718c',letterSpacing:'0.15em'}},'LIGHT'),
+          miniDesktop('#f5f2eb','#edeae0','#3a6fd4',false))),
+      ce('div',{onClick:()=>this.setState({compareMode:false}),style:{font:"400 12px 'JetBrains Mono'",color:'#63718c',cursor:'pointer',marginTop:8}},'× Close comparison'));
+    return {
+      showLogin: !this.state.loggedIn, showDesktop: this.state.loggedIn,
+      login: () => this.setState({ loggedIn: true }),
+      toggleTheme: () => this.setState(s => ({ darkMode: !s.darkMode })),
+      themeIcon: dark ? '☾' : '☀', clockTime, dark, frameButtons, icons, wallpaper, stars,
+      showConstellation: !!openWindows.constellation, showSubConstellation: !!openWindows.subconstellation,
+      showVideo: !!openWindows.video, showCheatcodes: !!openWindows.cheatcodes,
+      showTextbook: !!openWindows.textbook, showCaseFiles: !!openWindows.casefiles,
+      zConstellation: zOf('constellation'), zSubConstellation: zOf('subconstellation'),
+      zVideo: zOf('video'), zCheatcodes: zOf('cheatcodes'), zTextbook: zOf('textbook'), zCaseFiles: zOf('casefiles'),
+      dragConstellation: dragH('constellation'), dragSubConstellation: dragH('subconstellation'),
+      dragVideo: dragH('video'), dragCheatcodes: dragH('cheatcodes'), dragTextbook: dragH('textbook'), dragCaseFiles: dragH('casefiles'),
+      closeConstellation: closeH('constellation'), closeSubConstellation: closeH('subconstellation'),
+      closeVideo: closeH('video'), closeCheatcodes: closeH('cheatcodes'), closeTextbook: closeH('textbook'), closeCaseFiles: closeH('casefiles'),
+      focusConstellation: focusH('constellation'), focusSubConstellation: focusH('subconstellation'),
+      focusVideo: focusH('video'), focusCheatcodes: focusH('cheatcodes'), focusTextbook: focusH('textbook'), focusCaseFiles: focusH('casefiles'),
+      constellationSvg, subConstellationSvg, showDrawer, drawerVideos, closeDrawer: () => this.setState({ selectedSubNode: null }),
+      videos, cases, cheatSectionBtns, cheatContent, showJoinDiagrams, joinDiagrams,
+      bookButtons, chapters, breadcrumb,
+      activeChapterTitle: activeChTitle, activeBookTitle: ab.title, chapterNum: this.state.activeChapter + 1,
+      chapterBody: chapterBodies[activeChTitle] || 'Chapter content loading...',
+      chapterCode: chapterCodes[activeChTitle] || '-- Example code for this chapter',
+      tryThis: tryThisMap[activeChTitle] || 'Complete the exercises at the end of this chapter.',
+      compareMode, comparisonEl,
+    };
+  }
+}
+</script>
+</body>
+</html>

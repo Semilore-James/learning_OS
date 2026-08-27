@@ -1,0 +1,27 @@
+# dependencies / build output live under app/ and have their own .gitignore,
+# these are belt-and-braces for the repo root
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# env
+.env
+.env*.local
+.env.local
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# logs
+*.log
+npm-debug.log*
+
+# supabase local
+supabase/.branches
+supabase/.temp
