@@ -4,12 +4,11 @@
    The constellation canvas. One renderer for the level-1 topic map and every
    sub-constellation. SVG, token-driven, pan + wheel/trackpad zoom.
 
-   - wheel / pinch  -> zoom toward the cursor (0.6x .. 4x)
+   - wheel / pinch  -> zoom toward the cursor (0.6x .. 3x)
    - drag on empty  -> pan
-   - double click a node -> activate (opens its drawer)
-   - double click empty  -> reset view
-   Single clicks do nothing — deliberate, so a stray click while panning
-   doesn't fling a panel open.
+   - click a node   -> activate (opens its drawer); suppressed if the pointer
+                       was dragged (a pan), so panning never flings a panel open
+   - double click empty -> reset view
 
    Node state (locked / available / active / completed / needs-review) is
    passed in — derived by lib/graph.ts, never computed here.
@@ -43,7 +42,7 @@ const STATE_STROKE: Record<NodeState, string> = {
 };
 
 const MIN_K = 0.6;
-const MAX_K = 4;
+const MAX_K = 3;
 
 export function Constellation({
   nodes,
@@ -86,7 +85,8 @@ export function Constellation({
     e.preventDefault();
     const { sx, sy } = toLocal(e.clientX, e.clientY);
     setView((v) => {
-      const factor = Math.exp(-e.deltaY * 0.0015);
+      // clamp per-event change so one trackpad flick can't jump across the range
+      const factor = Math.min(1.12, Math.max(0.89, Math.exp(-e.deltaY * 0.0009)));
       const k = Math.min(MAX_K, Math.max(MIN_K, v.k * factor));
       // keep the point under the cursor fixed:  local = (s - t) / k
       const tx = sx - ((sx - v.tx) / v.k) * k;
@@ -204,9 +204,9 @@ export function Constellation({
             <g
               key={n.id}
               data-node={n.id}
-              onDoubleClick={(e) => {
+              onClick={(e) => {
                 e.stopPropagation();
-                onNodeActivate(n.id);
+                if (!pan.current?.moved) onNodeActivate(n.id);
               }}
               style={{ cursor: "pointer" }}
             >
