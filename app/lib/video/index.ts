@@ -6,25 +6,27 @@ export {
   type Difficulty,
 } from "./types";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/database.types";
+import raw from "@/content/videos.json";
 import type { VideoMeta } from "./types";
+import { TOPICS_BY_ID } from "@/content/curriculum";
+import { subNodesFor } from "@/lib/curriculumLayout";
 
-/** read the catalog (world-readable reference data) — filter by skill tag */
-export async function loadVideos(
-  sb: SupabaseClient<Database>,
-  skillTag?: string,
-): Promise<VideoMeta[]> {
-  let q = sb.from("video_catalog").select("*");
-  if (skillTag) q = q.contains("skill_tags", [skillTag]);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []).map((v) => ({
-    id: v.id,
-    title: v.title,
-    channel: v.channel,
-    durationSeconds: v.duration_seconds,
-    difficulty: v.difficulty as VideoMeta["difficulty"],
-    skillTags: v.skill_tags,
-  }));
+/** the curated catalog, from content/videos.json (imported from Semilore's
+ *  spreadsheet). The YouTube Data API is never called at runtime — only the
+ *  iframe embed, which is free. */
+export const VIDEOS: VideoMeta[] = raw as VideoMeta[];
+
+/** which topic a skill tag belongs to (tag may be a topic id or a sub-node id) */
+export function topicOfTag(tag: string): string | null {
+  if (TOPICS_BY_ID[tag]) return tag;
+  for (const t of Object.values(TOPICS_BY_ID)) {
+    if (subNodesFor(t).some((s) => s.id === tag)) return t.id;
+  }
+  return null;
+}
+
+/** videos whose tags match this curriculum node (topic or sub-node) */
+export function videosForNode(nodeId: string): VideoMeta[] {
+  const topic = topicOfTag(nodeId);
+  return VIDEOS.filter((v) => v.skillTags.includes(nodeId) || (topic && v.skillTags.includes(topic)));
 }

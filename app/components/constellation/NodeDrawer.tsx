@@ -7,8 +7,12 @@
    ("Enter / Continue track") or a sub-node ("Start / Mark complete").
    ========================================================================== */
 import { useState } from "react";
+import { ExternalLink, Play } from "lucide-react";
 import type { NodeState, SubNode, TopicNode } from "@/content/curriculum";
 import { useStore } from "@/lib/store";
+import { useWindowActions } from "@/lib/windowContext";
+import { videosForNode, watchUrl } from "@/lib/video";
+import { CASES } from "@/content/cases/registry";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,8 +42,11 @@ export function NodeDrawer({
   onClose: () => void;
 }) {
   const { state: s, dispatch } = useStore();
+  const win = useWindowActions();
   const [note, setNote] = useState(s.notes[node.id] ?? "");
   const chapters = "chapters" in node ? node.chapters : [];
+  const videos = videosForNode(node.id);
+  const cases = CASES.filter((c) => c.skills.includes(node.id));
 
   const commitNote = () => {
     if (note !== (s.notes[node.id] ?? "")) dispatch({ type: "saveNote", nodeId: node.id, body: note });
@@ -103,13 +110,46 @@ export function NodeDrawer({
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="p-3.5">
-            <TabsContent value="resources" className="mt-0 text-xs font-light text-muted-foreground">
-              Curated videos for this skill appear here once the Video Library import runs (build step
-              15), tagged <code className="font-mono text-[11px] text-brand-green">{node.id}</code>.
+            <TabsContent value="resources" className="mt-0 flex flex-col gap-2">
+              {videos.length === 0 && (
+                <p className="text-xs font-light text-muted-foreground">No videos tagged for this skill yet.</p>
+              )}
+              {videos.map((v) => (
+                <div key={v.id} className="chrome-flat bg-surface-raised p-2.5">
+                  <div className="text-xs font-semibold text-foreground">{v.title}</div>
+                  <div className="mb-1.5 font-mono text-[9px] text-muted-foreground">{v.channel}</div>
+                  <div className="flex gap-1.5">
+                    <Button size="xs" onClick={() => win.open("video")}>
+                      <Play className="size-2.5" /> Library
+                    </Button>
+                    <Button size="xs" variant="outline" asChild>
+                      <a href={watchUrl(v.id)} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="size-2.5" /> YouTube
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </TabsContent>
-            <TabsContent value="tasks" className="mt-0 text-xs font-light text-muted-foreground">
-              The Case Files that exercise this skill link here (build step 16). Completing one is what
-              unlocks &ldquo;Mark as complete&rdquo;.
+            <TabsContent value="tasks" className="mt-0 flex flex-col gap-2">
+              {cases.length === 0 && (
+                <p className="text-xs font-light text-muted-foreground">
+                  No case links this skill directly. Completing any case still counts.
+                </p>
+              )}
+              {cases.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => win.open("casefiles")}
+                  className="chrome-flat bg-surface-raised p-2.5 text-left"
+                >
+                  <div className="font-mono text-[9px] text-muted-foreground">
+                    {c.num} · {c.difficulty}
+                  </div>
+                  <div className="text-xs font-semibold text-foreground">{c.title}</div>
+                </button>
+              ))}
             </TabsContent>
             <TabsContent value="notes" className="mt-0">
               <Textarea

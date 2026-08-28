@@ -18,6 +18,7 @@ import { DailyLogWindow } from "@/components/dailylog/DailyLogWindow";
 import { HeatmapWindow } from "@/components/heatmap/HeatmapWindow";
 import { CaseFilesWindow } from "@/components/casefiles/CaseFilesWindow";
 import { PmAiWindow } from "@/components/pmai/PmAiWindow";
+import { VideoLibraryWindow } from "@/components/video/VideoLibraryWindow";
 import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
 import {
   GlyphCanvas,
@@ -70,7 +71,7 @@ export const APPS: AppDef[] = [
     glyph: <GlyphVideo />,
     flag: "videoLibrary",
     win: { title: "Video Library", width: 720, height: 580 },
-    Body: ph("Video Library", "Phase 1 · step 15"),
+    Body: VideoLibraryWindow,
   },
   {
     id: "casefiles",
