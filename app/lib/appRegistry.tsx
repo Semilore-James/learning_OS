@@ -16,6 +16,7 @@ import { TextbookWindow } from "@/components/textbook/TextbookWindow";
 import { CheatcodesWindow } from "@/components/cheatcodes/CheatcodesWindow";
 import { DailyLogWindow } from "@/components/dailylog/DailyLogWindow";
 import { HeatmapWindow } from "@/components/heatmap/HeatmapWindow";
+import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -140,7 +141,7 @@ export const APPS: AppDef[] = [
     glyph: <GlyphToolkit />,
     flag: "toolkit",
     win: { title: "Toolkit", subtitle: "THE LOADOUT", width: 820, height: 620 },
-    Body: ph("Toolkit", "Phase 1 · step 18"),
+    Body: ToolkitWindow,
   },
 ];
 
