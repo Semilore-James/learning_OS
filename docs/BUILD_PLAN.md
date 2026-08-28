@@ -139,11 +139,13 @@ hardening.
    topics + SQL + Git sub-nodes; other topics carry `plannedSubNodes` to be
    positioned). `app/lib/graph.ts` (DONE: `deriveStates`). Position + wire the
    remaining ~90 sub-nodes.
-8. **Desktop shell + window manager + action registry.** `Desktop` (wallpaper,
-   10-icon grid, taskbar: clock, XP, streak, theme toggle, avatar, daily-log
-   quick input). `app/lib/useWindows.ts` (port drag/focus/z-stack from
-   `docs/support.js`). `Window` chrome component. `app/lib/actions.ts` registry.
-   Boot sequence.
+8. **Desktop shell + window manager + app registry.** DONE (commit `af4029b`).
+   `components/desktop/` (Desktop, Boot, IconGrid, Taskbar, ChromeController),
+   `components/window/Window.tsx`, `lib/useWindows.ts`, `lib/appRegistry.tsx`
+   (10 apps; unbuilt ones render a build-status panel, flag-gated in prod).
+   Taskbar has clock + XP + streak + theme toggle + settings avatar; daily-log
+   quick input still pending. **Skins added** — see the Addition box above.
+   SettingsWindow (appearance section) is real: theme + skin + wallpaper persist.
 9. **External adapters scaffolded (typed, empty).** `app/lib/ai/` (`Advisor`
    interface, `grok.ts`, `buildContext(userId)` pure fn). `app/lib/analytics/`
    (`track()` + PostHog reverse-proxy rewrites). `app/lib/video/` (types +
