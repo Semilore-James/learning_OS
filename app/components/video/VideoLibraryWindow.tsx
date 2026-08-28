@@ -11,6 +11,7 @@ import { Check, ExternalLink, Play } from "lucide-react";
 import { VIDEOS, embedUrl, watchUrl } from "@/lib/video";
 import { TOPICS } from "@/content/curriculum";
 import { useStore } from "@/lib/store";
+import { openExternal } from "@/lib/openExternal";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -123,10 +124,8 @@ export function VideoLibraryWindow() {
                   <Button size="xs" onClick={() => setPlaying(isPlaying ? null : v.id)}>
                     <Play className="size-3" /> {isPlaying ? "Close" : "Play in app"}
                   </Button>
-                  <Button size="xs" variant="outline" asChild>
-                    <a href={watchUrl(v.id)} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="size-3" /> YouTube
-                    </a>
+                  <Button size="xs" variant="outline" onClick={() => openExternal(watchUrl(v.id))}>
+                    <ExternalLink className="size-3" /> YouTube
                   </Button>
                   {!watched && (
                     <Button size="xs" variant="secondary" onClick={() => dispatch({ type: "markVideoWatched", videoId: v.id, note: null })}>

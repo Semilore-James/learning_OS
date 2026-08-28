@@ -13,6 +13,7 @@ import { useStore } from "@/lib/store";
 import { useWindowActions } from "@/lib/windowContext";
 import { videosForNode, watchUrl } from "@/lib/video";
 import { CASES } from "@/content/cases/registry";
+import { openExternal } from "@/lib/openExternal";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -122,10 +123,8 @@ export function NodeDrawer({
                     <Button size="xs" onClick={() => win.open("video")}>
                       <Play className="size-2.5" /> Library
                     </Button>
-                    <Button size="xs" variant="outline" asChild>
-                      <a href={watchUrl(v.id)} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="size-2.5" /> YouTube
-                      </a>
+                    <Button size="xs" variant="outline" onClick={() => openExternal(watchUrl(v.id))}>
+                      <ExternalLink className="size-2.5" /> YouTube
                     </Button>
                   </div>
                 </div>

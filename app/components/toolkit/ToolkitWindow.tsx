@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { TOOLS, TOOL_CATEGORIES, type OS } from "@/content/toolkit";
 import { useStore } from "@/lib/store";
+import { openExternal } from "@/lib/openExternal";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -104,15 +105,14 @@ export function ToolkitWindow() {
           <p className="chrome-flat mt-3 bg-surface-raised p-2.5 text-xs text-brand-amber">{tool.note}</p>
         )}
 
-        <a
-          href={tool.source}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => openExternal(tool.source)}
           className="mt-3 inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
         >
           <ExternalLink className="size-3" />
           Official download page
-        </a>
+        </button>
 
         {/* OS tabs */}
         <div className="mt-5 flex gap-1.5">
