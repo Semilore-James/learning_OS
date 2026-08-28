@@ -395,6 +395,7 @@ export type Database = {
           display_name: string | null
           id: string
           onboarding_done: boolean
+          skin: string
           theme: string
           updated_at: string
           wallpaper_id: string
@@ -404,6 +405,7 @@ export type Database = {
           display_name?: string | null
           id: string
           onboarding_done?: boolean
+          skin?: string
           theme?: string
           updated_at?: string
           wallpaper_id?: string
@@ -413,6 +415,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           onboarding_done?: boolean
+          skin?: string
           theme?: string
           updated_at?: string
           wallpaper_id?: string

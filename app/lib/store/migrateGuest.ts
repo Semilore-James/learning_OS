@@ -22,6 +22,7 @@ export async function migrateGuestToAccount(sb: DB, userId: string): Promise<boo
       sb.from("profiles").update({
         display_name: s.profile.displayName,
         theme: s.profile.theme,
+        skin: s.profile.skin,
         wallpaper_id: s.profile.wallpaperId,
         onboarding_done: s.profile.onboardingDone,
       }).eq("id", userId),

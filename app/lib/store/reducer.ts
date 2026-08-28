@@ -29,6 +29,9 @@ export function reducer(state: AppState, action: Action): AppState {
     case "setTheme":
       return { ...state, profile: { ...state.profile, theme: action.theme } };
 
+    case "setSkin":
+      return { ...state, profile: { ...state.profile, skin: action.skin } };
+
     case "setWallpaper":
       return { ...state, profile: { ...state.profile, wallpaperId: action.wallpaperId } };
 

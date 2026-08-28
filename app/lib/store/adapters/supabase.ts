@@ -88,6 +88,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
           ? {
               displayName: profile.display_name,
               theme: profile.theme as AppState["profile"]["theme"],
+              skin: profile.skin as AppState["profile"]["skin"],
               wallpaperId: profile.wallpaper_id,
               onboardingDone: profile.onboarding_done,
             }
@@ -147,6 +148,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
     async commit(action, next) {
       switch (action.type) {
         case "setTheme":
+        case "setSkin":
         case "setWallpaper":
         case "setDisplayName":
         case "completeOnboarding":
@@ -154,6 +156,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
             sb.from("profiles").update({
               display_name: next.profile.displayName,
               theme: next.profile.theme,
+              skin: next.profile.skin,
               wallpaper_id: next.profile.wallpaperId,
               onboarding_done: next.profile.onboardingDone,
             }).eq("id", userId),

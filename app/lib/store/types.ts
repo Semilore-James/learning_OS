@@ -12,6 +12,13 @@
    ========================================================================== */
 
 export type Theme = "dark" | "light";
+export type Skin =
+  | "neobrutalism"
+  | "swiss"
+  | "brutalist-web"
+  | "memphis"
+  | "retro-futurism"
+  | "glassmorphism";
 export type NodeLevel = "topic" | "sub";
 export type StoredNodeState = "available" | "active" | "completed";
 export type CaseStatus =
@@ -67,6 +74,7 @@ export interface AppState {
   profile: {
     displayName: string | null;
     theme: Theme;
+    skin: Skin;
     wallpaperId: string;
     onboardingDone: boolean;
   };
@@ -113,6 +121,7 @@ export const EMPTY_STATE: AppState = {
   profile: {
     displayName: null,
     theme: "dark",
+    skin: "neobrutalism",
     wallpaperId: "starfield",
     onboardingDone: false,
   },
@@ -137,6 +146,7 @@ export const EMPTY_STATE: AppState = {
 export type Action =
   | { type: "hydrate"; state: Partial<AppState>; mode: "guest" | "account" }
   | { type: "setTheme"; theme: Theme }
+  | { type: "setSkin"; skin: Skin }
   | { type: "setWallpaper"; wallpaperId: string }
   | { type: "setDisplayName"; displayName: string }
   | { type: "completeOnboarding"; seededNodeIds: string[] }
