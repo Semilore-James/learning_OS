@@ -194,13 +194,20 @@ time, each merged green, unfinished behind a flag.**
 18. **Toolkit window** (`app/content/toolkit.ts` is seeded; build the window: category
     nav, per-tool detail with OS tabs, install steps, verify step, common problems;
     "mark installed" -> XP + heatmap; deep-link targets for sub-nodes).
-19. Canvas (`<canvas>`, pen/text/shapes/sticky/image/eraser/pan/zoom, jsonb doc,
-    30s autosave, named boards, PNG export).
-20. Games (`sql.js` WASM SQLite for SQL Dojo's 30 levels first, then Data Detective,
-    Pivot Puzzle, Chart Critiquer -> `Advisor` score).
-21. Additions: Review queue + `app/lib/srs.ts` + `needs-review` map state;
-    onboarding diagnostic; session briefing; command palette; Settings (theme,
-    wallpaper, JSON export, reset); public `/share/[handle]` page.
+19. Canvas — DONE. SVG scene (pen/rect/ellipse/arrow/text/sticky/eraser,
+    select-move, pan, wheel-zoom), localStorage autosave, PNG export, 2-min
+    session -> `logCanvasSession`. Named multi-board + Supabase `canvases` sync
+    still a follow-up.
+20. Games — DONE. SQL Dojo (real `sql.js` WASM, 15 graded levels v1 — 15 more
+    are content), Data Detective (6 rounds), Pivot Puzzle (4), Chart Critiquer
+    (5); all -> `recordGameScore` / `recordGameAttempt`.
+21. Additions — Review queue DONE (`ReviewWindow`, `select.dueReviewItems`,
+    self-graded Again/Hard/Good/Easy -> `answerReview`); onboarding diagnostic
+    DONE (`DiagnosticScreen`, 4 questions -> `completeOnboarding` seeds);
+    session briefing DONE (`SessionBriefing`, once/day); command palette DONE
+    (`CommandPalette`, Cmd/Ctrl-K); Settings DONE (display name, JSON export,
+    `resetProgress` action wired to both adapters). STILL TODO: public
+    `/share/[handle]` page (needs handle column + public RLS policy migration).
 22. Analytics wiring — `track(...)` at every PRD §16.1 event; session recording
     scoped to Constellation + Case Files.
 

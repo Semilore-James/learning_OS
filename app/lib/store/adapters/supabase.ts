@@ -433,6 +433,31 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
           );
           return;
 
+        case "resetProgress": {
+          const tables = [
+            "node_progress",
+            "xp_events",
+            "heatmap_activity",
+            "daily_log",
+            "notes",
+            "chapter_reads",
+            "bookmarks",
+            "video_watches",
+            "watch_queue",
+            "case_submissions",
+            "game_scores",
+            "game_attempts",
+            "review_items",
+            "tool_installs",
+            "pm_ai_declines",
+            "pm_ai_messages",
+            "canvases",
+            "diagnostic_results",
+          ] as const;
+          await Promise.all(tables.map((t) => mine(sb.from(t).delete().eq("user_id", userId))));
+          return;
+        }
+
         case "hydrate":
           return;
       }

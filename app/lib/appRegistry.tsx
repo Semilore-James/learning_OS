@@ -22,6 +22,7 @@ import { VideoLibraryWindow } from "@/components/video/VideoLibraryWindow";
 import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
 import { CanvasWindow } from "@/components/canvas/CanvasWindow";
 import { GamesWindow } from "@/components/games/GamesWindow";
+import { ReviewWindow } from "@/components/review/ReviewWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -31,6 +32,7 @@ import {
   GlyphGames,
   GlyphHeatmap,
   GlyphPmAi,
+  GlyphReview,
   GlyphSettings,
   GlyphToolkit,
   GlyphVideo,
@@ -119,6 +121,16 @@ export const APPS: AppDef[] = [
     flag: "games",
     win: { title: "Games", width: 760, height: 600 },
     Body: GamesWindow,
+  },
+  {
+    id: "review",
+    label: "Review",
+    hint: "Spaced-repetition queue",
+    glyph: <GlyphReview />,
+    flag: "reviewQueue",
+    win: { title: "Review", width: 460, height: 520 },
+    fitContent: true,
+    Body: ReviewWindow,
   },
   {
     id: "cheatcodes",

@@ -147,6 +147,7 @@ export type Action =
   | { type: "setDisplayName"; displayName: string }
   | { type: "setReduceEffects"; reduceEffects: boolean }
   | { type: "completeOnboarding"; seededNodeIds: string[] }
+  | { type: "resetProgress" }
   | { type: "startNode"; nodeId: string; level: NodeLevel; topicId: string | null }
   | { type: "completeNode"; nodeId: string; level: NodeLevel; topicId: string | null; alsoCompleteTopic?: string }
   | { type: "writeDailyLog"; day: string; body: string; nodeTag: string | null }

@@ -317,6 +317,15 @@ export function reducer(state: AppState, action: Action): AppState {
     case "logDecline":
       return { ...state, declineCount: state.declineCount + 1 };
 
+    case "resetProgress":
+      // wipe learning progress, keep identity + appearance + onboarding flag
+      return {
+        ...EMPTY_STATE,
+        ready: true,
+        mode: state.mode,
+        profile: state.profile,
+      };
+
     default:
       return state;
   }

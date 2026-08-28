@@ -8,10 +8,14 @@ import { useWindows } from "@/lib/useWindows";
 import { resolveApp } from "@/lib/appRegistry";
 import { WindowActionsProvider } from "@/lib/windowContext";
 import { useSession } from "@/lib/session/SessionProvider";
+import { flag } from "@/lib/flags";
 import { ChromeController } from "./ChromeController";
 import { Boot } from "./Boot";
 import { IconGrid } from "./IconGrid";
 import { Taskbar } from "./Taskbar";
+import { CommandPalette } from "./CommandPalette";
+import { SessionBriefing } from "./SessionBriefing";
+import { DiagnosticScreen } from "./DiagnosticScreen";
 
 const BOOT_KEY = "da-os-booted";
 
@@ -83,6 +87,7 @@ export function Desktop() {
 
       {ready && booted && (
         <WindowActionsProvider value={winActions}>
+          {flag("diagnostic") && !state.profile.onboardingDone && <DiagnosticScreen />}
           <IconGrid openIds={wm.open} onOpen={openApp} />
 
           {wm.open.map((id) => {
@@ -145,6 +150,9 @@ export function Desktop() {
               </button>
             </div>
           )}
+
+          {flag("commandPalette") && <CommandPalette />}
+          <SessionBriefing />
 
           <Taskbar onOpenSettings={() => openApp("settings")} />
         </WindowActionsProvider>

@@ -48,6 +48,14 @@ export function dueReviewCount(state: AppState): number {
   return state.review.filter((r) => isDue(r, t)).length;
 }
 
+/** review items due today or overdue, oldest due date first */
+export function dueReviewItems(state: AppState) {
+  const t = todayUTC();
+  return state.review
+    .filter((r) => isDue(r, t))
+    .sort((a, b) => a.dueOn.localeCompare(b.dueOn));
+}
+
 export function completedNodeIds(state: AppState): Set<string> {
   return new Set(
     Object.entries(state.nodes)
