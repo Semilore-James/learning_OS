@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Wallpaper } from "@/components/wallpaper";
 import { Window } from "@/components/window/Window";
-import { useStore } from "@/lib/store";
+import { useStore, select } from "@/lib/store";
 import { useWindows } from "@/lib/useWindows";
 import { resolveApp } from "@/lib/appRegistry";
 import { WindowActionsProvider } from "@/lib/windowContext";
 import { useSession } from "@/lib/session/SessionProvider";
 import { flag } from "@/lib/flags";
+import { track } from "@/lib/analytics";
 import { ChromeController } from "./ChromeController";
 import { Boot } from "./Boot";
 import { IconGrid } from "./IconGrid";
@@ -50,10 +51,25 @@ export function Desktop() {
 
   const ready = state.ready;
 
+  const sessionLogged = useRef(false);
+  useEffect(() => {
+    if (!ready || !booted || sessionLogged.current) return;
+    sessionLogged.current = true;
+    track("session_start", {
+      theme: state.profile.theme,
+      current_node: select.activeNodeId(state),
+      xp_total: state.xpTotal,
+    });
+  }, [ready, booted, state]);
+
   // always open a window at its registered default size, so resize math starts
   // from the size actually on screen
   const openApp = useCallback(
     (id: string, size?: { width: number; height: number }) => {
+      if (!wm.open.includes(id)) {
+        const label = resolveApp(id)?.win.title ?? id;
+        track("module_opened", { module_name: label });
+      }
       wm.openWindow(id, size ?? resolveApp(id)?.win);
     },
     [wm],

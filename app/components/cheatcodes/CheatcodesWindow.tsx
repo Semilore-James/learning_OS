@@ -5,8 +5,9 @@
    the section's blocks with copy buttons, a search box, and the JOIN Venn
    diagrams. Opening it fires the cheatcode_opened analytics event later.
    ========================================================================== */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, Search } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { SQL_SECTIONS, EXCEL_SECTIONS, type CheatSection } from "@/content/cheatcodes";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,10 @@ export function CheatcodesWindow() {
   const [tab, setTab] = useState<"sql" | "excel">("sql");
   const [sectionId, setSectionId] = useState<string>("select");
   const [q, setQ] = useState("");
+
+  useEffect(() => {
+    track("cheatcode_opened", { cheatcode_type: tab });
+  }, [tab]);
 
   const sections = tab === "sql" ? SQL_SECTIONS : EXCEL_SECTIONS;
 

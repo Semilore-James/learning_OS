@@ -208,8 +208,13 @@ time, each merged green, unfinished behind a flag.**
     (`CommandPalette`, Cmd/Ctrl-K); Settings DONE (display name, JSON export,
     `resetProgress` action wired to both adapters). STILL TODO: public
     `/share/[handle]` page (needs handle column + public RLS policy migration).
-22. Analytics wiring — `track(...)` at every PRD §16.1 event; session recording
-    scoped to Constellation + Case Files.
+22. Analytics wiring — DONE. `lib/analytics/fromAction.ts` maps every store
+    action to its PRD §16.1 event, emitted from StoreProvider's flush (only on
+    successful commit) + xp_milestone / streak_milestone diffs there. UI-only
+    events wired at call sites: session_start (Desktop), module_opened (openApp),
+    cheatcode_opened (CheatcodesWindow), pm_ai_prompt (PmAiWindow, classified).
+    identify(hashed uid) / resetIdentity in SessionProvider. All no-ops without
+    NEXT_PUBLIC_POSTHOG_KEY. Session recording config still TODO (Phase 3).
 
 ### Phase 2 — Content pipeline (starts once steps 12, 16, 18 exist; runs alongside Phase 1)
 

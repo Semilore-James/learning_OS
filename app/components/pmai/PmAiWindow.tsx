@@ -16,8 +16,19 @@ import { TOPICS } from "@/content/curriculum";
 import { subNodesFor } from "@/lib/curriculumLayout";
 import { CASES } from "@/content/cases/registry";
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Typewriter } from "@/components/motion";
+
+/** rough bucket for analytics — not shown to the learner */
+function classifyPrompt(t: string): string {
+  const s = t.toLowerCase();
+  if (/review|feedback|submission|grade/.test(s)) return "review_request";
+  if (/stuck|hint|help|don'?t (know|understand)/.test(s)) return "help_request";
+  if (/what (is|are|does)|explain|difference between|concept/.test(s)) return "concept_question";
+  if (/next|focus|should i|what now|roadmap/.test(s)) return "direction";
+  return "general";
+}
 
 const CHIPS = [
   "Review my last case submission",
@@ -61,6 +72,7 @@ export function PmAiWindow() {
   const send = async (text: string) => {
     const t = text.trim();
     if (!t || busy) return;
+    track("pm_ai_prompt", { prompt_category: classifyPrompt(t) });
     const next: Msg[] = [...messages, { role: "user", content: t }];
     setMessages(next);
     setInput("");

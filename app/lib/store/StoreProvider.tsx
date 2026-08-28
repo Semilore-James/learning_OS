@@ -24,6 +24,24 @@ import {
 import { reducer } from "./reducer";
 import { localAdapter } from "./adapters/local";
 import { EMPTY_STATE, type Action, type AppState, type StoreAdapter } from "./types";
+import { track } from "@/lib/analytics";
+import { eventsForAction } from "@/lib/analytics/fromAction";
+
+const XP_MILESTONE = 1000;
+const STREAK_MILESTONES = [7, 30, 100];
+
+function currentStreak(heatmap: Record<string, number>): number {
+  const days = new Set(Object.keys(heatmap).filter((d) => heatmap[d] > 0));
+  let n = 0;
+  const cur = new Date();
+  // allow the streak to count from today or yesterday
+  if (!days.has(cur.toISOString().slice(0, 10))) cur.setUTCDate(cur.getUTCDate() - 1);
+  while (days.has(cur.toISOString().slice(0, 10))) {
+    n += 1;
+    cur.setUTCDate(cur.getUTCDate() - 1);
+  }
+  return n;
+}
 
 interface StoreValue {
   state: AppState;
@@ -94,6 +112,20 @@ export function StoreProvider({
         if (cancelled) return;
         committedRef.current = state;
         setLastError(null);
+        // analytics only for actions that actually committed
+        for (const a of actions) {
+          for (const ev of eventsForAction(a, state)) track(ev.name, ev.props);
+        }
+        const prevXpTier = Math.floor(prev.xpTotal / XP_MILESTONE);
+        const nextXpTier = Math.floor(state.xpTotal / XP_MILESTONE);
+        if (nextXpTier > prevXpTier && state.xpTotal > 0) {
+          track("xp_milestone", { xp_total: nextXpTier * XP_MILESTONE });
+        }
+        const prevStreak = currentStreak(prev.heatmap);
+        const nextStreak = currentStreak(state.heatmap);
+        for (const m of STREAK_MILESTONES) {
+          if (prevStreak < m && nextStreak >= m) track("streak_milestone", { streak_days: m });
+        }
       } catch (e) {
         if (cancelled) return;
         rawDispatch({ type: "hydrate", state: prev, mode: prev.mode });

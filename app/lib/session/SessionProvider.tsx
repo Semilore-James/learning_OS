@@ -17,6 +17,7 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { publicEnv } from "@/lib/env";
+import { identify, resetIdentity } from "@/lib/analytics";
 import { supabaseAdapter, migrateGuestToAccount, type StoreAdapter } from "@/lib/store";
 
 const GUEST_KEY = "da-os-guest";
@@ -58,8 +59,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setReady(true);
+      if (data.session?.user) void identify(data.session.user.id);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s);
+      if (s?.user) void identify(s.user.id);
+      else resetIdentity();
+    });
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
