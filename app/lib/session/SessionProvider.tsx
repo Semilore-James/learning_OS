@@ -46,13 +46,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(!configured);
-  const [guest, setGuest] = useState<boolean>(() => {
+  // start false on the server AND the first client render so hydration matches;
+  // the real guest flag is read from sessionStorage after mount
+  const [guest, setGuest] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
     try {
-      return typeof window !== "undefined" && sessionStorage.getItem(GUEST_KEY) === "1";
+      if (sessionStorage.getItem(GUEST_KEY) === "1") setGuest(true);
     } catch {
-      return false;
+      /* private mode */
     }
-  });
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -112,13 +118,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase]);
 
-  const phase: Phase = !ready
-    ? "loading"
-    : session?.user
-      ? "account"
-      : guest
-        ? "guest"
-        : "signed-out";
+  const phase: Phase =
+    !hydrated || !ready
+      ? "loading"
+      : session?.user
+        ? "account"
+        : guest
+          ? "guest"
+          : "signed-out";
 
   const userId = session?.user?.id ?? null;
   const adapter = useMemo<StoreAdapter | undefined>(

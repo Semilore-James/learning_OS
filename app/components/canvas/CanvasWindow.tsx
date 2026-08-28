@@ -1,16 +1,14 @@
 "use client";
 
 /* ============================================================================
-   Canvas (build step 19 / PRD 13). A freeform SVG thinking space: pen, shapes,
-   arrow, text, sticky notes, eraser, select-move, pan, wheel-zoom.
+   Canvas (build step 19 / PRD 13). Freeform SVG board: pen, shapes, arrow,
+   text, sticky notes, eraser, select (move + resize), pan, wheel-zoom.
 
-   Interaction notes:
-   - the in-progress shape lives in draftRef (authoritative) and mirrors into
-     state only so it renders; pointerup reads the ref, never stale state
-   - the SVG captures the pointer on down so a drag that leaves the element
-     still finishes cleanly
-   - text / sticky use an inline editor, never window.prompt (which is a no-op
-     in embedded browsers)
+   - the in-progress shape lives in draftRef; pointerup reads the ref, not state
+   - the SVG captures the pointer so a drag that leaves it still finishes
+   - text / sticky use an inline <textarea>, never window.prompt (a no-op in
+     embedded browsers); editingRef makes the commit reliable
+   - a selected shape gets 8 resize handles
    Autosaves to localStorage; 2 minutes of use -> logCanvasSession (+15 XP).
    ========================================================================== */
 import { useEffect, useRef, useState } from "react";
@@ -29,14 +27,15 @@ import {
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { ShapeEl, hitTest, bbox, type El } from "./shapes";
+import { ShapeEl, hitTest, bbox, resizeEl, type El, type Box } from "./shapes";
 
 type Tool = "select" | "pan" | "pen" | "rect" | "ellipse" | "arrow" | "text" | "sticky" | "eraser";
+type Handle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 const KEY = "da-os-canvas";
 const COLORS = ["var(--primary)", "var(--accent-2)", "var(--accent-1)", "var(--accent-3)", "var(--text)"];
 const TOOLS: { id: Tool; icon: typeof Pencil; label: string }[] = [
-  { id: "select", icon: MousePointer2, label: "Select / move" },
+  { id: "select", icon: MousePointer2, label: "Select / move / resize" },
   { id: "pan", icon: Hand, label: "Pan" },
   { id: "pen", icon: Pencil, label: "Pen" },
   { id: "rect", icon: Square, label: "Rectangle" },
@@ -46,6 +45,17 @@ const TOOLS: { id: Tool; icon: typeof Pencil; label: string }[] = [
   { id: "sticky", icon: StickyNote, label: "Sticky note" },
   { id: "eraser", icon: Eraser, label: "Eraser" },
 ];
+const HANDLES: { id: Handle; fx: number; fy: number; cursor: string }[] = [
+  { id: "nw", fx: 0, fy: 0, cursor: "nwse-resize" },
+  { id: "n", fx: 0.5, fy: 0, cursor: "ns-resize" },
+  { id: "ne", fx: 1, fy: 0, cursor: "nesw-resize" },
+  { id: "e", fx: 1, fy: 0.5, cursor: "ew-resize" },
+  { id: "se", fx: 1, fy: 1, cursor: "nwse-resize" },
+  { id: "s", fx: 0.5, fy: 1, cursor: "ns-resize" },
+  { id: "sw", fx: 0, fy: 1, cursor: "nesw-resize" },
+  { id: "w", fx: 0, fy: 0.5, cursor: "ew-resize" },
+];
+
 function loadEls(): El[] {
   try {
     const raw = typeof window !== "undefined" ? localStorage.getItem(KEY) : null;
@@ -53,6 +63,30 @@ function loadEls(): El[] {
   } catch {
     return [];
   }
+}
+
+function nextBox(b0: Box, handle: Handle, dx: number, dy: number): Box {
+  let { x, y, w, h } = b0;
+  if (handle.includes("w")) {
+    x = b0.x + dx;
+    w = b0.w - dx;
+  }
+  if (handle.includes("e")) w = b0.w + dx;
+  if (handle.includes("n")) {
+    y = b0.y + dy;
+    h = b0.h - dy;
+  }
+  if (handle.includes("s")) h = b0.h + dy;
+  // keep a minimum size, flipping the anchor if needed
+  if (w < 8) {
+    x = handle.includes("w") ? b0.x + b0.w - 8 : x;
+    w = 8;
+  }
+  if (h < 8) {
+    y = handle.includes("n") ? b0.y + b0.h - 8 : y;
+    h = 8;
+  }
+  return { x, y, w, h };
 }
 
 export function CanvasWindow() {
@@ -70,7 +104,9 @@ export function CanvasWindow() {
 
   const draftRef = useRef<El | null>(null);
   const viewRef = useRef(view);
+  const editingRef = useRef(editing);
   const dragRef = useRef<{ id: string; sx: number; sy: number } | null>(null);
+  const resizeRef = useRef<{ id: string; handle: Handle; b0: Box; sx: number; sy: number } | null>(null);
   const panRef = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
   const usedMs = useRef(0);
   const loggedSession = useRef(false);
@@ -78,10 +114,21 @@ export function CanvasWindow() {
   useEffect(() => {
     viewRef.current = view;
   }, [view]);
+  useEffect(() => {
+    editingRef.current = editing;
+  }, [editing]);
 
   const putDraft = (next: El | null) => {
     draftRef.current = next;
     setDraft(next);
+  };
+
+  const capture = (id: number) => {
+    try {
+      svgRef.current?.setPointerCapture(id);
+    } catch {
+      /* pointer already released */
+    }
   };
 
   // autosave
@@ -108,10 +155,10 @@ export function CanvasWindow() {
     return () => clearInterval(id);
   }, [dispatch]);
 
-  // delete the selected element with Delete / Backspace (not while typing)
+  // Delete / Backspace removes the selected element (unless typing)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!selectedId || editing) return;
+      if (!selectedId || editingRef.current) return;
       const t = e.target as HTMLElement;
       if (t.tagName === "INPUT" || t.tagName === "TEXTAREA") return;
       if (e.key === "Delete" || e.key === "Backspace") {
@@ -124,7 +171,7 @@ export function CanvasWindow() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedId, editing]);
+  }, [selectedId]);
 
   const toLocal = (clientX: number, clientY: number) => {
     const r = svgRef.current!.getBoundingClientRect();
@@ -132,20 +179,30 @@ export function CanvasWindow() {
     return { x: (clientX - r.left - v.x) / v.k, y: (clientY - r.top - v.y) / v.k };
   };
 
+  /** write the inline editor's text back onto its element (or drop it if blank) */
   const commitEditing = () => {
-    setEditing((cur) => {
-      if (!cur) return null;
-      setEls((prev) => {
-        const text = cur.value.trim();
-        if (!text) return prev.filter((e) => e.id !== cur.id);
-        return prev.map((e) => (e.id === cur.id ? { ...e, text } : e));
-      });
-      return null;
-    });
+    const cur = editingRef.current;
+    if (!cur) return;
+    const text = cur.value.trim();
+    setEls((prev) =>
+      text ? prev.map((e) => (e.id === cur.id ? { ...e, text } : e)) : prev.filter((e) => e.id !== cur.id),
+    );
+    editingRef.current = null;
+    setEditing(null);
+  };
+
+  const startResize = (e: React.PointerEvent, handle: Handle) => {
+    if (!selectedId) return;
+    e.stopPropagation();
+    const el = els.find((x) => x.id === selectedId);
+    if (!el) return;
+    const p = toLocal(e.clientX, e.clientY);
+    resizeRef.current = { id: selectedId, handle, b0: bbox(el), sx: p.x, sy: p.y };
+    capture(e.pointerId);
   };
 
   const onDown = (e: React.PointerEvent) => {
-    if (editing) {
+    if (editingRef.current) {
       commitEditing();
       return;
     }
@@ -153,7 +210,7 @@ export function CanvasWindow() {
 
     if (tool === "pan") {
       panRef.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
-      svgRef.current?.setPointerCapture(e.pointerId);
+      capture(e.pointerId);
       return;
     }
     if (tool === "eraser") {
@@ -166,7 +223,7 @@ export function CanvasWindow() {
       if (hit) {
         dragRef.current = { id: hit.id, sx: p.x, sy: p.y };
         setSelectedId(hit.id);
-        svgRef.current?.setPointerCapture(e.pointerId);
+        capture(e.pointerId);
       } else {
         setSelectedId(null);
       }
@@ -176,16 +233,17 @@ export function CanvasWindow() {
       const id = crypto.randomUUID();
       const el: El =
         tool === "sticky"
-          ? { id, type: "sticky", x: p.x, y: p.y, w: 170, h: 130, text: "", color }
-          : { id, type: "text", x: p.x, y: p.y + 14, text: "", color };
+          ? { id, type: "sticky", x: p.x, y: p.y, w: 180, h: 130, text: "", color }
+          : { id, type: "text", x: p.x, y: p.y + 16, text: "", fontSize: 15, color };
       setEls((prev) => [...prev, el]);
+      editingRef.current = { id, value: "" };
       setEditing({ id, value: "" });
       return;
     }
     // drag-drawing tools
     const base: El = { id: crypto.randomUUID(), type: tool, x: p.x, y: p.y, color };
     putDraft(tool === "pen" ? { ...base, points: [[p.x, p.y]] } : { ...base, w: 0, h: 0 });
-    svgRef.current?.setPointerCapture(e.pointerId);
+    capture(e.pointerId);
   };
 
   const onMove = (e: React.PointerEvent) => {
@@ -195,6 +253,13 @@ export function CanvasWindow() {
       return;
     }
     const p = toLocal(e.clientX, e.clientY);
+
+    if (resizeRef.current) {
+      const rz = resizeRef.current;
+      const b1 = nextBox(rz.b0, rz.handle, p.x - rz.sx, p.y - rz.sy);
+      setEls((prev) => prev.map((el) => (el.id === rz.id ? resizeEl(el, rz.b0, b1) : el)));
+      return;
+    }
     if (dragRef.current) {
       const d = dragRef.current;
       const dx = p.x - d.sx;
@@ -229,13 +294,20 @@ export function CanvasWindow() {
     }
     panRef.current = null;
     dragRef.current = null;
+    resizeRef.current = null;
     const d = draftRef.current;
     if (d) {
       const empty =
         d.type === "pen"
           ? (d.points?.length ?? 0) < 2
           : Math.abs(d.w ?? 0) < 4 && Math.abs(d.h ?? 0) < 4;
-      if (!empty) setEls((prev) => [...prev, d]);
+      if (!empty) {
+        setEls((prev) => [...prev, d]);
+        if (tool !== "pen") {
+          setSelectedId(d.id);
+          setTool("select");
+        }
+      }
       putDraft(null);
     }
   };
@@ -278,7 +350,9 @@ export function CanvasWindow() {
   };
 
   const editingEl = editing ? els.find((e) => e.id === editing.id) : null;
-  const selBox = selectedId && tool === "select" ? bbox(els.find((e) => e.id === selectedId) ?? ({} as El)) : null;
+  const selEl = selectedId && tool === "select" ? els.find((e) => e.id === selectedId) : null;
+  const selBox = selEl ? bbox(selEl) : null;
+  const hs = 7 / view.k; // handle half-size in canvas units, constant on screen
 
   return (
     <div className="flex h-full">
@@ -308,7 +382,10 @@ export function CanvasWindow() {
             key={c}
             type="button"
             aria-label={`colour ${c}`}
-            onClick={() => setColor(c)}
+            onClick={() => {
+              setColor(c);
+              if (selectedId) setEls((prev) => prev.map((el) => (el.id === selectedId ? { ...el, color: c } : el)));
+            }}
             className={cn("size-5 rounded-full border-2", color === c ? "border-foreground" : "border-transparent")}
             style={{ background: c }}
           />
@@ -330,6 +407,8 @@ export function CanvasWindow() {
                 setEls([]);
                 putDraft(null);
                 setEditing(null);
+                editingRef.current = null;
+                setSelectedId(null);
               }
               setConfirmClear((v) => !v);
             }}
@@ -362,17 +441,33 @@ export function CanvasWindow() {
             {els.map((el) => (el.id === editing?.id ? null : <ShapeEl key={el.id} el={el} />))}
             {draft && <ShapeEl el={draft} ghost />}
             {selBox && (
-              <rect
-                x={selBox.x - 4}
-                y={selBox.y - 4}
-                width={selBox.w + 8}
-                height={selBox.h + 8}
-                fill="none"
-                stroke="var(--primary)"
-                strokeWidth={1}
-                strokeDasharray="4 3"
-                pointerEvents="none"
-              />
+              <>
+                <rect
+                  x={selBox.x - 3}
+                  y={selBox.y - 3}
+                  width={selBox.w + 6}
+                  height={selBox.h + 6}
+                  fill="none"
+                  stroke="var(--primary)"
+                  strokeWidth={1 / view.k}
+                  strokeDasharray={`${4 / view.k} ${3 / view.k}`}
+                  pointerEvents="none"
+                />
+                {HANDLES.map((hnd) => (
+                  <rect
+                    key={hnd.id}
+                    x={selBox.x + selBox.w * hnd.fx - hs}
+                    y={selBox.y + selBox.h * hnd.fy - hs}
+                    width={hs * 2}
+                    height={hs * 2}
+                    fill="var(--primary)"
+                    stroke="var(--bg)"
+                    strokeWidth={1 / view.k}
+                    style={{ cursor: hnd.cursor }}
+                    onPointerDown={(e) => startResize(e, hnd.id)}
+                  />
+                ))}
+              </>
             )}
           </g>
         </svg>
@@ -381,22 +476,26 @@ export function CanvasWindow() {
           <textarea
             autoFocus
             value={editing.value}
-            onChange={(e) => setEditing({ id: editing.id, value: e.target.value })}
+            onChange={(e) => {
+              const v = { id: editing.id, value: e.target.value };
+              editingRef.current = v;
+              setEditing(v);
+            }}
             onBlur={commitEditing}
             onKeyDown={(e) => {
-              if (e.key === "Escape") {
+              if (e.key === "Escape" || (e.key === "Enter" && !e.shiftKey)) {
                 e.preventDefault();
                 commitEditing();
               }
             }}
             placeholder={editingEl.type === "sticky" ? "Sticky note…" : "Text…"}
-            className="absolute resize-none border border-primary bg-surface p-1 text-[13px] text-foreground outline-none"
+            className="absolute resize-none border border-primary bg-surface p-1 text-foreground shadow-lg outline-none"
             style={{
               left: view.x + editingEl.x * view.k,
-              top: view.y + (editingEl.type === "text" ? editingEl.y - 14 : editingEl.y) * view.k,
-              width: (editingEl.w ?? 180) * view.k,
-              height: (editingEl.h ?? 40) * view.k,
-              font: "13px/1.4 var(--font-body)",
+              top: view.y + (editingEl.type === "text" ? editingEl.y - 16 : editingEl.y) * view.k,
+              width: (editingEl.w ?? 200) * view.k,
+              height: (editingEl.h ?? 44) * view.k,
+              font: `${(editingEl.fontSize ?? 13) * view.k}px/1.35 var(--font-body)`,
             }}
           />
         )}
