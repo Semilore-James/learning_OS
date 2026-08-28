@@ -1,0 +1,52 @@
+/* ============================================================================
+   Case Files — 20 real-world analytics scenarios (PRD section 8). Metadata
+   here; the full brief (scenario, dataset, deliverable) lives in
+   public/cases/<id>.md and is fetched as a static asset. Difficulty:
+   ROOKIE | ANALYST | SENIOR. Each case names the skills it exercises so the
+   node drawer's Tasks tab can link to it (step 16 follow-up).
+   ========================================================================== */
+
+export type Difficulty = "ROOKIE" | "ANALYST" | "SENIOR";
+
+export interface CaseDef {
+  id: string; // "case-01"
+  num: string; // "01"
+  title: string;
+  industry: string;
+  difficulty: Difficulty;
+  /** curriculum node ids this case exercises */
+  skills: string[];
+  /** true once a real brief exists in public/cases/<id>.md */
+  written: boolean;
+}
+
+export const CASES: CaseDef[] = [
+  { id: "case-01", num: "01", title: "Retail Sales Audit", industry: "Retail", difficulty: "ROOKIE", skills: ["excel", "pivot-tables"], written: true },
+  { id: "case-02", num: "02", title: "Social Media Engagement Report", industry: "Media", difficulty: "ROOKIE", skills: ["excel", "charts"], written: true },
+  { id: "case-03", num: "03", title: "Restaurant Revenue by Location", industry: "Hospitality", difficulty: "ROOKIE", skills: ["excel", "pivot-tables"], written: false },
+  { id: "case-04", num: "04", title: "SQL Customer Order Analysis", industry: "E-commerce", difficulty: "ROOKIE", skills: ["sql", "select-from", "where", "group-having"], written: true },
+  { id: "case-05", num: "05", title: "Fintech Churn Analysis", industry: "Fintech", difficulty: "ANALYST", skills: ["sql", "joins", "aggregates"], written: true },
+  { id: "case-06", num: "06", title: "Logistics Route Efficiency", industry: "Logistics", difficulty: "ANALYST", skills: ["sql", "visualization"], written: false },
+  { id: "case-07", num: "07", title: "E-commerce Funnel Drop", industry: "E-commerce", difficulty: "ANALYST", skills: ["visualization"], written: false },
+  { id: "case-08", num: "08", title: "Hospital Readmission Patterns", industry: "Healthcare", difficulty: "ANALYST", skills: ["statistics"], written: false },
+  { id: "case-09", num: "09", title: "Telecom Customer Segments", industry: "Telecom", difficulty: "ANALYST", skills: ["python"], written: false },
+  { id: "case-10", num: "10", title: "Real Estate Price Trends", industry: "Real Estate", difficulty: "ANALYST", skills: ["python", "visualization"], written: false },
+  { id: "case-11", num: "11", title: "HR Attrition Analysis", industry: "Corporate", difficulty: "ANALYST", skills: ["power-bi"], written: false },
+  { id: "case-12", num: "12", title: "EdTech Completion Rate Drop", industry: "EdTech", difficulty: "ANALYST", skills: ["storytelling"], written: false },
+  { id: "case-13", num: "13", title: "Ride-hailing Driver Efficiency", industry: "Mobility", difficulty: "ANALYST", skills: ["sql", "window-ranking"], written: false },
+  { id: "case-14", num: "14", title: "Retail Inventory Shrinkage", industry: "Retail", difficulty: "ANALYST", skills: ["sql", "excel"], written: false },
+  { id: "case-15", num: "15", title: "SQL Cohort Retention Analysis", industry: "SaaS", difficulty: "SENIOR", skills: ["sql", "real-world-patterns"], written: false },
+  { id: "case-16", num: "16", title: "Supply Chain Delay Tracker", industry: "Manufacturing", difficulty: "SENIOR", skills: ["sql", "power-bi"], written: false },
+  { id: "case-17", num: "17", title: "Bank Transaction Anomaly Detection", industry: "Banking", difficulty: "SENIOR", skills: ["python"], written: false },
+  { id: "case-18", num: "18", title: "Insurance Claims Pattern", industry: "Insurance", difficulty: "SENIOR", skills: ["statistics", "python"], written: false },
+  { id: "case-19", num: "19", title: "Startup Cohort Retention", industry: "SaaS", difficulty: "SENIOR", skills: ["sql", "python"], written: false },
+  { id: "case-20", num: "20", title: "Portfolio Capstone", industry: "Open", difficulty: "SENIOR", skills: ["portfolio"], written: false },
+];
+
+export const CASES_BY_ID: Record<string, CaseDef> = Object.fromEntries(CASES.map((c) => [c.id, c]));
+
+export const DIFFICULTY_ACCENT: Record<Difficulty, string> = {
+  ROOKIE: "var(--accent-3)",
+  ANALYST: "var(--accent-1)",
+  SENIOR: "var(--primary)",
+};

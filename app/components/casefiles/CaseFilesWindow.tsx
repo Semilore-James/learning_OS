@@ -1,0 +1,289 @@
+"use client";
+
+/* ============================================================================
+   Case Files window (build step 16 / PRD 8 / Userflow 7). Card list with
+   difficulty + status filters, a detail panel with the markdown brief, and the
+   submission state machine: open -> in progress -> submitted -> complete, with
+   an accept / revise / override branch after PM-AI review.
+   ========================================================================== */
+import { useEffect, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { CASES, CASES_BY_ID, DIFFICULTY_ACCENT, type Difficulty } from "@/content/cases/registry";
+import { useStore, select } from "@/lib/store";
+import { TOPICS } from "@/content/curriculum";
+import { subNodesFor } from "@/lib/curriculumLayout";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ParticleButton } from "@/components/motion";
+
+type ReviewState =
+  | { phase: "idle" }
+  | { phase: "loading" }
+  | { phase: "error"; message: string }
+  | { phase: "done"; strength: string; gap: string; question: string };
+
+function useLearnerContext() {
+  const { state } = useStore();
+  return useMemo(() => {
+    const active = select.activeNodeId(state);
+    let activeNode: { id: string; label: string; topic: string } | null = null;
+    for (const t of TOPICS) {
+      const s = subNodesFor(t).find((n) => n.id === active);
+      if (s) activeNode = { id: s.id, label: s.label, topic: t.label };
+    }
+    const done = Object.values(state.cases).filter((c) => c.status.startsWith("complete")).length;
+    return {
+      xpTotal: state.xpTotal,
+      streakDays: select.streak(state).current,
+      nodesCompleted: select.completedNodeIds(state).size,
+      casesComplete: done,
+      casesTotal: CASES.length,
+      declineCount: state.declineCount,
+      activeNode,
+    };
+  }, [state]);
+}
+
+export function CaseFilesWindow() {
+  const { state, dispatch } = useStore();
+  const ctx = useLearnerContext();
+  const [selectedId, setSelectedId] = useState(CASES[0].id);
+  const [diff, setDiff] = useState<Difficulty | "ALL">("ALL");
+  const [brief, setBrief] = useState<{ id: string; md: string } | null>(null);
+  const [draft, setDraft] = useState("");
+  const [review, setReview] = useState<ReviewState>({ phase: "idle" });
+
+  const def = CASES_BY_ID[selectedId];
+  const sub = state.cases[selectedId];
+  const status: string = sub?.status ?? "open";
+
+  const list = CASES.filter((c) => diff === "ALL" || c.difficulty === diff);
+
+  useEffect(() => {
+    if (!def.written) return;
+    let cancelled = false;
+    fetch(`/cases/${selectedId}.md`)
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error())))
+      .then((md) => !cancelled && setBrief({ id: selectedId, md }))
+      .catch(() => !cancelled && setBrief({ id: selectedId, md: "" }));
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, def.written]);
+
+  const start = () => {
+    dispatch({ type: "startCase", caseId: selectedId });
+    setDraft("");
+    setReview({ phase: "idle" });
+  };
+
+  const submit = async () => {
+    if (draft.trim().length < 20) return;
+    dispatch({ type: "submitCase", caseId: selectedId, body: draft, pmAiResponse: null });
+    setReview({ phase: "loading" });
+    try {
+      const res = await fetch("/api/pm-ai/review", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          caseId: selectedId,
+          caseTitle: def.title,
+          caseBrief: brief?.md?.slice(0, 2500) ?? "",
+          submission: draft,
+          context: ctx,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setReview({ phase: "error", message: data.error ?? "review failed" });
+      } else {
+        setReview({ phase: "done", ...data });
+        dispatch({ type: "submitCase", caseId: selectedId, body: draft, pmAiResponse: data });
+      }
+    } catch {
+      setReview({ phase: "error", message: "Could not reach PM-AI. Your submission is saved." });
+    }
+  };
+
+  const complete = (override: boolean) => {
+    dispatch({
+      type: "completeCase",
+      caseId: selectedId,
+      override,
+      reviewAccepted: review.phase === "done" && !override,
+    });
+  };
+
+  const statusChip = (s: string) => {
+    const map: Record<string, [string, string]> = {
+      open: ["OPEN", "var(--muted-foreground)"],
+      in_progress: ["IN PROGRESS", "var(--accent-1)"],
+      submitted: ["SUBMITTED", "var(--primary)"],
+      complete: ["COMPLETE", "var(--accent-2)"],
+      complete_override: ["COMPLETE (OVERRIDE)", "var(--accent-1)"],
+    };
+    const [label, color] = map[s] ?? ["OPEN", "var(--muted-foreground)"];
+    return (
+      <span className="font-mono text-[9px]" style={{ color, border: `1px solid ${color}`, padding: "1px 6px" }}>
+        {label}
+      </span>
+    );
+  };
+
+  const touched = Object.keys(state.cases).length;
+
+  return (
+    <div className="flex h-full">
+      {/* list */}
+      <div className="flex w-64 min-w-64 flex-col border-r border-border bg-surface">
+        <div className="flex gap-1 border-b border-border p-2">
+          {(["ALL", "ROOKIE", "ANALYST", "SENIOR"] as const).map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDiff(d)}
+              className={cn(
+                "chrome-flat flex-1 py-1 font-mono text-[9px]",
+                diff === d ? "bg-primary text-primary-foreground" : "bg-surface-raised text-muted-foreground",
+              )}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-1 flex-col gap-2 overflow-auto p-2.5">
+          {list.map((c) => {
+            const st = state.cases[c.id]?.status ?? "open";
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  setSelectedId(c.id);
+                  setDraft(state.cases[c.id]?.body ?? "");
+                  setReview({ phase: "idle" });
+                }}
+                className={cn(
+                  "chrome-flat flex flex-col gap-1 bg-surface-raised p-2.5 text-left",
+                  c.id === selectedId && "outline outline-1 outline-primary",
+                )}
+                style={{ borderLeft: `3px solid ${DIFFICULTY_ACCENT[c.difficulty]}` }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[9px] text-muted-foreground">{c.num}</span>
+                  {statusChip(st)}
+                </div>
+                <span className="text-xs font-semibold text-foreground">{c.title}</span>
+                <span className="font-mono text-[9px]" style={{ color: DIFFICULTY_ACCENT[c.difficulty] }}>
+                  {c.difficulty} · {c.industry}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2 border-t border-border px-3 py-2">
+          <div className="h-1 flex-1 bg-surface-raised">
+            <div className="h-full bg-brand-green" style={{ width: `${(touched / CASES.length) * 100}%` }} />
+          </div>
+          <span className="font-mono text-[9px] text-brand-green">{touched} of {CASES.length} touched</span>
+        </div>
+      </div>
+
+      {/* detail */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex items-center justify-between gap-3 border-b border-border p-3">
+          <div>
+            <h2 className="font-display text-base font-semibold text-foreground">
+              Case {def.num} — {def.title}
+            </h2>
+            <span className="font-mono text-[10px]" style={{ color: DIFFICULTY_ACCENT[def.difficulty] }}>
+              {def.difficulty} · {def.industry}
+            </span>
+          </div>
+          {status === "open" && <Button size="sm" onClick={start}>Start this case (+10 XP)</Button>}
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto p-5">
+          {!def.written ? (
+            <p className="text-sm text-muted-foreground">
+              The full brief for this case is being written (Phase 2 content pass). It exercises:{" "}
+              {def.skills.map((s) => (
+                <code key={s} className="font-mono text-[11px] text-brand-green">{s} </code>
+              ))}
+            </p>
+          ) : (
+            <div className="prose-da">
+              {brief?.md ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{brief.md}</ReactMarkdown>
+              ) : (
+                <p className="text-muted-foreground">Loading brief…</p>
+              )}
+            </div>
+          )}
+
+          {(status === "in_progress" || status === "submitted") && (
+            <div className="mt-6 flex flex-col gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Your findings
+              </span>
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Your queries, findings, and what you would tell the stakeholder…"
+                className="min-h-40 w-full resize-y border border-border bg-background p-3 font-body text-sm leading-relaxed"
+                style={{ borderRadius: "var(--radius-control)" }}
+              />
+              <div className="flex items-center gap-2">
+                <ParticleButton onClick={submit}>Submit to PM-AI for review</ParticleButton>
+                {sub?.startedAt && (
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    started {sub.startedAt.slice(0, 10)}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {review.phase === "loading" && <p className="mt-4 text-sm text-muted-foreground">PM-AI is reading your submission…</p>}
+          {review.phase === "error" && (
+            <div className="chrome-flat mt-4 bg-surface-raised p-3 text-sm text-brand-amber">{review.message}</div>
+          )}
+          {review.phase === "done" && (
+            <div className="chrome-flat mt-4 flex flex-col gap-2 bg-surface-raised p-3.5 text-sm">
+              <p><span className="font-semibold text-brand-green">Strength.</span> {review.strength}</p>
+              <p><span className="font-semibold text-brand-amber">Gap.</span> {review.gap}</p>
+              <p><span className="font-semibold text-primary">Question.</span> {review.question}</p>
+            </div>
+          )}
+
+          {status === "submitted" && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button size="sm" variant="secondary" onClick={() => dispatch({ type: "startCase", caseId: selectedId })}>
+                Revise &amp; resubmit
+              </Button>
+              <Button size="sm" onClick={() => complete(false)}>
+                Accept &amp; mark complete{review.phase === "done" ? " (+130 XP)" : " (+80 XP)"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (confirm("PM-AI disagreement will be logged in your Decline Log. Continue?")) complete(true);
+                }}
+              >
+                Override &amp; mark complete
+              </Button>
+            </div>
+          )}
+
+          {(status === "complete" || status === "complete_override") && (
+            <p className="mt-6 font-mono text-xs text-brand-green">
+              ✓ Case complete{status === "complete_override" && " — override logged"}.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

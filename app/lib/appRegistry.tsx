@@ -16,6 +16,7 @@ import { TextbookWindow } from "@/components/textbook/TextbookWindow";
 import { CheatcodesWindow } from "@/components/cheatcodes/CheatcodesWindow";
 import { DailyLogWindow } from "@/components/dailylog/DailyLogWindow";
 import { HeatmapWindow } from "@/components/heatmap/HeatmapWindow";
+import { CaseFilesWindow } from "@/components/casefiles/CaseFilesWindow";
 import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
 import {
   GlyphCanvas,
@@ -77,7 +78,7 @@ export const APPS: AppDef[] = [
     glyph: <GlyphCaseFiles />,
     flag: "caseFiles",
     win: { title: "Case Files", subtitle: "20 MISSIONS", width: 620, height: 560 },
-    Body: ph("Case Files", "Phase 1 · step 16"),
+    Body: CaseFilesWindow,
   },
   {
     id: "pmai",
