@@ -173,8 +173,14 @@ time, each merged green, unfinished behind a flag.**
 
 ### Phase 1 — Feature windows (parallel)
 
-11. Constellation Map + sub-constellations + node drawer (port `buildConstellation`
-    from `docs/support.js` reference; wrap animations in reduced-motion check).
+11. Constellation Map + sub-constellations + node drawer. **DONE (commit `43c47ee`).**
+    L1 map (11 tracks) + a sub-constellation per topic (SQL/Git hand-placed, the
+    other 9 auto-laid-out from `plannedSubNodes` by `lib/curriculumLayout.ts` —
+    fill a topic's real `subNodes` later to replace). Drawer tabs
+    Resources/Tasks/Notes/Textbook; Notes sync to the store; CTA by derived
+    state. Full loop works: complete node → XP + heatmap + prereq unlock. Still
+    to refine: hand-position the ~90 auto-laid sub-nodes (step 7), wire
+    Resources to real videos (step 15) and Tasks to real cases (step 16).
 12. Textbook window + markdown pipeline (`app/content/textbook/<topic>/<slug>.md`,
     `react-markdown` + highlighter).
 13. Cheatcodes window (static `app/content/cheatcodes.ts`, JOIN Venn SVGs, print view).
