@@ -7,6 +7,17 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+
+  // Reverse-proxy PostHog through our own origin so adblockers don't drop
+  // analytics. Client is configured with api_host "/ingest".
+  async rewrites() {
+    return [
+      { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
+      { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
+    ];
+  },
+  // PostHog needs to send the trailing-slash-free path through
+  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;

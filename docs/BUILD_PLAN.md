@@ -146,11 +146,27 @@ hardening.
    Taskbar has clock + XP + streak + theme toggle + settings avatar; daily-log
    quick input still pending. **Skins added** — see the Addition box above.
    SettingsWindow (appearance section) is real: theme + skin + wallpaper persist.
-9. **External adapters scaffolded (typed, empty).** `app/lib/ai/` (`Advisor`
-   interface, `grok.ts`, `buildContext(userId)` pure fn). `app/lib/analytics/`
-   (`track()` + PostHog reverse-proxy rewrites). `app/lib/video/` (types +
-   `scripts/import-videos.mjs`).
-10. **Sentry + rate limiter.** `@sentry/nextjs`. Upstash Redis + `app/lib/ratelimit.ts`.
+9. **External adapters scaffolded.** DONE (commit pending).
+   - `app/lib/ai/`: `Advisor` interface + `AdvisorUnavailableError`, `grok.ts`
+     (OpenAI-compatible REST, no SDK), `context.ts` (`buildContext(sb,userId)`
+     pure-ish), `system-prompt.v1.ts` (versioned, PRD §9 mandate + fixed review
+     JSON schema), `redteam.ts` (10 jailbreak fixtures), `getAdvisor()` factory
+     keyed on `AI_PROVIDER`.
+   - `app/lib/analytics/`: typed `EventMap` (PRD §16.1), `track()`/`identify()`
+     no-op without key, hashed user id, `AnalyticsProvider` mounted in App,
+     `/ingest` reverse-proxy rewrites in `next.config.ts`.
+   - `app/lib/video/`: `VideoMeta` + `embedUrl` (youtube-nocookie, runtime-safe),
+     `loadVideos(sb, tag)`, `scripts/import-videos.mjs` (CSV → YouTube Data API
+     at build time → `video_catalog`), `content/videos.sample.csv`.
+10. **Sentry + rate limiter.** `app/lib/ratelimit.ts` DONE (Upstash sliding
+    window, 20 advisor calls/user/hour, no-op without Upstash env). Sentry
+    (`@sentry/nextjs`) still TO DO — own pass.
+
+**Proactive PM-AI (the "cron" flavour):** PM-AI in the PRD is a window plus
+event triggers (reviews on case submit, notes disagreements next session). A
+proactive layer — a weekly "here's your one focus" note, flagging a case
+stalled >N days — rides on the streak-nudge cron (step 26) and the session
+briefing (step 21). Folded into those steps, not a separate system.
 
 **Contracts frozen. Everything below is a leaf — build in any order, one PR at a
 time, each merged green, unfinished behind a flag.**
