@@ -20,6 +20,7 @@ import { CaseFilesWindow } from "@/components/casefiles/CaseFilesWindow";
 import { PmAiWindow } from "@/components/pmai/PmAiWindow";
 import { VideoLibraryWindow } from "@/components/video/VideoLibraryWindow";
 import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
+import { CanvasWindow } from "@/components/canvas/CanvasWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -107,7 +108,7 @@ export const APPS: AppDef[] = [
     glyph: <GlyphCanvas />,
     flag: "canvas",
     win: { title: "Canvas", width: 900, height: 640 },
-    Body: ph("Canvas", "Phase 1 · step 19"),
+    Body: CanvasWindow,
   },
   {
     id: "games",
