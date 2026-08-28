@@ -10,6 +10,10 @@ export interface WindowActions {
   open: (id: string, size?: { width: number; height: number }) => void;
   close: (id: string) => void;
   focus: (id: string) => void;
+  /** open the Textbook window at a specific chapter slug (or node id) */
+  openTextbook: (slugOrNodeId?: string) => void;
+  /** the pending textbook target set by the last openTextbook call, consumed once */
+  consumeTextbookTarget: () => string | undefined;
 }
 
 const Ctx = createContext<WindowActions | null>(null);

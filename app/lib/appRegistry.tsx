@@ -12,6 +12,7 @@ import { Placeholder } from "@/components/desktop/Placeholder";
 import { SettingsWindow } from "@/components/settings/SettingsWindow";
 import { ConstellationWindow } from "@/components/constellation/ConstellationWindow";
 import { SubConstellationWindow } from "@/components/constellation/SubConstellationWindow";
+import { TextbookWindow } from "@/components/textbook/TextbookWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -155,7 +156,22 @@ export const SETTINGS_APP: AppDef = {
   Body: SettingsWindow,
 };
 
-export const ALL_APPS: Record<string, AppDef> = { ...APPS_BY_ID, settings: SETTINGS_APP };
+/** Textbook is opened from a node drawer's "Textbook Reference", not a desktop
+ *  icon. Its own icon (the "Textbooks" constellation node) also routes here. */
+export const TEXTBOOK_APP: AppDef = {
+  id: "textbook",
+  label: "Textbooks",
+  hint: "The DA Field Guide and topic books",
+  glyph: null,
+  win: { title: "DA // Field Guide", subtitle: "TEXTBOOK", width: 940, height: 680 },
+  Body: TextbookWindow,
+};
+
+export const ALL_APPS: Record<string, AppDef> = {
+  ...APPS_BY_ID,
+  settings: SETTINGS_APP,
+  textbook: TEXTBOOK_APP,
+};
 
 /** Cache of synthesized AppDefs so a window id always resolves to the SAME
  *  object (and the SAME Body component) across renders — otherwise React

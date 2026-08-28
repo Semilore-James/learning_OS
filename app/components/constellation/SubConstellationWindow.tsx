@@ -96,7 +96,7 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
             const intensity = lastInTrack ? 1 : Math.max(0.3, 1 - doneCount * 0.14);
             burst.current?.fire({ intensity });
           }}
-          onOpenChapter={() => win.open("textbook")}
+          onOpenChapter={(slug) => win.openTextbook(slug)}
           onClose={() => setSelected(null)}
         />
       )}

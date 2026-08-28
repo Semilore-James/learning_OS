@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Wallpaper } from "@/components/wallpaper";
 import { Window } from "@/components/window/Window";
 import { useStore } from "@/lib/store";
@@ -53,8 +53,22 @@ export function Desktop() {
     [wm],
   );
 
+  const textbookTarget = useRef<string | undefined>(undefined);
   const winActions = useMemo(
-    () => ({ open: openApp, close: wm.closeWindow, focus: wm.focusWindow }),
+    () => ({
+      open: openApp,
+      close: wm.closeWindow,
+      focus: wm.focusWindow,
+      openTextbook: (slug?: string) => {
+        textbookTarget.current = slug;
+        openApp("textbook");
+      },
+      consumeTextbookTarget: () => {
+        const t = textbookTarget.current;
+        textbookTarget.current = undefined;
+        return t;
+      },
+    }),
     [openApp, wm.closeWindow, wm.focusWindow],
   );
 

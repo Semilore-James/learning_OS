@@ -118,11 +118,17 @@ export function ConstellationWindow() {
           state={selState}
           blockingLabel={blocker ? TOPICS_BY_ID[blocker]?.label : null}
           onStart={() => {
+            if (sel.special === "textbooks") {
+              win.openTextbook();
+              return;
+            }
             if (selState === "available") dispatch({ type: "startNode", nodeId: sel.id, level: "topic", topicId: null });
             win.open(`subconstellation:${sel.id}`);
           }}
-          onComplete={() => win.open(`subconstellation:${sel.id}`)}
-          onOpenChapter={() => win.open("textbook")}
+          onComplete={() =>
+            sel.special === "textbooks" ? win.openTextbook() : win.open(`subconstellation:${sel.id}`)
+          }
+          onOpenChapter={(slug) => win.openTextbook(slug)}
           onClose={() => setSelected(null)}
         />
       )}
