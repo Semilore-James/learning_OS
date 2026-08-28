@@ -17,6 +17,7 @@ import { CheatcodesWindow } from "@/components/cheatcodes/CheatcodesWindow";
 import { DailyLogWindow } from "@/components/dailylog/DailyLogWindow";
 import { HeatmapWindow } from "@/components/heatmap/HeatmapWindow";
 import { CaseFilesWindow } from "@/components/casefiles/CaseFilesWindow";
+import { PmAiWindow } from "@/components/pmai/PmAiWindow";
 import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
 import {
   GlyphCanvas,
@@ -87,7 +88,7 @@ export const APPS: AppDef[] = [
     glyph: <GlyphPmAi />,
     flag: "pmAI",
     win: { title: "PM-AI", width: 560, height: 620 },
-    Body: ph("PM-AI", "Phase 1 · step 17"),
+    Body: PmAiWindow,
   },
   {
     id: "heatmap",
