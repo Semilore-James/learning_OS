@@ -21,6 +21,7 @@ import { PmAiWindow } from "@/components/pmai/PmAiWindow";
 import { VideoLibraryWindow } from "@/components/video/VideoLibraryWindow";
 import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
 import { CanvasWindow } from "@/components/canvas/CanvasWindow";
+import { GamesWindow } from "@/components/games/GamesWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -117,7 +118,7 @@ export const APPS: AppDef[] = [
     glyph: <GlyphGames />,
     flag: "games",
     win: { title: "Games", width: 760, height: 600 },
-    Body: ph("Games", "Phase 1 · step 20"),
+    Body: GamesWindow,
   },
   {
     id: "cheatcodes",
