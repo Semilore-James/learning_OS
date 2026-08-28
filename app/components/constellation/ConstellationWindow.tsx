@@ -16,7 +16,7 @@ import { deriveStates, topicProgress, blockingPrerequisite } from "@/lib/graph";
 import { useStore, select } from "@/lib/store";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useWindowActions } from "@/lib/windowContext";
-import { Constellation, type CNode } from "./Constellation";
+import { Constellation, type CNode, type SubGraph } from "./Constellation";
 import { NodeDrawer } from "./NodeDrawer";
 import { Legend } from "./Legend";
 
@@ -54,6 +54,31 @@ export function ConstellationWindow() {
   }, [state.nodes, completedSubs, startedSubs]);
 
   const cnodes: CNode[] = TOPICS.map((t) => ({ id: t.id, label: t.label.replace(/\n/g, " "), pos: t.pos }));
+
+  // level-of-detail: each topic's sub-graph, revealed on zoom-in
+  const { expandable, subStates } = useMemo(() => {
+    const exp: Record<string, SubGraph> = {};
+    const ss: Record<string, NodeState> = {};
+    for (const t of TOPICS) {
+      const subs = subNodesFor(t);
+      if (!subs.length) continue;
+      exp[t.id] = {
+        nodes: subs.map((s) => ({ id: s.id, label: s.label, code: s.code, pos: s.pos })),
+        edges: subs.flatMap((s) => s.prerequisites.map((p) => ({ from: p, to: s.id }))),
+        space: { w: 840, h: 600 },
+      };
+      Object.assign(
+        ss,
+        deriveStates({
+          nodes: subs.map((s) => ({ id: s.id, prerequisites: s.prerequisites })),
+          completed: completedSubs,
+          started: startedSubs,
+        }),
+      );
+    }
+    return { expandable: exp, subStates: ss };
+  }, [completedSubs, startedSubs]);
+
   const sel = selected ? TOPICS_BY_ID[selected] : null;
   const selState = selected ? states[selected] : "locked";
   const blocker = sel
@@ -72,6 +97,13 @@ export function ConstellationWindow() {
           selectedId={selected}
           reducedMotion={reduced}
           onNodeActivate={(id) => setSelected(id)}
+          expandable={expandable}
+          subStates={subStates}
+          onExpandedActivate={(topicId) => {
+            if (states[topicId] === "available")
+              dispatch({ type: "startNode", nodeId: topicId, level: "topic", topicId: null });
+            win.open(`subconstellation:${topicId}`);
+          }}
         />
         <ZoneLabels />
         <Legend />

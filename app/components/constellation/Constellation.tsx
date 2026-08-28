@@ -45,7 +45,16 @@ const STATE_STROKE: Record<NodeState, string> = {
 };
 
 const MIN_K = 0.6;
-const MAX_K = 3;
+const MAX_K = 3.4;
+const LOD_START = 1.7;
+const LOD_FULL = 2.5;
+
+export interface SubGraph {
+  nodes: CNode[];
+  edges: CEdge[];
+  /** the space `nodes` positions were laid out in, for normalising */
+  space: { w: number; h: number };
+}
 
 export function Constellation({
   nodes,
@@ -57,6 +66,9 @@ export function Constellation({
   selectedId,
   reducedMotion,
   onNodeActivate,
+  expandable,
+  subStates,
+  onExpandedActivate,
 }: {
   nodes: CNode[];
   edges: CEdge[];
@@ -67,6 +79,11 @@ export function Constellation({
   selectedId?: string | null;
   reducedMotion: boolean;
   onNodeActivate: (id: string) => void;
+  /** level-of-detail: parent node id -> its sub-graph, revealed on zoom-in */
+  expandable?: Record<string, SubGraph>;
+  /** derived states for the sub-graph nodes */
+  subStates?: Record<string, NodeState>;
+  onExpandedActivate?: (parentId: string, childId: string) => void;
 }) {
   const byId: Record<string, CNode> = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const uid = useId().replace(/[^a-z0-9]/gi, "");
@@ -160,6 +177,85 @@ export function Constellation({
       <rect width={width} height={height} fill={`url(#bg-${uid})`} />
 
       <g transform={`translate(${view.tx} ${view.ty}) scale(${view.k})`}>
+        {/* level-of-detail: sub-nodes revealed as you zoom into a topic */}
+        {expandable &&
+          (() => {
+            const alpha = Math.min(1, Math.max(0, (view.k - LOD_START) / (LOD_FULL - LOD_START)));
+            if (alpha <= 0.02) return null;
+            const spread = 46 + alpha * 66;
+            return nodes.map((parent) => {
+              const sg = expandable[parent.id];
+              if (!sg || sg.nodes.length === 0) return null;
+              const cx0 = sg.space.w / 2;
+              const cy0 = sg.space.h / 2;
+              const place = (p: { x: number; y: number }) => ({
+                x: parent.pos.x + ((p.x - cx0) / (sg.space.w / 2)) * spread,
+                y: parent.pos.y + ((p.y - cy0) / (sg.space.h / 2)) * spread,
+              });
+              const posOf: Record<string, { x: number; y: number }> = {};
+              sg.nodes.forEach((n) => (posOf[n.id] = place(n.pos)));
+              return (
+                <g key={`lod-${parent.id}`} opacity={alpha} style={{ pointerEvents: alpha > 0.5 ? "auto" : "none" }}>
+                  {sg.edges.map((e, i) => {
+                    const a = posOf[e.from];
+                    const b = posOf[e.to];
+                    if (!a || !b) return null;
+                    return (
+                      <line
+                        key={i}
+                        x1={a.x}
+                        y1={a.y}
+                        x2={b.x}
+                        y2={b.y}
+                        stroke="var(--muted-foreground)"
+                        strokeWidth={0.6}
+                        opacity={0.4}
+                      />
+                    );
+                  })}
+                  {sg.nodes.map((n) => {
+                    const p = posOf[n.id];
+                    const st = subStates?.[n.id] ?? "locked";
+                    const fill =
+                      st === "completed" ? "var(--accent-2)" : st === "active" ? "var(--primary)" : "var(--surface-raised)";
+                    const stroke =
+                      st === "completed" ? "var(--accent-2)" : st === "available" ? "var(--accent-3)" : "var(--muted-foreground)";
+                    return (
+                      <g
+                        key={n.id}
+                        data-node={`lod:${n.id}`}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          if (!pan.current?.moved) onExpandedActivate?.(parent.id, n.id);
+                        }}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <title>{n.label}</title>
+                        <circle cx={p.x} cy={p.y} r={4.5} fill={fill} stroke={stroke} strokeWidth={1} />
+                        {alpha > 0.7 && (
+                          <text
+                            x={p.x}
+                            y={p.y + 11}
+                            textAnchor="middle"
+                            fontFamily="var(--font-mono)"
+                            fontSize={5.5}
+                            fill="var(--muted-foreground)"
+                            stroke="var(--bg)"
+                            strokeWidth={2}
+                            paintOrder="stroke"
+                            pointerEvents="none"
+                          >
+                            {n.code ?? n.label}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
+                </g>
+              );
+            });
+          })()}
+
         {/* connections */}
         {edges.map((e, i) => {
           const f = byId[e.from];
