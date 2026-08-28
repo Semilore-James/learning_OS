@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ParticleButton } from "@/components/motion";
 
 export function NodeDrawer({
   node,
@@ -62,7 +63,11 @@ export function NodeDrawer({
     if (state === "available")
       return <Button className="w-full uppercase tracking-wide" onClick={onStart}>Start this skill</Button>;
     if (state === "active" || state === "needs-review")
-      return <Button className="w-full uppercase tracking-wide" onClick={onComplete}>Mark as complete</Button>;
+      return (
+        <ParticleButton className="w-full uppercase tracking-wide" onClick={onComplete}>
+          Mark as complete
+        </ParticleButton>
+      );
     return <p className="text-center text-[10px] font-mono text-brand-green">✓ complete</p>;
   })();
 

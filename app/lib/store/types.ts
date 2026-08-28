@@ -71,6 +71,7 @@ export interface AppState {
     skin: Skin;
     wallpaperId: string;
     onboardingDone: boolean;
+    reduceEffects: boolean;
   };
 
   /** node_id -> progress. Absence = locked/available is derived by lib/graph.ts */
@@ -118,6 +119,7 @@ export const EMPTY_STATE: AppState = {
     skin: "neobrutalism",
     wallpaperId: "starfield",
     onboardingDone: false,
+    reduceEffects: false,
   },
   nodes: {},
   xpTotal: 0,
@@ -143,6 +145,7 @@ export type Action =
   | { type: "setSkin"; skin: Skin }
   | { type: "setWallpaper"; wallpaperId: string }
   | { type: "setDisplayName"; displayName: string }
+  | { type: "setReduceEffects"; reduceEffects: boolean }
   | { type: "completeOnboarding"; seededNodeIds: string[] }
   | { type: "startNode"; nodeId: string; level: NodeLevel; topicId: string | null }
   | { type: "completeNode"; nodeId: string; level: NodeLevel; topicId: string | null; alsoCompleteTopic?: string }

@@ -5,13 +5,14 @@
    topic is auto-laid-out by lib/curriculumLayout. Marking the last sub-node
    complete rolls the parent topic node up to complete on the level-1 map.
    ========================================================================== */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { TOPICS_BY_ID, type NodeState } from "@/content/curriculum";
 import { subNodesFor } from "@/lib/curriculumLayout";
-import { deriveStates, blockingPrerequisite } from "@/lib/graph";
+import { deriveStates, blockingPrerequisite, topicProgress } from "@/lib/graph";
 import { useStore, select } from "@/lib/store";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useWindowActions } from "@/lib/windowContext";
+import { Burst, type BurstHandle } from "@/components/motion";
 import { Constellation, type CNode, type CEdge } from "./Constellation";
 import { NodeDrawer } from "./NodeDrawer";
 import { Legend } from "./Legend";
@@ -25,6 +26,7 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
   const reduced = useReducedMotion();
   const win = useWindowActions();
   const [selected, setSelected] = useState<string | null>(null);
+  const burst = useRef<BurstHandle>(null);
 
   const subNodes = useMemo(() => (topic ? subNodesFor(topic) : []), [topic]);
   const completed = select.completedNodeIds(state);
@@ -52,9 +54,12 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
   const remainingAfter = (doneId: string) =>
     subNodes.filter((s) => s.id !== doneId && !completed.has(s.id)).length === 0;
 
+  const doneCount = topicProgress(subNodes.map((s) => s.id), completed).done;
+
   return (
     <div style={{ position: "relative", height: "100%", display: "flex" }}>
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+        <Burst ref={burst} />
         <Constellation
           nodes={cnodes}
           edges={edges}
@@ -78,15 +83,19 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
           state={selState}
           blockingLabel={blockerLabel}
           onStart={() => dispatch({ type: "startNode", nodeId: sel.id, level: "sub", topicId: topic.id })}
-          onComplete={() =>
+          onComplete={() => {
+            const lastInTrack = remainingAfter(sel.id);
             dispatch({
               type: "completeNode",
               nodeId: sel.id,
               level: "sub",
               topicId: topic.id,
-              alsoCompleteTopic: remainingAfter(sel.id) ? topic.id : undefined,
-            })
-          }
+              alsoCompleteTopic: lastInTrack ? topic.id : undefined,
+            });
+            // council: big on the first completion in a track, tapered after
+            const intensity = lastInTrack ? 1 : Math.max(0.3, 1 - doneCount * 0.14);
+            burst.current?.fire({ intensity });
+          }}
           onOpenChapter={() => win.open("textbook")}
           onClose={() => setSelected(null)}
         />

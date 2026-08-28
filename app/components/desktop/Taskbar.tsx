@@ -5,6 +5,7 @@ import { Play } from "lucide-react";
 import { useStore, select } from "@/lib/store";
 import { useWindowActions } from "@/lib/windowContext";
 import { TOPICS, TOPICS_BY_ID } from "@/content/curriculum";
+import { CountUp, Pulse } from "@/components/motion";
 
 function useClock() {
   const [t, setT] = useState("--:--");
@@ -68,12 +69,16 @@ export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
       <div className="flex items-center gap-3.5">
         {syncing && <span className="font-mono text-[9px] text-muted-foreground">saving…</span>}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-brand-amber">{xp.toLocaleString()} XP</span>
+          <span className="text-[11px] font-bold text-brand-amber">
+            <CountUp value={xp} /> XP
+          </span>
           <span className="block h-1 w-14 bg-surface-raised">
-            <span className="block h-full bg-brand-amber" style={{ width: `${(xpInLevel / 1000) * 100}%` }} />
+            <span className="block h-full bg-brand-amber transition-[width] duration-500" style={{ width: `${(xpInLevel / 1000) * 100}%` }} />
           </span>
         </div>
-        <div className="flex items-center gap-1 text-[11px] font-bold text-brand-amber">🔥 {streak}</div>
+        <Pulse trigger={streak} className="items-center gap-1 text-[11px] font-bold text-brand-amber">
+          🔥 {streak}
+        </Pulse>
         <button
           type="button"
           aria-label={`Switch to ${nextTheme} theme`}

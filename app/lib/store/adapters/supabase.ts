@@ -91,6 +91,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
               skin: profile.skin as AppState["profile"]["skin"],
               wallpaperId: profile.wallpaper_id,
               onboardingDone: profile.onboarding_done,
+              reduceEffects: profile.reduce_effects,
             }
           : undefined,
         nodes: Object.fromEntries(
@@ -151,6 +152,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         case "setSkin":
         case "setWallpaper":
         case "setDisplayName":
+        case "setReduceEffects":
         case "completeOnboarding":
           await mine(
             sb.from("profiles").update({
@@ -159,6 +161,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
               skin: next.profile.skin,
               wallpaper_id: next.profile.wallpaperId,
               onboarding_done: next.profile.onboardingDone,
+              reduce_effects: next.profile.reduceEffects,
             }).eq("id", userId),
           );
           if (action.type === "completeOnboarding") {

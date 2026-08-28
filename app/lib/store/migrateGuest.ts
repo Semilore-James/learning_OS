@@ -25,6 +25,7 @@ export async function migrateGuestToAccount(sb: DB, userId: string): Promise<boo
         skin: s.profile.skin,
         wallpaper_id: s.profile.wallpaperId,
         onboarding_done: s.profile.onboardingDone,
+        reduce_effects: s.profile.reduceEffects,
       }).eq("id", userId),
     );
   }

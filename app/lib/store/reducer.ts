@@ -35,6 +35,9 @@ export function reducer(state: AppState, action: Action): AppState {
     case "setWallpaper":
       return { ...state, profile: { ...state.profile, wallpaperId: action.wallpaperId } };
 
+    case "setReduceEffects":
+      return { ...state, profile: { ...state.profile, reduceEffects: action.reduceEffects } };
+
     case "setDisplayName":
       return { ...state, profile: { ...state.profile, displayName: action.displayName } };
 

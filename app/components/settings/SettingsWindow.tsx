@@ -10,6 +10,7 @@ import { SKINS } from "@/lib/skins";
 import { WALLPAPERS } from "@/components/wallpaper";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import type { Skin, Theme } from "@/lib/store/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function SettingsWindow() {
   const { state, dispatch } = useStore();
-  const { theme, skin, wallpaperId } = state.profile;
+  const { theme, skin, wallpaperId, reduceEffects } = state.profile;
 
   return (
     <div className="w-[420px] max-w-full">
@@ -63,6 +64,19 @@ export function SettingsWindow() {
             <span className="text-[11px] font-light text-muted-foreground">{s.blurb}</span>
           </button>
         ))}
+      </section>
+
+      <section className="flex items-center justify-between gap-4 border-b border-border p-5">
+        <div className="flex flex-col gap-1">
+          <SectionLabel>Reduce celebration effects</SectionLabel>
+          <span className="text-[11px] font-light text-muted-foreground">
+            Turns off particle bursts, count-ups, and pulses. The wallpaper is unaffected.
+          </span>
+        </div>
+        <Switch
+          checked={reduceEffects}
+          onCheckedChange={(v) => dispatch({ type: "setReduceEffects", reduceEffects: v })}
+        />
       </section>
 
       <section className="flex flex-col gap-3 p-5">
