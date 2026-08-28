@@ -13,6 +13,7 @@ import { SettingsWindow } from "@/components/settings/SettingsWindow";
 import { ConstellationWindow } from "@/components/constellation/ConstellationWindow";
 import { SubConstellationWindow } from "@/components/constellation/SubConstellationWindow";
 import { TextbookWindow } from "@/components/textbook/TextbookWindow";
+import { CheatcodesWindow } from "@/components/cheatcodes/CheatcodesWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -117,8 +118,8 @@ export const APPS: AppDef[] = [
     hint: "SQL and Excel reference",
     glyph: <GlyphCheatcodes />,
     flag: "cheatcodes",
-    win: { title: "Cheatcodes", subtitle: "QUICK REFERENCE", width: 760, height: 600 },
-    Body: ph("Cheatcodes", "Phase 1 · step 13"),
+    win: { title: "Cheatcodes", subtitle: "QUICK REFERENCE", width: 780, height: 600 },
+    Body: CheatcodesWindow,
   },
   {
     id: "dailylog",
