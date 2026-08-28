@@ -393,9 +393,11 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          handle: string | null
           id: string
           onboarding_done: boolean
           reduce_effects: boolean
+          share_public: boolean
           skin: string
           theme: string
           updated_at: string
@@ -404,9 +406,11 @@ export type Database = {
         Insert: {
           created_at?: string
           display_name?: string | null
+          handle?: string | null
           id: string
           onboarding_done?: boolean
           reduce_effects?: boolean
+          share_public?: boolean
           skin?: string
           theme?: string
           updated_at?: string
@@ -415,9 +419,11 @@ export type Database = {
         Update: {
           created_at?: string
           display_name?: string | null
+          handle?: string | null
           id?: string
           onboarding_done?: boolean
           reduce_effects?: boolean
+          share_public?: boolean
           skin?: string
           theme?: string
           updated_at?: string
@@ -608,7 +614,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      shared_progress: { Args: { p_handle: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

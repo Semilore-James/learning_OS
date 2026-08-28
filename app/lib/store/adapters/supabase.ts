@@ -92,6 +92,8 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
               wallpaperId: profile.wallpaper_id,
               onboardingDone: profile.onboarding_done,
               reduceEffects: profile.reduce_effects,
+              handle: profile.handle,
+              sharePublic: profile.share_public,
             }
           : undefined,
         nodes: Object.fromEntries(
@@ -153,6 +155,8 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         case "setWallpaper":
         case "setDisplayName":
         case "setReduceEffects":
+        case "setHandle":
+        case "setSharePublic":
         case "completeOnboarding":
           await mine(
             sb.from("profiles").update({
@@ -162,6 +166,8 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
               wallpaper_id: next.profile.wallpaperId,
               onboarding_done: next.profile.onboardingDone,
               reduce_effects: next.profile.reduceEffects,
+              handle: next.profile.handle,
+              share_public: next.profile.sharePublic,
             }).eq("id", userId),
           );
           if (action.type === "completeOnboarding") {

@@ -1,7 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { publicEnv } from "@/lib/env";
 import type { Database } from "./database.types";
+
+/**
+ * Cookie-less anon client for public pages (no user session). Used by the
+ * /share/<handle> route, which only ever calls the public shared_progress()
+ * RPC. Still the anon key + RLS.
+ */
+export function createPublicClient() {
+  return createSupabaseClient<Database>(
+    publicEnv.supabaseUrl,
+    publicEnv.supabaseAnonKey,
+    { auth: { persistSession: false } },
+  );
+}
 
 /**
  * Server Supabase client for Server Components, Route Handlers, and Server

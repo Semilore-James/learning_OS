@@ -72,6 +72,10 @@ export interface AppState {
     wallpaperId: string;
     onboardingDone: boolean;
     reduceEffects: boolean;
+    /** URL slug for the public /share page; null until the learner sets one */
+    handle: string | null;
+    /** master switch for the public /share page (default off) */
+    sharePublic: boolean;
   };
 
   /** node_id -> progress. Absence = locked/available is derived by lib/graph.ts */
@@ -120,6 +124,8 @@ export const EMPTY_STATE: AppState = {
     wallpaperId: "starfield",
     onboardingDone: false,
     reduceEffects: false,
+    handle: null,
+    sharePublic: false,
   },
   nodes: {},
   xpTotal: 0,
@@ -146,6 +152,8 @@ export type Action =
   | { type: "setWallpaper"; wallpaperId: string }
   | { type: "setDisplayName"; displayName: string }
   | { type: "setReduceEffects"; reduceEffects: boolean }
+  | { type: "setHandle"; handle: string | null }
+  | { type: "setSharePublic"; sharePublic: boolean }
   | { type: "completeOnboarding"; seededNodeIds: string[] }
   | { type: "resetProgress" }
   | { type: "startNode"; nodeId: string; level: NodeLevel; topicId: string | null }

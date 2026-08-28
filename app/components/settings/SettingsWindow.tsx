@@ -7,6 +7,7 @@
    ========================================================================== */
 import { useState } from "react";
 import { useStore } from "@/lib/store";
+import { useSession } from "@/lib/session/SessionProvider";
 import { SKINS } from "@/lib/skins";
 import { WALLPAPERS } from "@/components/wallpaper";
 import { cn } from "@/lib/utils";
@@ -25,9 +26,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function SettingsWindow() {
   const { state, dispatch } = useStore();
-  const { theme, skin, wallpaperId, reduceEffects, displayName } = state.profile;
+  const { phase } = useSession();
+  const { theme, skin, wallpaperId, reduceEffects, displayName, handle, sharePublic } = state.profile;
   const [name, setName] = useState(displayName ?? "");
   const [confirmReset, setConfirmReset] = useState(false);
+  const [handleDraft, setHandleDraft] = useState(handle ?? "");
+  const handleValid = /^[a-z0-9_-]{3,30}$/.test(handleDraft);
+  const shareUrl = typeof window !== "undefined" && handle ? `${window.location.origin}/share/${handle}` : "";
 
   const exportData = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -143,6 +148,56 @@ export function SettingsWindow() {
           More wallpapers, including your own art, drop into the same picker later.
         </p>
       </section>
+
+      {phase === "account" && (
+        <section className="flex flex-col gap-2 border-t border-border p-5">
+          <SectionLabel>Public progress page</SectionLabel>
+          <span className="text-[11px] font-light text-muted-foreground">
+            Off by default. When on, anyone with the link sees your XP, completed lessons,
+            solved cases, and finished tracks. No logs, notes, or answers are shared.
+          </span>
+          <div className="flex gap-2">
+            <Input
+              value={handleDraft}
+              onChange={(e) => setHandleDraft(e.target.value.toLowerCase())}
+              placeholder="your-handle"
+              aria-label="Share handle"
+            />
+            <Button
+              variant="outline"
+              disabled={!handleValid || handleDraft === handle}
+              onClick={() => dispatch({ type: "setHandle", handle: handleDraft })}
+            >
+              Set
+            </Button>
+          </div>
+          {!handleValid && handleDraft.length > 0 && (
+            <span className="text-[11px] text-[#e5484d]">
+              3–30 characters: lowercase letters, numbers, dash, underscore.
+            </span>
+          )}
+          <div className="mt-1 flex items-center justify-between gap-4">
+            <span className="text-[11px] text-foreground">
+              {handle ? "Make my page public" : "Set a handle first"}
+            </span>
+            <Switch
+              checked={sharePublic}
+              disabled={!handle}
+              onCheckedChange={(v) => dispatch({ type: "setSharePublic", sharePublic: v })}
+            />
+          </div>
+          {sharePublic && shareUrl && (
+            <button
+              type="button"
+              onClick={() => void navigator.clipboard?.writeText(shareUrl)}
+              className="chrome-flat mt-1 truncate bg-surface-raised px-2 py-1.5 text-left font-mono text-[10px] text-muted-foreground hover:text-foreground"
+              title="Copy link"
+            >
+              {shareUrl} — click to copy
+            </button>
+          )}
+        </section>
+      )}
 
       <section className="flex flex-col gap-3 border-t border-border p-5">
         <SectionLabel>Data</SectionLabel>

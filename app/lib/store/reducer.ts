@@ -41,6 +41,12 @@ export function reducer(state: AppState, action: Action): AppState {
     case "setDisplayName":
       return { ...state, profile: { ...state.profile, displayName: action.displayName } };
 
+    case "setHandle":
+      return { ...state, profile: { ...state.profile, handle: action.handle } };
+
+    case "setSharePublic":
+      return { ...state, profile: { ...state.profile, sharePublic: action.sharePublic } };
+
     case "completeOnboarding": {
       const nodes = { ...state.nodes };
       for (const id of action.seededNodeIds) {
