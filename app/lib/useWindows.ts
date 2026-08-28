@@ -25,6 +25,7 @@ export interface WindowManager {
   zOf: (id: string) => number;
   posOf: (id: string) => { x: number; y: number } | undefined;
   sizeOf: (id: string) => Size | undefined;
+  reportNatural: (id: string, size: Size) => void;
   openWindow: (id: string, size?: Size) => void;
   closeWindow: (id: string) => void;
   focusWindow: (id: string) => void;
@@ -54,7 +55,24 @@ export function useWindows(): WindowManager {
   const [maximized, setMaximized] = useState<string[]>([]);
   const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
   const [size, setSize] = useState<Record<string, Size>>({});
+  const [natural, setNatural] = useState<Record<string, Size>>({});
   const openCount = useRef(0);
+
+  const fitViewport = useCallback(
+    (s: Size): Size => ({
+      width: Math.min(s.width, vw() - 24),
+      height: Math.min(s.height, vh() - TASKBAR - 24),
+    }),
+    [],
+  );
+
+  const reportNatural = useCallback((id: string, s: Size) => {
+    setNatural((n) => {
+      const prev = n[id];
+      if (prev && Math.abs(prev.width - s.width) < 6 && Math.abs(prev.height - s.height) < 6) return n;
+      return { ...n, [id]: s };
+    });
+  }, []);
 
   const drag = useRef<{ id: string; dx: number; dy: number } | null>(null);
   const resize = useRef<{
@@ -169,15 +187,19 @@ export function useWindows(): WindowManager {
       if (r) {
         const ddx = e.clientX - r.px;
         const ddy = e.clientY - r.py;
+        // can't shrink below what the content needs (capped at viewport)
+        const nat = natural[r.id];
+        const minW = Math.max(MIN_W, Math.min(nat?.width ?? 0, vw() - 40));
+        const minH = Math.max(MIN_H, Math.min(nat?.height ?? 0, vh() - TASKBAR - 40));
         let { x0: x, y0: y, w0: w, h0: h } = r;
-        if (r.edge.includes("e")) w = Math.max(MIN_W, r.w0 + ddx);
-        if (r.edge.includes("s")) h = Math.max(MIN_H, r.h0 + ddy);
+        if (r.edge.includes("e")) w = Math.max(minW, r.w0 + ddx);
+        if (r.edge.includes("s")) h = Math.max(minH, r.h0 + ddy);
         if (r.edge.includes("w")) {
-          w = Math.max(MIN_W, r.w0 - ddx);
+          w = Math.max(minW, r.w0 - ddx);
           x = r.x0 + (r.w0 - w);
         }
         if (r.edge.includes("n")) {
-          h = Math.max(MIN_H, r.h0 - ddy);
+          h = Math.max(minH, r.h0 - ddy);
           y = Math.max(0, r.y0 + (r.h0 - h));
         }
         setSize((sz) => ({ ...sz, [r.id]: { width: w, height: h } }));
@@ -195,7 +217,7 @@ export function useWindows(): WindowManager {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
     };
-  }, [size, clampPos]);
+  }, [size, natural, clampPos]);
 
   return {
     open,
@@ -206,7 +228,9 @@ export function useWindows(): WindowManager {
     isMaximized: (id) => maximized.includes(id),
     zOf: (id) => Z_BASE + Math.max(0, stack.indexOf(id)),
     posOf: (id) => pos[id],
-    sizeOf: (id) => size[id],
+    // user-set size wins; otherwise fit the measured content to the viewport
+    sizeOf: (id) => size[id] ?? (natural[id] ? fitViewport(natural[id]) : undefined),
+    reportNatural,
     openWindow,
     closeWindow,
     focusWindow,

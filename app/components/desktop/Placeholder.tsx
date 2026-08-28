@@ -18,7 +18,7 @@ export function Placeholder({ feature, step }: { feature: string; step: string }
       <div style={{ font: "600 15px var(--font-display)", color: "var(--text)" }}>
         {feature}
       </div>
-      <div style={{ font: "400 12px var(--font-body)", color: "var(--muted)", maxWidth: 360 }}>
+      <div style={{ font: "400 12px var(--font-body)", color: "var(--muted-foreground)", maxWidth: 360 }}>
         Under construction. Tracked as {step} in the build plan. The window
         chrome, theming, and state layer it plugs into are already live.
       </div>
@@ -29,7 +29,7 @@ export function Placeholder({ feature, step }: { feature: string; step: string }
           border: "var(--bd-inner)",
           borderRadius: "var(--radius-control)",
           font: "400 10px var(--font-mono)",
-          color: "var(--muted)",
+          color: "var(--muted-foreground)",
         }}
       >
         {step}

@@ -1,19 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Play } from "lucide-react";
 import { useStore, select } from "@/lib/store";
+import { useWindowActions } from "@/lib/windowContext";
+import { TOPICS, TOPICS_BY_ID } from "@/content/curriculum";
 
 function useClock() {
   const [t, setT] = useState("--:--");
   useEffect(() => {
     const tick = () => {
       const n = new Date();
-      setT(
-        `${n.getHours().toString().padStart(2, "0")}:${n
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}`,
-      );
+      setT(`${n.getHours().toString().padStart(2, "0")}:${n.getMinutes().toString().padStart(2, "0")}`);
     };
     tick();
     const id = setInterval(tick, 10_000);
@@ -22,74 +20,65 @@ function useClock() {
   return t;
 }
 
+/** the track the learner is mid-way through, if any */
+function activeTrack(nodes: Record<string, { state: string; topicId: string | null }>) {
+  // an explicitly-active topic, or the topic owning an active sub-node
+  const activeTopic = TOPICS.find((t) => nodes[t.id]?.state === "active");
+  if (activeTopic) return activeTopic;
+  for (const p of Object.values(nodes)) {
+    if (p.state === "active" && p.topicId) return TOPICS_BY_ID[p.topicId] ?? null;
+  }
+  return null;
+}
+
 export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const { state, dispatch, syncing } = useStore();
+  const win = useWindowActions();
   const clock = useClock();
   const { current: streak } = select.streak(state);
   const xp = state.xpTotal;
   const xpInLevel = xp % 1000;
   const nextTheme = state.profile.theme === "dark" ? "light" : "dark";
+  const track = activeTrack(state.nodes);
 
   return (
     <div
-      style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 44,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 16px",
-        background: "var(--surface)",
-        borderTop: "var(--bd)",
-        zIndex: 200,
-      }}
+      className="absolute inset-x-0 bottom-0 z-[200] flex h-11 items-center justify-between px-4"
+      style={{ background: "var(--surface)", borderTop: "var(--bd)" }}
     >
-      <div style={{ font: "700 13px var(--font-mono)", color: "var(--primary)", letterSpacing: "-0.3px" }}>
-        DA // OS
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-[13px] font-bold tracking-tight text-primary">DA // OS</span>
+        {track && (
+          <button
+            type="button"
+            onClick={() => {
+              win.open("constellation");
+              win.open(`subconstellation:${track.id}`);
+            }}
+            className="chrome-flat chrome-press flex items-center gap-1.5 bg-surface-raised px-2.5 py-1 text-[11px] font-semibold text-foreground"
+          >
+            <Play className="size-3 fill-primary text-primary" />
+            Continue: {track.label.replace(/\n/g, " ")}
+          </button>
+        )}
       </div>
 
-      <div style={{ font: "400 13px var(--font-mono)", color: "var(--text)" }}>{clock}</div>
+      <span className="font-mono text-[13px] text-foreground">{clock}</span>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        {syncing && (
-          <span style={{ font: "400 9px var(--font-mono)", color: "var(--muted)" }}>saving…</span>
-        )}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ font: "700 11px var(--font-display)", color: "var(--accent-1)" }}>
-            {xp.toLocaleString()} XP
-          </span>
-          <span style={{ width: 60, height: 4, background: "var(--surface-raised)", display: "block" }}>
-            <span
-              style={{
-                display: "block",
-                height: "100%",
-                width: `${(xpInLevel / 1000) * 100}%`,
-                background: "var(--accent-1)",
-              }}
-            />
+      <div className="flex items-center gap-3.5">
+        {syncing && <span className="font-mono text-[9px] text-muted-foreground">saving…</span>}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold text-brand-amber">{xp.toLocaleString()} XP</span>
+          <span className="block h-1 w-14 bg-surface-raised">
+            <span className="block h-full bg-brand-amber" style={{ width: `${(xpInLevel / 1000) * 100}%` }} />
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, font: "700 11px var(--font-display)", color: "var(--accent-1)" }}>
-          🔥 {streak}
-        </div>
+        <div className="flex items-center gap-1 text-[11px] font-bold text-brand-amber">🔥 {streak}</div>
         <button
           type="button"
           aria-label={`Switch to ${nextTheme} theme`}
           onClick={() => dispatch({ type: "setTheme", theme: nextTheme })}
-          style={{
-            width: 30,
-            height: 30,
-            display: "grid",
-            placeItems: "center",
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 15,
-            color: "var(--text)",
-          }}
+          className="grid size-[30px] place-items-center text-[15px] text-foreground hover:bg-surface-raised"
         >
           {state.profile.theme === "dark" ? "☾" : "☀"}
         </button>
@@ -97,16 +86,7 @@ export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
           type="button"
           aria-label="Open settings"
           onClick={onOpenSettings}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: "50%",
-            background: "var(--accent-3)",
-            border: "var(--bd-inner)",
-            color: "#fff",
-            font: "700 10px var(--font-display)",
-            cursor: "pointer",
-          }}
+          className="chrome-flat size-7 bg-brand-violet text-[10px] font-bold text-white"
         >
           {(state.profile.displayName?.[0] ?? "A").toUpperCase()}
         </button>

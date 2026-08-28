@@ -18,7 +18,10 @@ import type { NodeState } from "@/content/curriculum";
 
 export interface CNode {
   id: string;
+  /** full name — shown for the selected node and as a hover title */
   label: string;
+  /** short code shown under every node ("XL 04"); falls back to label */
+  code?: string;
   pos: { x: number; y: number; r: number };
 }
 export interface CEdge {
@@ -174,7 +177,7 @@ export function Constellation({
                 id={pid}
                 d={d}
                 fill="none"
-                stroke={done ? "var(--accent-2)" : half ? "var(--primary)" : "var(--muted)"}
+                stroke={done ? "var(--accent-2)" : half ? "var(--primary)" : "var(--muted-foreground)"}
                 strokeWidth={done ? 1.8 : half ? 1.4 : 1.1}
                 strokeDasharray={done || half ? "none" : "2 5"}
                 strokeLinecap="round"
@@ -199,7 +202,9 @@ export function Constellation({
           const isA = st === "active";
           const isR = st === "needs-review";
           const isL = st === "locked";
-          const labelColor = isC || isA || isR ? "var(--text)" : "var(--muted)";
+          const isSel = selectedId === n.id;
+          const labelColor = isC || isA || isR ? "var(--text)" : "var(--muted-foreground)";
+          const shortLabel = n.code ?? n.label;
           return (
             <g
               key={n.id}
@@ -210,6 +215,7 @@ export function Constellation({
               }}
               style={{ cursor: "pointer" }}
             >
+              <title>{n.label}</title>
               {(isC || isR) && (
                 <circle
                   cx={x}
@@ -255,21 +261,41 @@ export function Constellation({
                   <line x1={x - r * 0.55} y1={y} x2={x + r * 0.55} y2={y} stroke="#fff" strokeWidth={1} />
                 </g>
               )}
+              {/* short code under every node */}
               <text
                 x={x}
-                y={y + r + 14}
+                y={y + r + 13}
                 textAnchor="middle"
-                fontFamily="var(--font-label)"
-                fontSize={labelSize}
-                fontWeight={isC || isA || isR ? 600 : 500}
+                fontFamily="var(--font-mono)"
+                fontSize={labelSize - 1}
+                fontWeight={isC || isA || isR ? 700 : 500}
                 fill={labelColor}
                 stroke="var(--bg)"
                 strokeWidth={3.5}
                 paintOrder="stroke"
                 pointerEvents="none"
+                letterSpacing="0.03em"
               >
-                {n.label}
+                {shortLabel}
               </text>
+              {/* full name only for the selected node */}
+              {isSel && n.code && (
+                <text
+                  x={x}
+                  y={y + r + 27}
+                  textAnchor="middle"
+                  fontFamily="var(--font-label)"
+                  fontSize={labelSize}
+                  fontWeight={600}
+                  fill="var(--text)"
+                  stroke="var(--bg)"
+                  strokeWidth={4}
+                  paintOrder="stroke"
+                  pointerEvents="none"
+                >
+                  {n.label}
+                </text>
+              )}
             </g>
           );
         })}

@@ -101,6 +101,8 @@ export function Desktop() {
                 onMaximize={() => wm.toggleMaximize(id)}
                 onDragStart={(e) => wm.startDrag(id, e)}
                 onResizeStart={(edge, e) => wm.startResize(id, edge, e)}
+                fitContent={app.fitContent}
+                onReportNatural={wm.reportNatural.bind(null, id)}
               >
                 <Body />
               </Window>
@@ -159,7 +161,7 @@ export function Desktop() {
                 border: "var(--bd-inner)",
                 borderRadius: "var(--radius-control)",
                 font: "400 11px var(--font-mono)",
-                color: "var(--muted)",
+                color: "var(--muted-foreground)",
                 zIndex: 150,
               }}
             >

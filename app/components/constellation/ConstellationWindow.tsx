@@ -81,16 +81,15 @@ export function ConstellationWindow() {
         <NodeDrawer
           key={sel.id}
           node={sel}
-          topicLabel="Track"
+          kind="topic"
+          topicLabel={sel.cluster}
           state={selState}
           blockingLabel={blocker ? TOPICS_BY_ID[blocker]?.label : null}
           onStart={() => {
             if (selState === "available") dispatch({ type: "startNode", nodeId: sel.id, level: "topic", topicId: null });
-            win.open(`subconstellation:${sel.id}`, { width: 880, height: 660 });
+            win.open(`subconstellation:${sel.id}`);
           }}
-          onComplete={() => {
-            win.open(`subconstellation:${sel.id}`, { width: 880, height: 660 });
-          }}
+          onComplete={() => win.open(`subconstellation:${sel.id}`)}
           onOpenChapter={() => win.open("textbook")}
           onClose={() => setSelected(null)}
         />
@@ -116,7 +115,7 @@ function ZoneLabels() {
             top: `${(z.y / MAP_H) * 100}%`,
             font: "700 8px var(--font-mono)",
             letterSpacing: "0.24em",
-            color: "var(--muted)",
+            color: "var(--muted-foreground)",
             opacity: 0.55,
             pointerEvents: "none",
           }}

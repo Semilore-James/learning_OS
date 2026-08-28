@@ -27,6 +27,8 @@ export type Cluster = "foundations" | "analysis" | "output";
 export interface SubNode {
   id: string;
   label: string;
+  /** short course code shown on the map ("XL 04"); full label lives in the drawer */
+  code?: string;
   /** ids of sub-nodes (within the same topic) that must be completed first */
   prerequisites: string[];
   /** textbook chapter slugs this sub-node maps to (content/textbook/<topic>/<slug>.md) */
@@ -35,6 +37,20 @@ export interface SubNode {
   /** svg position within the sub-constellation canvas */
   pos: { x: number; y: number; r: number };
 }
+
+/** topic id -> code prefix for its sub-nodes */
+export const TOPIC_CODE: Record<string, string> = {
+  excel: "XL",
+  sql: "SQL",
+  python: "PY",
+  statistics: "STAT",
+  "data-cleaning": "CLN",
+  visualization: "VIZ",
+  "power-bi": "PBI",
+  git: "GIT",
+  storytelling: "STORY",
+  portfolio: "PORT",
+};
 
 export interface TopicNode {
   id: string;
@@ -138,9 +154,12 @@ export const TOPICS: TopicNode[] = [
       "Data validation",
       "Conditional formatting",
       "Charts (bar, line, scatter, combo)",
-      "Power Query basics",
       "Named ranges",
       "Data cleaning in Excel",
+      "Power Query in Excel: get and transform data",
+      "Power Query (M): custom columns, parameters, reusable queries",
+      "VBA: the editor, recording macros, running them",
+      "VBA: variables, loops, and writing a small automation",
     ],
   },
   {
@@ -268,9 +287,13 @@ export const TOPICS: TopicNode[] = [
     plannedSubNodes: [
       "Power BI interface orientation",
       "Connecting to data sources",
-      "Data model basics (tables, relationships)",
+      "Power Query (M): shaping data in the query editor",
+      "Power Query (M): custom columns, parameters, and reuse",
+      "Data model basics (tables, relationships, star schema)",
+      "DAX: row context vs filter context (the core idea)",
       "DAX basics (calculated columns, measures)",
       "DAX intermediate (CALCULATE, FILTER, ALL)",
+      "DAX advanced: variables, iterators (SUMX), time intelligence",
       "Building visuals in Power BI",
       "Slicers and filters",
       "Drill-through and report navigation",

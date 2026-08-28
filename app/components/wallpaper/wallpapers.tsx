@@ -369,7 +369,7 @@ export function Contour({ theme }: WallpaperProps) {
       <rect width={W} height={H} fill="var(--bg)" />
       <g fill="none" strokeWidth={1} opacity={op}>
         {lines.map((l, i) => (
-          <path key={i} d={l.d} stroke={l.hot ? "var(--accent-1)" : "var(--muted)"} />
+          <path key={i} d={l.d} stroke={l.hot ? "var(--accent-1)" : "var(--muted-foreground)"} />
         ))}
       </g>
     </svg>

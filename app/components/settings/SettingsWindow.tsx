@@ -1,154 +1,102 @@
 "use client";
 
 /* ============================================================================
-   Settings — theme (colour palette), skin (design language), wallpaper.
-   All three persist to the profile via the store, so a logged-in user keeps
-   them across devices and a guest keeps them in localStorage.
-   The full Settings window (data export, reset progress, profile) lands in
-   Phase 1 step 21; this is the appearance section, built now on request.
+   Settings — appearance: theme (palette), skin (design language), wallpaper.
+   All three persist to the profile via the store. Full Settings (profile, data
+   export, reset progress) lands in Phase 1 step 21.
    ========================================================================== */
 import { useStore } from "@/lib/store";
 import { SKINS } from "@/lib/skins";
 import { WALLPAPERS } from "@/components/wallpaper";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { Skin, Theme } from "@/lib/store/types";
 
-const section: React.CSSProperties = {
-  padding: "18px 20px",
-  borderBottom: "1px solid var(--border)",
-  display: "flex",
-  flexDirection: "column",
-  gap: 12,
-};
-const label: React.CSSProperties = {
-  font: "700 9px var(--font-mono)",
-  letterSpacing: "0.15em",
-  textTransform: "uppercase",
-  color: "var(--muted)",
-};
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+      {children}
+    </span>
+  );
+}
 
 export function SettingsWindow() {
   const { state, dispatch } = useStore();
   const { theme, skin, wallpaperId } = state.profile;
 
   return (
-    <div>
-      {/* THEME ---------------------------------------------------------- */}
-      <div style={section}>
-        <span style={label}>Theme</span>
-        <div style={{ display: "flex", gap: 8 }}>
+    <div className="w-[420px] max-w-full">
+      <section className="flex flex-col gap-3 border-b border-border p-5">
+        <SectionLabel>Theme</SectionLabel>
+        <div className="flex gap-2">
           {(["dark", "light"] as Theme[]).map((t) => (
-            <button
+            <Button
               key={t}
-              type="button"
+              variant={theme === t ? "default" : "outline"}
+              className="flex-1 capitalize"
               onClick={() => dispatch({ type: "setTheme", theme: t })}
-              style={{
-                flex: 1,
-                padding: "10px 0",
-                textTransform: "capitalize",
-                font: "600 12px var(--font-display)",
-                color: theme === t ? "#fff" : "var(--text)",
-                background: theme === t ? "var(--primary)" : "var(--surface-raised)",
-                border: "var(--bd-inner)",
-                borderRadius: "var(--radius-control)",
-                cursor: "pointer",
-              }}
             >
               {t}
-            </button>
+            </Button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* SKIN --------------------------------------------------------- */}
-      <div style={section}>
-        <span style={label}>Design language</span>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {SKINS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => dispatch({ type: "setSkin", skin: s.id as Skin })}
-              style={{
-                textAlign: "left",
-                padding: "10px 12px",
-                background: skin === s.id ? "var(--surface-raised)" : "transparent",
-                border: skin === s.id ? "var(--bd-inner)" : "1px solid var(--border)",
-                borderRadius: "var(--radius-control)",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                gap: 3,
-              }}
-            >
-              <span style={{ font: "600 12px var(--font-display)", color: "var(--text)" }}>
-                {s.label}
-                {skin === s.id && (
-                  <span style={{ color: "var(--primary)", marginLeft: 8, font: "400 9px var(--font-mono)" }}>
-                    ACTIVE
-                  </span>
-                )}
-              </span>
-              <span style={{ font: "300 11px var(--font-body)", color: "var(--muted)" }}>
-                {s.blurb}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <section className="flex flex-col gap-2 border-b border-border p-5">
+        <SectionLabel>Design language</SectionLabel>
+        {SKINS.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => dispatch({ type: "setSkin", skin: s.id as Skin })}
+            className={cn(
+              "flex flex-col gap-1 rounded-[var(--radius-control)] border p-3 text-left",
+              skin === s.id ? "chrome-flat bg-surface-raised" : "border-border",
+            )}
+          >
+            <span className="text-xs font-semibold text-foreground">
+              {s.label}
+              {skin === s.id && (
+                <span className="ml-2 font-mono text-[9px] text-primary">ACTIVE</span>
+              )}
+            </span>
+            <span className="text-[11px] font-light text-muted-foreground">{s.blurb}</span>
+          </button>
+        ))}
+      </section>
 
-      {/* WALLPAPER -------------------------------------------------- */}
-      <div style={{ ...section, borderBottom: "none" }}>
-        <span style={label}>Wallpaper</span>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 8,
-          }}
-        >
+      <section className="flex flex-col gap-3 p-5">
+        <SectionLabel>Wallpaper</SectionLabel>
+        <div className="grid grid-cols-3 gap-2">
           {WALLPAPERS.map((w) => (
             <button
               key={w.id}
               type="button"
               title={w.blurb}
               onClick={() => dispatch({ type: "setWallpaper", wallpaperId: w.id })}
-              style={{
-                aspectRatio: "16 / 10",
-                position: "relative",
-                overflow: "hidden",
-                background: "var(--surface-raised)",
-                border: wallpaperId === w.id ? "2px solid var(--primary)" : "1px solid var(--border)",
-                borderRadius: "var(--radius-control)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "flex-end",
-                padding: 0,
-              }}
+              className={cn(
+                "relative flex aspect-[16/10] items-end overflow-hidden rounded-[var(--radius-control)] border bg-surface-raised p-0",
+                wallpaperId === w.id ? "border-2 border-primary" : "border-border",
+              )}
             >
               {w.kind === "svg" && w.Component && (
-                <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+                <div className="pointer-events-none absolute inset-0">
                   <w.Component theme={theme} reducedMotion />
                 </div>
               )}
               <span
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  padding: "3px 6px",
-                  font: "400 9px var(--font-mono)",
-                  color: "var(--text)",
-                  background: "color-mix(in srgb, var(--bg) 70%, transparent)",
-                }}
+                className="relative w-full px-1.5 py-[3px] font-mono text-[9px] text-foreground"
+                style={{ background: "color-mix(in srgb, var(--bg) 70%, transparent)" }}
               >
                 {w.label}
               </span>
             </button>
           ))}
         </div>
-        <p style={{ font: "300 11px var(--font-body)", color: "var(--muted)", margin: 0 }}>
+        <p className="text-[11px] font-light text-muted-foreground">
           More wallpapers, including your own art, drop into the same picker later.
         </p>
-      </div>
+      </section>
     </div>
   );
 }

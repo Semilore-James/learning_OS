@@ -34,6 +34,9 @@ export interface AppDef {
   /** feature flag gating this app; omitted = always available */
   flag?: Flag;
   win: { title: string; subtitle?: string; width: number; height: number };
+  /** true = open at the size the content needs and clamp resize to it;
+   *  false (default) = use win.{width,height}, for canvas / grid windows */
+  fitContent?: boolean;
   Body: ComponentType;
 }
 
@@ -148,6 +151,7 @@ export const SETTINGS_APP: AppDef = {
   hint: "Theme, skin, wallpaper",
   glyph: <GlyphSettings />,
   win: { title: "Settings", width: 560, height: 600 },
+  fitContent: true,
   Body: SettingsWindow,
 };
 

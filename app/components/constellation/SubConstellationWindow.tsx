@@ -42,7 +42,7 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
 
   if (!topic) return <div style={{ padding: 24 }}>Unknown track.</div>;
 
-  const cnodes: CNode[] = subNodes.map((s) => ({ id: s.id, label: s.label, pos: s.pos }));
+  const cnodes: CNode[] = subNodes.map((s) => ({ id: s.id, label: s.label, code: s.code, pos: s.pos }));
   const edges: CEdge[] = subNodes.flatMap((s) => s.prerequisites.map((p) => ({ from: p, to: s.id })));
   const sel = selected ? subNodes.find((s) => s.id === selected) ?? null : null;
   const selState = selected ? states[selected] ?? "locked" : "locked";
@@ -73,6 +73,7 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
         <NodeDrawer
           key={sel.id}
           node={sel}
+          kind="sub"
           topicLabel={topic.label.replace(/\n/g, " ")}
           state={selState}
           blockingLabel={blockerLabel}

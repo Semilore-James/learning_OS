@@ -79,7 +79,7 @@ export function Legend() {
             background: "var(--surface)",
             border: "var(--bd-inner)",
             boxShadow: "var(--shadow-xs)",
-            color: "var(--muted)",
+            color: "var(--muted-foreground)",
             font: "italic 700 12px var(--font-label)",
             cursor: "pointer",
           }}

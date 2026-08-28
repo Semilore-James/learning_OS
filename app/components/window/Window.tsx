@@ -5,7 +5,7 @@
    contract in globals.css, so a skin swap restyles every window at once.
    Controls: minimise, maximise, close.
    ========================================================================== */
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { ResizeEdge } from "@/lib/useWindows";
 
 const TASKBAR = 44;
@@ -53,7 +53,7 @@ function ControlButton({
         background: "var(--surface-raised)",
         border: "var(--bd-inner)",
         borderRadius: "var(--radius-control)",
-        color: "var(--muted)",
+        color: "var(--muted-foreground)",
         cursor: "pointer",
       }}
       onMouseEnter={(e) => {
@@ -66,7 +66,7 @@ function ControlButton({
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = "var(--surface-raised)";
-        e.currentTarget.style.color = "var(--muted)";
+        e.currentTarget.style.color = "var(--muted-foreground)";
       }}
     >
       {children}
@@ -90,6 +90,8 @@ export function Window({
   onMaximize,
   onDragStart,
   onResizeStart,
+  fitContent = false,
+  onReportNatural,
   children,
 }: {
   id: string;
@@ -107,8 +109,28 @@ export function Window({
   onMaximize: () => void;
   onDragStart: (e: React.PointerEvent) => void;
   onResizeStart: (edge: ResizeEdge, e: React.PointerEvent) => void;
+  fitContent?: boolean;
+  onReportNatural?: (size: { width: number; height: number }) => void;
   children: ReactNode;
 }) {
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!fitContent || !onReportNatural || !bodyRef.current) return;
+    const el = bodyRef.current;
+    const report = onReportNatural;
+    const measure = () => {
+      const inner = el.firstElementChild as HTMLElement | null;
+      const target = inner ?? el;
+      report({ width: target.scrollWidth + 8, height: target.scrollHeight + 44 });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => ro.disconnect();
+  }, [fitContent, onReportNatural]);
+
   const geom: React.CSSProperties = maximized
     ? { left: 8, top: 8, width: "calc(100vw - 16px)", height: `calc(100dvh - ${TASKBAR + 16}px)` }
     : { left: x, top: y, width, height };
@@ -165,7 +187,7 @@ export function Window({
           {title}
         </span>
         {subtitle && (
-          <span style={{ font: "400 9px var(--font-mono)", color: "var(--muted)" }}>{subtitle}</span>
+          <span style={{ font: "400 9px var(--font-mono)", color: "var(--muted-foreground)" }}>{subtitle}</span>
         )}
         <div style={{ display: "flex", gap: 4 }}>
           <ControlButton label="Minimise" onClick={onMinimize}>
@@ -186,7 +208,9 @@ export function Window({
           </ControlButton>
         </div>
       </header>
-      <div style={{ flex: 1, overflow: "auto", position: "relative" }}>{children}</div>
+      <div ref={bodyRef} style={{ flex: 1, overflow: "auto", position: "relative" }}>
+        {children}
+      </div>
 
       {!maximized &&
         HANDLES.map((h) => (

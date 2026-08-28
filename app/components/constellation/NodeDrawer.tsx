@@ -3,24 +3,21 @@
 /* ============================================================================
    The node drawer — slides in on the right of a constellation window.
    Tabs: Resources | Tasks | Notes | Textbook (PRD 6.6 / Userflow 5).
-   Notes are real and sync through the store. Resources / Tasks show what will
-   fill them (videos import at step 15, cases author at step 16).
+   Notes sync through the store. The CTA depends on whether this is a topic
+   ("Enter / Continue track") or a sub-node ("Start / Mark complete").
    ========================================================================== */
 import { useState } from "react";
 import type { NodeState, SubNode, TopicNode } from "@/content/curriculum";
 import { useStore } from "@/lib/store";
-
-type Tab = "resources" | "tasks" | "notes" | "textbook";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "resources", label: "Resources" },
-  { id: "tasks", label: "Tasks" },
-  { id: "notes", label: "Notes" },
-  { id: "textbook", label: "Textbook" },
-];
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function NodeDrawer({
   node,
+  kind,
   topicLabel,
   state,
   blockingLabel,
@@ -30,6 +27,7 @@ export function NodeDrawer({
   onClose,
 }: {
   node: SubNode | TopicNode;
+  kind: "topic" | "sub";
   topicLabel: string;
   state: NodeState;
   blockingLabel: string | null;
@@ -39,7 +37,6 @@ export function NodeDrawer({
   onClose: () => void;
 }) {
   const { state: s, dispatch } = useStore();
-  const [tab, setTab] = useState<Tab>("resources");
   const [note, setNote] = useState(s.notes[node.id] ?? "");
   const chapters = "chapters" in node ? node.chapters : [];
 
@@ -47,22 +44,34 @@ export function NodeDrawer({
     if (note !== (s.notes[node.id] ?? "")) dispatch({ type: "saveNote", nodeId: node.id, body: note });
   };
 
+  const statusLine = () => {
+    if (state === "locked") return `Locked. Complete ${blockingLabel ?? "the prerequisite"} first.`;
+    if ("blurb" in node) return node.blurb;
+    if (state === "completed") return "Completed. Notes stay editable.";
+    if (state === "needs-review") return "Due for review — the queue will bring back a question from this.";
+    return "Work through the resources, then mark this complete.";
+  };
+
+  const cta = (() => {
+    if (state === "locked")
+      return <p className="text-center text-[10px] font-mono text-muted-foreground">complete {blockingLabel ?? "prerequisite"} first</p>;
+    if (kind === "topic") {
+      const label = state === "completed" ? "Revisit track" : state === "available" ? "Enter this track" : "Continue track";
+      return <Button className="w-full uppercase tracking-wide" onClick={onStart}>{label}</Button>;
+    }
+    if (state === "available")
+      return <Button className="w-full uppercase tracking-wide" onClick={onStart}>Start this skill</Button>;
+    if (state === "active" || state === "needs-review")
+      return <Button className="w-full uppercase tracking-wide" onClick={onComplete}>Mark as complete</Button>;
+    return <p className="text-center text-[10px] font-mono text-brand-green">✓ complete</p>;
+  })();
+
   return (
-    <aside
-      style={{
-        width: 288,
-        minWidth: 288,
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--surface)",
-        borderLeft: "var(--bd)",
-        animation: "fadeIn .18s ease",
-      }}
-    >
-      <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", gap: 8, alignItems: "flex-start" }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ font: "600 14px var(--font-display)", color: "var(--text)", lineHeight: 1.25 }}>{node.label}</div>
-          <div style={{ marginTop: 4, font: "400 9px var(--font-mono)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+    <aside className="flex w-72 min-w-72 flex-col bg-surface" style={{ borderLeft: "var(--bd)", animation: "fadeIn .18s ease" }}>
+      <div className="flex items-start gap-2 border-b border-border p-4">
+        <div className="flex-1">
+          <div className="text-sm font-semibold leading-tight text-foreground">{node.label}</div>
+          <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
             {topicLabel}
             {"estHours" in node ? ` · ~${node.estHours}h` : ""}
           </div>
@@ -71,147 +80,61 @@ export function NodeDrawer({
           type="button"
           aria-label="Close drawer"
           onClick={onClose}
-          style={{ background: "none", border: "none", color: "var(--muted)", font: "700 13px var(--font-mono)", cursor: "pointer" }}
+          className="font-mono text-sm font-bold text-muted-foreground hover:text-foreground"
         >
           ×
         </button>
       </div>
 
-      {/* blurb / status line */}
-      <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border)", font: "300 12px var(--font-body)", color: "var(--muted)" }}>
-        {state === "locked"
-          ? `Locked. Complete ${blockingLabel ?? "the prerequisite"} first.`
-          : "blurb" in node
-            ? node.blurb
-            : state === "completed"
-              ? "Completed. Notes stay editable."
-              : state === "needs-review"
-                ? "Due for review — the queue will bring back a question from this."
-                : "Work through the resources, then mark this complete."}
-      </div>
+      <p className="border-b border-border px-4 py-2.5 text-xs font-light text-muted-foreground">{statusLine()}</p>
 
-      {/* tabs */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}>
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            style={{
-              flex: 1,
-              padding: "8px 0",
-              background: "none",
-              border: "none",
-              borderBottom: tab === t.id ? "2px solid var(--primary)" : "2px solid transparent",
-              color: tab === t.id ? "var(--primary)" : "var(--muted)",
-              font: "600 10px var(--font-display)",
-              cursor: "pointer",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <Tabs defaultValue="resources" className="min-h-0 flex-1 gap-0">
+        <TabsList variant="line" className="w-full justify-around border-b border-border px-2">
+          <TabsTrigger value="resources" className="text-[10px]">Resources</TabsTrigger>
+          <TabsTrigger value="tasks" className="text-[10px]">Tasks</TabsTrigger>
+          <TabsTrigger value="notes" className="text-[10px]">Notes</TabsTrigger>
+          <TabsTrigger value="textbook" className="text-[10px]">Textbook</TabsTrigger>
+        </TabsList>
 
-      <div style={{ flex: 1, overflow: "auto", padding: 14 }}>
-        {tab === "resources" && (
-          <p style={{ font: "300 12px var(--font-body)", color: "var(--muted)", margin: 0 }}>
-            Curated videos for this skill appear here once the Video Library import runs
-            (build step 15). They come from Semilore&rsquo;s spreadsheet, tagged{" "}
-            <code style={{ font: "400 11px var(--font-mono)", color: "var(--accent-2)" }}>{node.id}</code>.
-          </p>
-        )}
-        {tab === "tasks" && (
-          <p style={{ font: "300 12px var(--font-body)", color: "var(--muted)", margin: 0 }}>
-            The Case Files that exercise this skill link here (build step 16). Completing one
-            is what unlocks &ldquo;Mark as complete&rdquo;.
-          </p>
-        )}
-        {tab === "notes" && (
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            onBlur={commitNote}
-            placeholder="Your notes on this skill…"
-            style={{
-              width: "100%",
-              minHeight: 180,
-              resize: "vertical",
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius-control)",
-              color: "var(--text)",
-              font: "400 12px/1.5 var(--font-body)",
-              padding: 10,
-            }}
-          />
-        )}
-        {tab === "textbook" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {chapters.length === 0 && (
-              <p style={{ font: "300 12px var(--font-body)", color: "var(--muted)", margin: 0 }}>
-                No chapter mapped yet.
-              </p>
-            )}
-            {chapters.map((slug) => (
-              <button
-                key={slug}
-                type="button"
-                onClick={() => onOpenChapter(slug)}
-                style={{
-                  textAlign: "left",
-                  padding: "8px 10px",
-                  background: "var(--surface-raised)",
-                  border: "var(--bd-inner)",
-                  borderRadius: "var(--radius-control)",
-                  color: "var(--text)",
-                  font: "400 11px var(--font-mono)",
-                  cursor: "pointer",
-                }}
-              >
-                {slug} &rarr;
-              </button>
-            ))}
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="p-3.5">
+            <TabsContent value="resources" className="mt-0 text-xs font-light text-muted-foreground">
+              Curated videos for this skill appear here once the Video Library import runs (build step
+              15), tagged <code className="font-mono text-[11px] text-brand-green">{node.id}</code>.
+            </TabsContent>
+            <TabsContent value="tasks" className="mt-0 text-xs font-light text-muted-foreground">
+              The Case Files that exercise this skill link here (build step 16). Completing one is what
+              unlocks &ldquo;Mark as complete&rdquo;.
+            </TabsContent>
+            <TabsContent value="notes" className="mt-0">
+              <Textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onBlur={commitNote}
+                placeholder="Your notes on this skill…"
+                className="min-h-44 resize-y bg-background font-body text-xs leading-relaxed"
+              />
+            </TabsContent>
+            <TabsContent value="textbook" className="mt-0 flex flex-col gap-2">
+              {chapters.length === 0 && (
+                <p className="text-xs font-light text-muted-foreground">No chapter mapped yet.</p>
+              )}
+              {chapters.map((slug) => (
+                <button
+                  key={slug}
+                  type="button"
+                  onClick={() => onOpenChapter(slug)}
+                  className={cn("chrome-flat chrome-press bg-surface-raised px-2.5 py-2 text-left font-mono text-[11px] text-foreground")}
+                >
+                  {slug} &rarr;
+                </button>
+              ))}
+            </TabsContent>
           </div>
-        )}
-      </div>
+        </ScrollArea>
+      </Tabs>
 
-      {/* CTA */}
-      <div style={{ padding: 12, borderTop: "1px solid var(--border)" }}>
-        {state === "available" && (
-          <button type="button" onClick={onStart} style={ctaStyle}>
-            Start this skill
-          </button>
-        )}
-        {(state === "active" || state === "needs-review") && (
-          <button type="button" onClick={onComplete} style={ctaStyle}>
-            Mark as complete
-          </button>
-        )}
-        {state === "completed" && (
-          <div style={{ font: "400 10px var(--font-mono)", color: "var(--accent-2)", textAlign: "center" }}>
-            ✓ complete
-          </div>
-        )}
-        {state === "locked" && (
-          <div style={{ font: "400 10px var(--font-mono)", color: "var(--muted)", textAlign: "center" }}>
-            complete {blockingLabel ?? "prerequisite"} first
-          </div>
-        )}
-      </div>
+      <div className="border-t border-border p-3">{cta}</div>
     </aside>
   );
 }
-
-const ctaStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 0",
-  background: "var(--primary)",
-  color: "#fff",
-  border: "var(--bd-inner)",
-  borderRadius: "var(--radius-control)",
-  font: "600 12px var(--font-display)",
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  cursor: "pointer",
-};

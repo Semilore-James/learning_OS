@@ -1,18 +1,27 @@
-/* ============================================================================
-   DA // LEARNING OS  —  design tokens
-   ----------------------------------------------------------------------------
-   Two orthogonal axes:
-     data-theme  = dark (default) | light   -> the COLOUR palette
-     data-skin   = neobrutalism (default) | swiss | brutalist-web | memphis
-                   | retro-futurism | glassmorphism   -> the CHROME
-                   (border, shadow, radius, panel treatment, typography)
+@import "tailwindcss";
+@import "tw-animate-css";
 
-   Components must reference the token names below, never hardcode a border,
-   shadow, or radius, so a skin swap restyles the whole OS.
+/* ============================================================================
+   DA // LEARNING OS  —  design system
+   ----------------------------------------------------------------------------
+   Three layers:
+     1. The palette         data-theme = dark (default) | light
+     2. The chrome contract data-skin  = neobrutalism (default) | swiss | glass
+        (border, shadow, radius, panel treatment, typography)
+     3. shadcn/ui semantic tokens (--background, --primary, --muted, ...) are
+        thin aliases over layers 1+2, exposed to Tailwind via @theme inline so
+        shadcn components restyle with the theme AND the skin.
+
+   Custom components reference the token names directly; shadcn components use
+   the Tailwind utilities that map to them. Never hardcode a colour, border,
+   shadow, or radius.
    ========================================================================== */
 
+/* dark is the default; light is opt-in via data-theme="light" */
+@custom-variant dark (&:is(:root:not([data-theme="light"]) *, [data-theme="dark"] *));
+
 :root {
-  /* ---- colour palette : dark (default) --------------------------------- */
+  /* ---- 1. palette : dark (default) ----------------------------------- */
   --bg: #080b14;
   --surface: #111a28;
   --surface-raised: #1a2637;
@@ -21,18 +30,18 @@
   --accent-2: #5beeb0;
   --accent-3: #8d5bee;
   --text: #e8ecf4;
-  --muted: #63718c;
+  --text-muted: #63718c;
   --border: #26344a;
+  --danger: #e5484d;
 
   /* ---- typography (skins may override) --------------------------------
-     Inter for everything readable — clean at every size. JetBrains Mono only
-     for code blocks and hard-technical labels. */
+     Inter for everything readable. JetBrains Mono for code / hard labels. */
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
   --font-display: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-label: var(--font-inter), system-ui, sans-serif;
 
-  /* ---- chrome contract : NEOBRUTALISM defaults ----------------------- */
+  /* ---- 2. chrome contract : NEOBRUTALISM defaults ------------------- */
   --radius: 0px;
   --radius-control: 0px;
   --bd-width: 3px;
@@ -49,11 +58,29 @@
   --press: translate(2px, 2px);
   --press-shadow: 2px 2px 0 #000;
   --link-decoration: none;
-  --deco-opacity: 0;              /* Memphis scatter shapes; 0 = hidden */
   --tile-bg: var(--surface);
+
+  /* ---- 3. shadcn/ui semantic tokens (aliases over 1 + 2) ----------- */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-raised);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-raised);
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --destructive-foreground: #ffffff;
+  --input: var(--border);
+  --ring: var(--primary);
 }
 
-/* ---- colour palette : light ----------------------------------------- */
+/* ---- 1. palette : light ------------------------------------------------ */
 :root[data-theme="light"] {
   --bg: #f5f2eb;
   --surface: #edeae0;
@@ -63,19 +90,19 @@
   --accent-2: #1a9e6e;
   --accent-3: #6b3ec4;
   --text: #1a1f2e;
-  --muted: #6b6a62;
+  --text-muted: #6b6a62;
   --border: #c8c4b8;
+  --danger: #cf3438;
+  --primary-foreground: #ffffff;
 }
 
 /* ============================================================================
-   SKINS  —  chrome only. Put these AFTER the theme block so a skin's chrome
-   wins in both themes; skins deliberately do NOT touch colour tokens.
+   SKINS  —  chrome only, applied after the palette so they win in both themes.
    ========================================================================== */
 
-/* ---- Swiss / International Typographic ----------------------------------- */
 :root[data-skin="swiss"] {
-  --font-display: "Helvetica Neue", Helvetica, Arial, "Inter", sans-serif;
-  --font-body: "Helvetica Neue", Helvetica, Arial, "Inter", sans-serif;
+  --font-display: "Helvetica Neue", Helvetica, Arial, var(--font-inter), sans-serif;
+  --font-body: "Helvetica Neue", Helvetica, Arial, var(--font-inter), sans-serif;
   --radius: 0px;
   --radius-control: 0px;
   --bd-width: 1px;
@@ -92,7 +119,6 @@
   --press-shadow: none;
 }
 
-/* ---- Glassmorphism / Viewport panels ------------------------------ */
 :root[data-skin="glassmorphism"] {
   --radius: 16px;
   --radius-control: 10px;
@@ -112,32 +138,81 @@
 }
 
 /* ============================================================================
-   base
+   Tailwind theme — makes the tokens available as utilities
+   (bg-background, text-foreground, border-border, rounded-lg, ...)
    ========================================================================== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-* { box-sizing: border-box; }
+  /* brand extras */
+  --color-brand-amber: var(--accent-1);
+  --color-brand-green: var(--accent-2);
+  --color-brand-violet: var(--accent-3);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-text: var(--text);
 
-html, body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
-body { overflow: hidden; } /* the desktop owns the viewport */
-
-a { color: var(--primary); text-decoration: var(--link-decoration); }
-a:hover { color: var(--accent-1); text-decoration: underline; }
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    overflow: hidden; /* the desktop owns the viewport */
+  }
+  a {
+    color: var(--primary);
+    text-decoration: var(--link-decoration);
+  }
+  a:hover {
+    color: var(--accent-1);
+    text-decoration: underline;
+  }
+}
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); }
 
 /* ---- interactive wallpaper dots ---------------------------------- */
-/* circles marked .wp-dot get pointer events back and a hover pop. They do
-   nothing else — just react to the cursor. */
 .wp-dot {
   pointer-events: auto;
   cursor: crosshair;
@@ -150,23 +225,33 @@ a:hover { color: var(--accent-1); text-decoration: underline; }
   opacity: 1 !important;
   filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 14px currentColor);
 }
-@media (prefers-reduced-motion: reduce) {
-  .wp-dot { transition: none; }
-  .wp-dot:hover { transform: scale(2); filter: none; }
+
+/* ---- reusable chrome helpers ----------------------------------- */
+/* Applied to shadcn components so they inherit the active skin's border,
+   shadow, radius, and press behaviour. */
+@layer components {
+  .chrome-panel {
+    background: var(--panel);
+    border: var(--bd);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    -webkit-backdrop-filter: var(--panel-blur);
+    backdrop-filter: var(--panel-blur);
+  }
+  .chrome-flat {
+    border: var(--bd-inner);
+    border-radius: var(--radius-control);
+  }
+  .chrome-press {
+    transition: transform 90ms ease, box-shadow 90ms ease, filter 120ms ease;
+  }
+  .chrome-press:active:not(:disabled) {
+    transform: var(--press);
+    box-shadow: var(--press-shadow);
+  }
 }
 
-/* ---- reusable chrome helpers -------------------------------------- */
-.chrome-panel {
-  background: var(--panel);
-  border: var(--bd);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  -webkit-backdrop-filter: var(--panel-blur);
-  backdrop-filter: var(--panel-blur);
-}
-
-/* ---- motion ----------------------------------------------------------
-   prefers-reduced-motion freezes all ambient animation. */
+/* ---- motion ---------------------------------------------------- */
 @keyframes breathe { 0%,100% { transform: scale(1); opacity: .35 } 50% { transform: scale(1.14); opacity: .75 } }
 @keyframes pulse   { 0% { transform: scale(1); opacity: .6 } 100% { transform: scale(2.5); opacity: 0 } }
 @keyframes twinkle { 0%,100% { opacity: .03 } 50% { opacity: .09 } }
@@ -174,6 +259,8 @@ a:hover { color: var(--accent-1); text-decoration: underline; }
 @keyframes bootline { from { opacity: 0 } to { opacity: 1 } }
 
 @media (prefers-reduced-motion: reduce) {
+  .wp-dot { transition: none; }
+  .wp-dot:hover { transform: scale(2); filter: none; }
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;

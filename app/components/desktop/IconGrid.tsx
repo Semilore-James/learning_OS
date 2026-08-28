@@ -28,8 +28,11 @@ export function IconGrid({
           <button
             key={a.id}
             type="button"
-            title={a.hint}
-            onClick={() => onOpen(a.id)}
+            title={`${a.hint} — double-click to open`}
+            onDoubleClick={() => onOpen(a.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") onOpen(a.id);
+            }}
             style={{
               width: 84,
               display: "flex",
@@ -39,8 +42,9 @@ export function IconGrid({
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              color: isOpen ? "var(--primary)" : "var(--muted)",
+              color: isOpen ? "var(--primary)" : "var(--muted-foreground)",
               padding: 0,
+              userSelect: "none",
             }}
           >
             <span
@@ -60,7 +64,7 @@ export function IconGrid({
             <span
               style={{
                 font: "400 10px/1.2 var(--font-mono)",
-                color: "var(--muted)",
+                color: "var(--muted-foreground)",
                 textAlign: "center",
                 whiteSpace: "pre-line",
               }}

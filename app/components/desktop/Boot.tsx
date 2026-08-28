@@ -41,7 +41,7 @@ export function Boot({ onDone }: { onDone: () => void }) {
     >
       {LINES.slice(0, n).map((l, i) => (
         <div key={i} style={{ animation: "bootline .2s ease" }}>
-          <span style={{ color: "var(--muted)" }}>&gt;</span> {l}
+          <span style={{ color: "var(--muted-foreground)" }}>&gt;</span> {l}
         </div>
       ))}
       <div
