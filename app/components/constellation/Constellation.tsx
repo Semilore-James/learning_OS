@@ -13,7 +13,7 @@
    Node state (locked / available / active / completed / needs-review) is
    passed in — derived by lib/graph.ts, never computed here.
    ========================================================================== */
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { NodeState } from "@/content/curriculum";
 
 export interface CNode {
@@ -93,27 +93,27 @@ export function Constellation({
   const [panning, setPanning] = useState(false);
   const pan = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
 
-  // convert a client point to svg-user coords (pre-transform)
-  const toLocal = (clientX: number, clientY: number) => {
-    const rect = svgRef.current!.getBoundingClientRect();
-    const sx = ((clientX - rect.left) / rect.width) * width;
-    const sy = ((clientY - rect.top) / rect.height) * height;
-    return { sx, sy };
-  };
-
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const { sx, sy } = toLocal(e.clientX, e.clientY);
-    setView((v) => {
-      // clamp per-event change so one trackpad flick can't jump across the range
-      const factor = Math.min(1.12, Math.max(0.89, Math.exp(-e.deltaY * 0.0009)));
-      const k = Math.min(MAX_K, Math.max(MIN_K, v.k * factor));
-      // keep the point under the cursor fixed:  local = (s - t) / k
-      const tx = sx - ((sx - v.tx) / v.k) * k;
-      const ty = sy - ((sy - v.ty) / v.k) * k;
-      return { k, tx, ty };
-    });
-  };
+  // non-passive wheel listener so preventDefault works (React attaches wheel
+  // listeners as passive by default)
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const sx = ((e.clientX - rect.left) / rect.width) * width;
+      const sy = ((e.clientY - rect.top) / rect.height) * height;
+      setView((v) => {
+        const factor = Math.min(1.12, Math.max(0.89, Math.exp(-e.deltaY * 0.0009)));
+        const k = Math.min(MAX_K, Math.max(MIN_K, v.k * factor));
+        const tx = sx - ((sx - v.tx) / v.k) * k;
+        const ty = sy - ((sy - v.ty) / v.k) * k;
+        return { k, tx, ty };
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [width, height]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     // only pan when the background (not a node) is grabbed
@@ -144,7 +144,6 @@ export function Constellation({
       height="100%"
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="xMidYMid meet"
-      onWheel={onWheel}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

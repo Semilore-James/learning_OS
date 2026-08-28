@@ -42,7 +42,7 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
     [subNodes, completed, started],
   );
 
-  if (!topic) return <div style={{ padding: 24 }}>Unknown track.</div>;
+  if (!topic) return <div className="p-6">Unknown track.</div>;
 
   const cnodes: CNode[] = subNodes.map((s) => ({ id: s.id, label: s.label, code: s.code, pos: s.pos }));
   const edges: CEdge[] = subNodes.flatMap((s) => s.prerequisites.map((p) => ({ from: p, to: s.id })));
@@ -57,8 +57,8 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
   const doneCount = topicProgress(subNodes.map((s) => s.id), completed).done;
 
   return (
-    <div style={{ position: "relative", height: "100%", display: "flex" }}>
-      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+    <div className="relative flex h-full">
+      <div className="relative flex-1 overflow-hidden">
         <Burst ref={burst} />
         <Constellation
           nodes={cnodes}

@@ -86,8 +86,8 @@ export function ConstellationWindow() {
     : null;
 
   return (
-    <div style={{ position: "relative", height: "100%", display: "flex" }}>
-      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+    <div className="relative flex h-full">
+      <div className="relative flex-1 overflow-hidden">
         <Constellation
           nodes={cnodes}
           edges={TOPIC_EDGES}
@@ -141,16 +141,8 @@ function ZoneLabels() {
       {zones.map((z) => (
         <span
           key={z.label}
-          style={{
-            position: "absolute",
-            left: `${(z.x / MAP_W) * 100}%`,
-            top: `${(z.y / MAP_H) * 100}%`,
-            font: "700 8px var(--font-mono)",
-            letterSpacing: "0.24em",
-            color: "var(--muted-foreground)",
-            opacity: 0.55,
-            pointerEvents: "none",
-          }}
+          className="pointer-events-none absolute font-mono text-[8px] font-bold tracking-[0.24em] text-muted-foreground opacity-55"
+          style={{ left: `${(z.x / MAP_W) * 100}%`, top: `${(z.y / MAP_H) * 100}%` }}
         >
           {z.label}
         </span>

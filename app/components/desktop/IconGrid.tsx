@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { APPS } from "@/lib/appRegistry";
 import { flag } from "@/lib/flags";
 
@@ -11,17 +12,7 @@ export function IconGrid({
   onOpen: (id: string) => void;
 }) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: 24,
-        left: 24,
-        display: "grid",
-        gridTemplateColumns: "repeat(2, 84px)",
-        gap: 16,
-        zIndex: 5,
-      }}
-    >
+    <div className="absolute left-6 top-6 z-[5] grid grid-cols-2 gap-4" style={{ gridTemplateColumns: "repeat(2, 84px)" }}>
       {APPS.filter((a) => !a.flag || flag(a.flag)).map((a) => {
         const isOpen = openIds.includes(a.id);
         return (
@@ -33,27 +24,14 @@ export function IconGrid({
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") onOpen(a.id);
             }}
-            style={{
-              width: 84,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 6,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: isOpen ? "var(--primary)" : "var(--muted-foreground)",
-              padding: 0,
-              userSelect: "none",
-            }}
+            className={cn(
+              "flex w-[84px] select-none flex-col items-center gap-1.5",
+              isOpen ? "text-primary" : "text-muted-foreground",
+            )}
           >
             <span
+              className="grid size-[76px] place-items-center bg-[var(--tile-bg)]"
               style={{
-                width: 76,
-                height: 76,
-                display: "grid",
-                placeItems: "center",
-                background: "var(--tile-bg)",
                 border: isOpen ? "var(--bd-width) solid var(--primary)" : "var(--bd)",
                 borderRadius: "var(--radius)",
                 boxShadow: "var(--shadow-sm)",
@@ -61,27 +39,10 @@ export function IconGrid({
             >
               {a.glyph}
             </span>
-            <span
-              style={{
-                font: "400 10px/1.2 var(--font-mono)",
-                color: "var(--muted-foreground)",
-                textAlign: "center",
-                whiteSpace: "pre-line",
-              }}
-            >
+            <span className="whitespace-pre-line text-center font-mono text-[10px]/[1.2] text-muted-foreground">
               {a.label}
             </span>
-            {isOpen && (
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "var(--primary)",
-                  marginTop: -2,
-                }}
-              />
-            )}
+            {isOpen && <span className="-mt-0.5 size-1.5 rounded-full bg-primary" />}
           </button>
         );
       })}

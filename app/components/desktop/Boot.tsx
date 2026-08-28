@@ -24,42 +24,16 @@ export function Boot({ onDone }: { onDone: () => void }) {
   }, [n, onDone]);
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "var(--bg)",
-        color: "var(--accent-2)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "0 12vw",
-        gap: 6,
-        font: "400 13px/1.7 var(--font-mono)",
-        zIndex: 9999,
-      }}
-    >
+    <div className="fixed inset-0 z-[9999] flex flex-col justify-center gap-1.5 px-[12vw] font-mono text-[13px] leading-[1.7] text-brand-green" style={{ background: "var(--bg)" }}>
       {LINES.slice(0, n).map((l, i) => (
         <div key={i} style={{ animation: "bootline .2s ease" }}>
-          <span style={{ color: "var(--muted-foreground)" }}>&gt;</span> {l}
+          <span className="text-muted-foreground">&gt;</span> {l}
         </div>
       ))}
-      <div
-        style={{
-          marginTop: 18,
-          height: 3,
-          width: "100%",
-          maxWidth: 420,
-          background: "var(--surface-raised)",
-        }}
-      >
+      <div className="mt-4 h-[3px] w-full max-w-[420px] bg-surface-raised">
         <div
-          style={{
-            height: "100%",
-            width: `${Math.min(100, (n / LINES.length) * 100)}%`,
-            background: "var(--primary)",
-            transition: "width .2s ease",
-          }}
+          className="h-full bg-primary transition-[width] duration-200"
+          style={{ width: `${Math.min(100, (n / LINES.length) * 100)}%` }}
         />
       </div>
     </div>

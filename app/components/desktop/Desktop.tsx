@@ -59,15 +59,7 @@ export function Desktop() {
   );
 
   return (
-    <main
-      style={{
-        position: "relative",
-        height: "100dvh",
-        overflow: "hidden",
-        background: "var(--bg)",
-        color: "var(--text)",
-      }}
-    >
+    <main className="relative h-[100dvh] overflow-hidden bg-background text-foreground">
       <ChromeController />
       <Wallpaper id={state.profile.wallpaperId} theme={state.profile.theme} />
 
@@ -110,16 +102,7 @@ export function Desktop() {
           })}
 
           {wm.minimized.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                left: 16,
-                bottom: 52,
-                display: "flex",
-                gap: 6,
-                zIndex: 150,
-              }}
-            >
+            <div className="absolute bottom-[52px] left-4 z-[150] flex gap-1.5">
               {wm.minimized.map((id) => {
                 const app = resolveApp(id);
                 if (!app) return null;
@@ -128,20 +111,9 @@ export function Desktop() {
                     key={id}
                     type="button"
                     onClick={() => openApp(id)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      padding: "5px 10px",
-                      background: "var(--surface-raised)",
-                      border: "var(--bd-inner)",
-                      borderRadius: "var(--radius-control)",
-                      font: "600 11px var(--font-display)",
-                      color: "var(--text)",
-                      cursor: "pointer",
-                    }}
+                    className="chrome-flat flex items-center gap-1.5 bg-surface-raised px-2.5 py-[5px] font-display text-[11px] font-semibold text-foreground"
                   >
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--primary)" }} />
+                    <span className="size-1.5 rounded-full bg-primary" />
                     {app.win.title}
                   </button>
                 );
@@ -150,21 +122,7 @@ export function Desktop() {
           )}
 
           {state.mode === "guest" && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 52,
-                left: "50%",
-                transform: "translateX(-50%)",
-                padding: "6px 14px",
-                background: "var(--surface-raised)",
-                border: "var(--bd-inner)",
-                borderRadius: "var(--radius-control)",
-                font: "400 11px var(--font-mono)",
-                color: "var(--muted-foreground)",
-                zIndex: 150,
-              }}
-            >
+            <div className="chrome-flat absolute bottom-[52px] left-1/2 z-[150] -translate-x-1/2 bg-surface-raised px-3.5 py-1.5 font-mono text-[11px] text-muted-foreground">
               Guest mode. Progress saves to this browser only.
             </div>
           )}

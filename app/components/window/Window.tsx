@@ -1,36 +1,38 @@
 "use client";
 
 /* ============================================================================
-   Generic window chrome. All visual treatment comes from the chrome token
-   contract in globals.css, so a skin swap restyles every window at once.
+   Generic window chrome. Visual treatment comes from the chrome token contract
+   (.chrome-panel + CSS vars), so a skin swap restyles every window at once.
    Controls: minimise, maximise, close.
    ========================================================================== */
 import { useEffect, useRef, type ReactNode } from "react";
+import { Minus, Square, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ResizeEdge } from "@/lib/useWindows";
 
 const TASKBAR = 44;
 
-const HANDLES: { edge: ResizeEdge; style: React.CSSProperties }[] = [
-  { edge: "n", style: { top: -3, left: 8, right: 8, height: 6, cursor: "ns-resize" } },
-  { edge: "s", style: { bottom: -3, left: 8, right: 8, height: 6, cursor: "ns-resize" } },
-  { edge: "e", style: { right: -3, top: 8, bottom: 8, width: 6, cursor: "ew-resize" } },
-  { edge: "w", style: { left: -3, top: 8, bottom: 8, width: 6, cursor: "ew-resize" } },
-  { edge: "ne", style: { top: -4, right: -4, width: 12, height: 12, cursor: "nesw-resize" } },
-  { edge: "nw", style: { top: -4, left: -4, width: 12, height: 12, cursor: "nwse-resize" } },
-  { edge: "se", style: { bottom: -4, right: -4, width: 14, height: 14, cursor: "nwse-resize" } },
-  { edge: "sw", style: { bottom: -4, left: -4, width: 12, height: 12, cursor: "nesw-resize" } },
+const HANDLES: { edge: ResizeEdge; cls: string }[] = [
+  { edge: "n", cls: "-top-[3px] left-2 right-2 h-1.5 cursor-ns-resize" },
+  { edge: "s", cls: "-bottom-[3px] left-2 right-2 h-1.5 cursor-ns-resize" },
+  { edge: "e", cls: "-right-[3px] top-2 bottom-2 w-1.5 cursor-ew-resize" },
+  { edge: "w", cls: "-left-[3px] top-2 bottom-2 w-1.5 cursor-ew-resize" },
+  { edge: "ne", cls: "-top-1 -right-1 size-3 cursor-nesw-resize" },
+  { edge: "nw", cls: "-top-1 -left-1 size-3 cursor-nwse-resize" },
+  { edge: "se", cls: "-bottom-1 -right-1 size-3.5 cursor-nwse-resize" },
+  { edge: "sw", cls: "-bottom-1 -left-1 size-3 cursor-nesw-resize" },
 ];
 
 function ControlButton({
   label,
   onClick,
-  children,
   danger,
+  children,
 }: {
   label: string;
   onClick: () => void;
-  children: ReactNode;
   danger?: boolean;
+  children: ReactNode;
 }) {
   return (
     <button
@@ -42,32 +44,10 @@ function ControlButton({
         onClick();
       }}
       onPointerDown={(e) => e.stopPropagation()}
-      style={{
-        width: 20,
-        height: 20,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        lineHeight: 1,
-        padding: 0,
-        background: "var(--surface-raised)",
-        border: "var(--bd-inner)",
-        borderRadius: "var(--radius-control)",
-        color: "var(--muted-foreground)",
-        cursor: "pointer",
-      }}
-      onMouseEnter={(e) => {
-        if (danger) {
-          e.currentTarget.style.background = "#e5484d";
-          e.currentTarget.style.color = "#fff";
-        } else {
-          e.currentTarget.style.color = "var(--text)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "var(--surface-raised)";
-        e.currentTarget.style.color = "var(--muted-foreground)";
-      }}
+      className={cn(
+        "chrome-flat grid size-5 place-items-center bg-surface-raised text-muted-foreground transition-colors",
+        danger ? "hover:bg-[#e5484d] hover:text-white" : "hover:text-foreground",
+      )}
     >
       {children}
     </button>
@@ -139,76 +119,35 @@ export function Window({
     <section
       id={`win-${id}`}
       onPointerDown={onFocus}
-      style={{
-        position: "absolute",
-        zIndex: z,
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--panel)",
-        color: "var(--text)",
-        border: "var(--bd)",
-        borderRadius: "var(--radius)",
-        boxShadow: "var(--shadow)",
-        backdropFilter: "var(--panel-blur)",
-        WebkitBackdropFilter: "var(--panel-blur)",
-        animation: "fadeIn .16s ease",
-        overflow: "hidden",
-        ...geom,
-      }}
+      className="chrome-panel absolute flex flex-col overflow-hidden text-foreground"
+      style={{ zIndex: z, animation: "fadeIn .16s ease", ...geom }}
     >
       <header
         onPointerDown={onDragStart}
         onDoubleClick={onMaximize}
-        style={{
-          height: 44,
-          minHeight: 44,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "0 10px 0 0",
-          background: "var(--titlebar)",
-          borderBottom: "var(--bd)",
-          cursor: maximized ? "default" : "grab",
-          touchAction: "none",
-        }}
-      >
-        <div style={{ width: "var(--titlebar-accent-w)", alignSelf: "stretch", background: "var(--primary)" }} />
-        <span
-          style={{
-            flex: 1,
-            font: "600 14px var(--font-display)",
-            color: "var(--text)",
-            paddingLeft: 4,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {title}
-        </span>
-        {subtitle && (
-          <span style={{ font: "400 9px var(--font-mono)", color: "var(--muted-foreground)" }}>{subtitle}</span>
+        className={cn(
+          "flex h-11 min-h-11 touch-none items-center gap-2 pr-2.5",
+          maximized ? "cursor-default" : "cursor-grab",
         )}
-        <div style={{ display: "flex", gap: 4 }}>
+        style={{ background: "var(--titlebar)", borderBottom: "var(--bd)" }}
+      >
+        <div className="self-stretch bg-primary" style={{ width: "var(--titlebar-accent-w)" }} />
+        <span className="flex-1 truncate pl-1 font-display text-sm font-semibold">{title}</span>
+        {subtitle && <span className="font-mono text-[9px] text-muted-foreground">{subtitle}</span>}
+        <div className="flex gap-1">
           <ControlButton label="Minimise" onClick={onMinimize}>
-            <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden>
-              <line x1="1.5" y1="8" x2="8.5" y2="8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
+            <Minus className="size-2.5" strokeWidth={2.5} />
           </ControlButton>
           <ControlButton label={maximized ? "Restore" : "Maximise"} onClick={onMaximize}>
-            <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden>
-              <rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="currentColor" strokeWidth="1.4" />
-            </svg>
+            <Square className="size-2" strokeWidth={2.5} />
           </ControlButton>
           <ControlButton label="Close" onClick={onClose} danger>
-            <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden>
-              <line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              <line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
+            <X className="size-2.5" strokeWidth={2.5} />
           </ControlButton>
         </div>
       </header>
-      <div ref={bodyRef} style={{ flex: 1, overflow: "auto", position: "relative" }}>
+
+      <div ref={bodyRef} className="relative flex-1 overflow-auto">
         {children}
       </div>
 
@@ -217,7 +156,7 @@ export function Window({
           <div
             key={h.edge}
             onPointerDown={(e) => onResizeStart(h.edge, e)}
-            style={{ position: "absolute", zIndex: 5, ...h.style }}
+            className={cn("absolute z-[5]", h.cls)}
           />
         ))}
     </section>
