@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Check, Lock, Play } from "lucide-react";
+import { Check, Infinity as InfinityIcon, Lock, Play } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { DOJO_LEVELS, SEED_SQL } from "@/lib/games/sqlDojo";
+import { getLevel, AUTHORED_LEVELS, SEED_SQL } from "@/lib/games/sqlDojoGen";
 import { runQuery, resultsMatch, type QueryResult } from "@/lib/games/sqlEngine";
 
 function ResultTable({ r }: { r: QueryResult }) {
@@ -40,7 +40,7 @@ function ResultTable({ r }: { r: QueryResult }) {
 export function SqlDojo() {
   const { state, dispatch } = useStore();
   const best = state.games.sql_dojo?.level ?? 0;
-  const [idx, setIdx] = useState(Math.min(best, DOJO_LEVELS.length - 1));
+  const [n, setN] = useState(Math.max(1, best + 1));
   const [sql, setSql] = useState("");
   const [running, setRunning] = useState(false);
   const [out, setOut] = useState<QueryResult | null>(null);
@@ -48,11 +48,10 @@ export function SqlDojo() {
   const [passed, setPassed] = useState(false);
   const [showHint, setShowHint] = useState(false);
 
-  const level = DOJO_LEVELS[idx];
-  const unlockedThrough = Math.max(best, 0); // level n (1-based) unlocked if n <= best+1
+  const level = useMemo(() => getLevel(n), [n]);
 
-  const pick = useCallback((i: number) => {
-    setIdx(i);
+  const go = useCallback((to: number) => {
+    setN(Math.max(1, to));
     setSql("");
     setOut(null);
     setErr(null);
@@ -75,47 +74,49 @@ export function SqlDojo() {
     const ref = await runQuery(SEED_SQL, level.reference);
     const good = ref.ok && ref.result ? resultsMatch(mine.result, ref.result, Boolean(level.ordered)) : false;
     setPassed(good);
-    if (good) {
-      dispatch({ type: "recordGameScore", game: "sql_dojo", level: level.n, score: level.n });
-      dispatch({ type: "recordGameAttempt", game: "sql_dojo", level: level.n, passed: true });
-    } else {
-      dispatch({ type: "recordGameAttempt", game: "sql_dojo", level: level.n, passed: false });
-    }
+    dispatch({ type: "recordGameAttempt", game: "sql_dojo", level: level.n, passed: good });
+    if (good) dispatch({ type: "recordGameScore", game: "sql_dojo", level: level.n, score: level.n });
     setRunning(false);
   }, [sql, level, dispatch]);
 
-  const levels = useMemo(() => DOJO_LEVELS, []);
+  // windowed level list: everything cleared, plus a few ahead
+  const listCount = Math.max(20, best + 6);
+  const rows = useMemo(() => Array.from({ length: listCount }, (_, i) => i + 1), [listCount]);
 
   return (
     <div className="flex h-full">
       <nav className="w-44 min-w-44 overflow-auto border-r border-border bg-surface p-2">
-        {levels.map((l, i) => {
-          const locked = l.n > unlockedThrough + 1;
-          const done = l.n <= best;
+        {rows.map((l) => {
+          const locked = l > best + 1;
+          const done = l <= best;
           return (
             <button
-              key={l.n}
+              key={l}
               type="button"
               disabled={locked}
-              onClick={() => pick(i)}
+              onClick={() => go(l)}
               className={cn(
                 "flex w-full items-center gap-1.5 px-2 py-1.5 text-left text-[11px]",
-                i === idx ? "chrome-flat bg-surface-raised text-foreground" : "text-muted-foreground hover:text-foreground",
+                l === n ? "chrome-flat bg-surface-raised text-foreground" : "text-muted-foreground hover:text-foreground",
                 locked && "cursor-not-allowed opacity-40",
               )}
             >
-              <span className="w-4 font-mono text-[10px] text-muted-foreground">{l.n}</span>
+              <span className="w-5 font-mono text-[10px] text-muted-foreground">{l}</span>
               {locked ? <Lock className="size-3" /> : done ? <Check className="size-3 text-brand-green" /> : null}
-              <span className="truncate">{l.title}</span>
+              <span className="truncate">{done || l <= best + 1 ? getLevel(l).title : "locked"}</span>
             </button>
           );
         })}
+        <div className="mt-2 flex items-center gap-1.5 px-2 py-1 font-mono text-[9px] text-muted-foreground">
+          <InfinityIcon className="size-3" /> generated past {AUTHORED_LEVELS}
+        </div>
       </nav>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-auto p-3">
         <div>
           <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
             Level {level.n} · {level.concept}
+            {level.n > AUTHORED_LEVELS && " · generated"}
           </span>
           <h3 className="font-display text-sm font-bold text-foreground">{level.title}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{level.brief}</p>
@@ -160,15 +161,13 @@ export function SqlDojo() {
           </div>
         )}
         {out && !err && !passed && (
-          <p className="text-[11px] text-muted-foreground">
-            Runs, but the result doesn&apos;t match what the level asks for yet.
-          </p>
+          <p className="text-[11px] text-muted-foreground">Runs, but the result doesn&apos;t match the task yet.</p>
         )}
 
-        {passed && idx < DOJO_LEVELS.length - 1 && (
+        {passed && (
           <button
             type="button"
-            onClick={() => pick(idx + 1)}
+            onClick={() => go(n + 1)}
             className="chrome-flat w-fit bg-surface-raised px-3 py-1.5 text-[11px] font-semibold text-foreground hover:text-primary"
           >
             Next level →

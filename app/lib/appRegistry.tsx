@@ -8,7 +8,6 @@ import type { ComponentType, ReactNode } from "react";
 import type { Flag } from "@/lib/flags";
 import { TOPICS_BY_ID } from "@/content/curriculum";
 import { subNodesFor } from "@/lib/curriculumLayout";
-import { Placeholder } from "@/components/desktop/Placeholder";
 import { SettingsWindow } from "@/components/settings/SettingsWindow";
 import { ConstellationWindow } from "@/components/constellation/ConstellationWindow";
 import { SubConstellationWindow } from "@/components/constellation/SubConstellationWindow";
@@ -52,12 +51,6 @@ export interface AppDef {
   Body: ComponentType;
 }
 
-const ph = (feature: string, step: string): ComponentType => {
-  const C = () => <Placeholder feature={feature} step={step} />;
-  C.displayName = `Placeholder(${feature})`;
-  return C;
-};
-
 export const APPS: AppDef[] = [
   {
     id: "constellation",
@@ -88,11 +81,11 @@ export const APPS: AppDef[] = [
   },
   {
     id: "pmai",
-    label: "PM-AI",
-    hint: "Your advisor",
+    label: "L_OS COMMS",
+    hint: "Message your PM",
     glyph: <GlyphPmAi />,
     flag: "pmAI",
-    win: { title: "PM-AI", width: 560, height: 620 },
+    win: { title: "L_OS COMMS", subtitle: "#comms", width: 560, height: 620 },
     Body: PmAiWindow,
   },
   {

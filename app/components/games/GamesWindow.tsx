@@ -22,9 +22,10 @@ const GAMES: {
   title: string;
   blurb: string;
   icon: typeof Database;
-  levels: number;
+  /** number to show, or null for "endless" (procedurally generated) */
+  levels: number | null;
 }[] = [
-  { id: "sql_dojo", title: "SQL Dojo", blurb: "Write real queries against a live SQLite database.", icon: Database, levels: 15 },
+  { id: "sql_dojo", title: "SQL Dojo", blurb: "Write real queries against a live SQLite database.", icon: Database, levels: null },
   { id: "data_detective", title: "Data Detective", blurb: "Find the broken row before it reaches the dashboard.", icon: Search, levels: 6 },
   { id: "pivot_puzzle", title: "Pivot Puzzle", blurb: "Rebuild the summary table from the raw rows.", icon: Table2, levels: 4 },
   { id: "chart_critiquer", title: "Chart Critiquer", blurb: "Spot what makes a chart lie.", icon: BarChart3, levels: 5 },
@@ -76,7 +77,13 @@ export function GamesWindow() {
             <span className="font-display text-sm font-bold text-foreground">{g.title}</span>
             <span className="text-xs text-muted-foreground">{g.blurb}</span>
             <span className="mt-auto pt-2 font-mono text-[10px] text-muted-foreground">
-              {best > 0 ? `cleared ${best}/${g.levels}` : `${g.levels} levels`}
+              {g.levels === null
+                ? best > 0
+                  ? `level ${best} · endless`
+                  : "endless levels"
+                : best > 0
+                  ? `cleared ${best}/${g.levels}`
+                  : `${g.levels} levels`}
             </span>
           </button>
         );

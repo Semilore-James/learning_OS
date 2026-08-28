@@ -1,16 +1,17 @@
 "use client";
 
 /* ============================================================================
-   PM-AI window (build step 17 / PRD 9 / Userflow 8). A demanding advisor, not a
-   tutor. Chat with prompt chips, plus a Decline Log tab. Every decline is
-   counted; the full log is an account feature (needs persisted history).
+   L_OS COMMS (build step 17 / PRD 9 / Userflow 8). Presented as a chat channel:
+   #comms, where the other person in the room is your PM. Same advisor behind it
+   — a demanding reviewer, not a tutor: it will not hand you answers or re-teach
+   the textbook, it reviews, pushes back, and asks the question you should be
+   asking. Declines are counted; the full log unlocks per account.
 
-   PM-AI needs the advisor configured (GROK_API_KEY) — until then every turn
-   returns a plain "not reachable" line. It also officially needs an account
-   for continuity; guests get a soft warning.
+   Needs GROK_API_KEY server-side; without it every turn returns a plain
+   "not reachable" line.
    ========================================================================== */
-import { useMemo, useRef, useState } from "react";
-import { Send } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Hash, Send } from "lucide-react";
 import { useStore, select } from "@/lib/store";
 import { TOPICS } from "@/content/curriculum";
 import { subNodesFor } from "@/lib/curriculumLayout";
@@ -34,7 +35,7 @@ const CHIPS = [
   "Review my last case submission",
   "What should I focus on next?",
   "Is my approach correct?",
-  "I am stuck. What question should I be asking?",
+  "I'm stuck — what question should I be asking?",
 ];
 
 interface Msg {
@@ -43,12 +44,32 @@ interface Msg {
   declined?: boolean;
 }
 
+function Row({ who, tone, children }: { who: "PM" | "You"; tone?: string; children: React.ReactNode }) {
+  const isPm = who === "PM";
+  return (
+    <div className="flex gap-2.5 px-4 py-1.5 hover:bg-surface-raised/40">
+      <div
+        className={cn(
+          "mt-0.5 grid size-7 shrink-0 place-items-center rounded-[var(--radius-control)] text-[10px] font-bold",
+          isPm ? "bg-brand-violet text-white" : "bg-primary text-primary-foreground",
+        )}
+      >
+        {who}
+      </div>
+      <div className="min-w-0 flex-1">
+        <span className="text-[12px] font-bold text-foreground">{isPm ? "PM" : "You"}</span>
+        <div className={cn("text-[13px] leading-relaxed", tone ?? "text-foreground")}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export function PmAiWindow() {
   const { state } = useStore();
-  const [tab, setTab] = useState<"chat" | "declines">("chat");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showDeclines, setShowDeclines] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const ctx = useMemo(() => {
@@ -68,6 +89,10 @@ export function PmAiWindow() {
       activeNode,
     };
   }, [state]);
+
+  useEffect(() => {
+    requestAnimationFrame(() => scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight));
+  }, [messages, busy]);
 
   const send = async (text: string) => {
     const t = text.trim();
@@ -92,109 +117,117 @@ export function PmAiWindow() {
         setMessages([...next, { role: "assistant", content: data.content }]);
       }
     } catch {
-      setMessages([...next, { role: "assistant", content: "Could not reach PM-AI." }]);
+      setMessages([...next, { role: "assistant", content: "Couldn't reach the channel." }]);
     } finally {
       setBusy(false);
-      requestAnimationFrame(() => scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight));
     }
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex gap-1 border-b border-border p-2">
-        {(["chat", "declines"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={cn(
-              "chrome-flat px-3 py-1 text-[11px] font-semibold uppercase",
-              tab === t ? "bg-primary text-primary-foreground" : "bg-surface-raised text-muted-foreground",
-            )}
-          >
-            {t === "chat" ? "Chat" : `Decline Log (${state.declineCount})`}
-          </button>
-        ))}
+    <div className="flex h-full flex-col bg-background">
+      {/* channel header */}
+      <div className="flex items-center justify-between border-b border-border px-4 py-2">
+        <div className="flex items-center gap-1.5">
+          <Hash className="size-4 text-muted-foreground" />
+          <span className="text-[13px] font-bold text-foreground">comms</span>
+          <span className="ml-2 font-mono text-[9px] text-muted-foreground">your PM, on call</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowDeclines((v) => !v)}
+          className="chrome-flat bg-surface-raised px-2 py-0.5 font-mono text-[9px] text-muted-foreground hover:text-foreground"
+        >
+          declines {state.declineCount}
+        </button>
       </div>
 
-      {tab === "declines" ? (
-        <div className="flex-1 overflow-auto p-5 text-sm">
+      {showDeclines && (
+        <div className="border-b border-border bg-surface-raised px-4 py-2.5 text-[12px]">
           <p className="text-foreground">
-            PM-AI has declined a shortcut or logged a disagreement <span className="font-bold text-brand-amber">{state.declineCount}</span>{" "}
-            time{state.declineCount === 1 ? "" : "s"}.
+            The PM has declined a shortcut or logged a disagreement{" "}
+            <span className="font-bold text-brand-amber">{state.declineCount}</span> time
+            {state.declineCount === 1 ? "" : "s"}.
           </p>
-          <p className="mt-3 text-muted-foreground">
-            The full log — every request PM-AI refused, when, and what it said — surfaces automatically once
-            you finish all {CASES.length} cases, and is stored per account. Sign in to keep it across devices.
+          <p className="mt-1 text-muted-foreground">
+            The full transcript of every refusal unlocks once you clear all {CASES.length} cases, and is kept
+            per account.
           </p>
         </div>
-      ) : (
-        <>
-          <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4">
-            {messages.length === 0 && (
-              <div className="m-auto max-w-sm text-center text-sm text-muted-foreground">
-                <p className="font-display font-semibold text-foreground">PM-AI</p>
-                <p className="mt-1">
-                  Not a tutor. It will not give you answers or explain what the textbook covers. It reviews,
-                  challenges, and asks the question you should be asking.
-                </p>
-                {state.mode === "guest" && (
-                  <p className="mt-3 text-[11px] text-brand-amber">
-                    Guest mode: PM-AI works best with an account, since it needs your full history.
-                  </p>
-                )}
-              </div>
-            )}
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "max-w-[85%] rounded-[var(--radius-control)] px-3 py-2 text-sm leading-relaxed",
-                  m.role === "user"
-                    ? "self-end bg-primary text-primary-foreground"
-                    : cn("self-start bg-surface-raised", m.declined ? "text-brand-amber" : "text-foreground"),
-                )}
-              >
-                {m.role === "assistant" && i === messages.length - 1 ? (
-                  <Typewriter key={m.content} text={m.content} />
-                ) : (
-                  m.content
-                )}
-              </div>
-            ))}
-            {busy && <div className="self-start font-mono text-xs text-muted-foreground">PM-AI is thinking…</div>}
-          </div>
-
-          {messages.length === 0 && (
-            <div className="flex flex-wrap gap-1.5 px-4 pb-2">
-              {CHIPS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => send(c)}
-                  className="chrome-flat bg-surface-raised px-2.5 py-1 text-[11px] text-foreground hover:text-primary"
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 border-t border-border p-2.5">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send(input)}
-              placeholder="Ask PM-AI…"
-              className="flex-1 border border-border bg-background px-2.5 py-1.5 text-sm"
-              style={{ borderRadius: "var(--radius-control)" }}
-            />
-            <Button size="icon-sm" onClick={() => send(input)} disabled={busy || !input.trim()} aria-label="Send">
-              <Send className="size-3.5" />
-            </Button>
-          </div>
-        </>
       )}
+
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-auto py-2">
+        {messages.length === 0 && (
+          <div className="m-auto max-w-sm px-4 text-center text-[13px] text-muted-foreground">
+            <div className="mx-auto mb-2 grid size-9 place-items-center rounded-[var(--radius-control)] bg-brand-violet text-xs font-bold text-white">
+              PM
+            </div>
+            <p className="font-display font-semibold text-foreground">This is the start of #comms</p>
+            <p className="mt-1">
+              Message your PM like a colleague. They won&apos;t give you answers or re-explain the textbook —
+              they review what you did, push back, and ask the question you&apos;re avoiding.
+            </p>
+            {state.mode === "guest" && (
+              <p className="mt-3 text-[11px] text-brand-amber">
+                Guest mode: the PM works best with an account — it reads your whole history.
+              </p>
+            )}
+          </div>
+        )}
+
+        {messages.map((m, i) => (
+          <Row
+            key={i}
+            who={m.role === "user" ? "You" : "PM"}
+            tone={m.declined ? "text-brand-amber" : undefined}
+          >
+            {m.role === "assistant" && i === messages.length - 1 ? (
+              <Typewriter key={m.content} text={m.content} />
+            ) : (
+              <span className="whitespace-pre-wrap">{m.content}</span>
+            )}
+          </Row>
+        ))}
+        {busy && (
+          <Row who="PM" tone="text-muted-foreground">
+            <span className="font-mono text-xs">typing…</span>
+          </Row>
+        )}
+      </div>
+
+      {messages.length === 0 && (
+        <div className="flex flex-wrap gap-1.5 px-4 pb-2">
+          {CHIPS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => send(c)}
+              className="chrome-flat bg-surface-raised px-2.5 py-1 text-[11px] text-foreground hover:text-primary"
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-end gap-2 border-t border-border p-2.5">
+        <textarea
+          rows={1}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send(input);
+            }
+          }}
+          placeholder="Message #comms"
+          className="max-h-28 flex-1 resize-none border border-border bg-surface px-2.5 py-2 text-[13px] text-foreground outline-none"
+          style={{ borderRadius: "var(--radius-control)" }}
+        />
+        <Button size="icon-sm" onClick={() => send(input)} disabled={busy || !input.trim()} aria-label="Send">
+          <Send className="size-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }

@@ -53,6 +53,7 @@ export function CaseFilesWindow() {
   const [brief, setBrief] = useState<{ id: string; md: string } | null>(null);
   const [draft, setDraft] = useState("");
   const [review, setReview] = useState<ReviewState>({ phase: "idle" });
+  const [confirmOverride, setConfirmOverride] = useState(false);
 
   const def = CASES_BY_ID[selectedId];
   const sub = state.cases[selectedId];
@@ -102,7 +103,7 @@ export function CaseFilesWindow() {
         dispatch({ type: "submitCase", caseId: selectedId, body: draft, pmAiResponse: data });
       }
     } catch {
-      setReview({ phase: "error", message: "Could not reach PM-AI. Your submission is saved." });
+      setReview({ phase: "error", message: "Couldn't reach your PM. Your submission is saved." });
     }
   };
 
@@ -235,7 +236,7 @@ export function CaseFilesWindow() {
                 style={{ borderRadius: "var(--radius-control)" }}
               />
               <div className="flex items-center gap-2">
-                <ParticleButton onClick={submit}>Submit to PM-AI for review</ParticleButton>
+                <ParticleButton onClick={submit}>Send to your PM for review</ParticleButton>
                 {sub?.startedAt && (
                   <span className="font-mono text-[10px] text-muted-foreground">
                     started {sub.startedAt.slice(0, 10)}
@@ -245,7 +246,7 @@ export function CaseFilesWindow() {
             </div>
           )}
 
-          {review.phase === "loading" && <p className="mt-4 text-sm text-muted-foreground">PM-AI is reading your submission…</p>}
+          {review.phase === "loading" && <p className="mt-4 text-sm text-muted-foreground">Your PM is reading your submission…</p>}
           {review.phase === "error" && (
             <div className="chrome-flat mt-4 bg-surface-raised p-3 text-sm text-brand-amber">{review.message}</div>
           )}
@@ -258,22 +259,35 @@ export function CaseFilesWindow() {
           )}
 
           {status === "submitted" && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={() => dispatch({ type: "startCase", caseId: selectedId })}>
-                Revise &amp; resubmit
-              </Button>
-              <Button size="sm" onClick={() => complete(false)}>
-                Accept &amp; mark complete{review.phase === "done" ? " (+130 XP)" : " (+80 XP)"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  if (confirm("PM-AI disagreement will be logged in your Decline Log. Continue?")) complete(true);
-                }}
-              >
-                Override &amp; mark complete
-              </Button>
+            <div className="mt-4 flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="secondary" onClick={() => dispatch({ type: "startCase", caseId: selectedId })}>
+                  Revise &amp; resubmit
+                </Button>
+                <Button size="sm" onClick={() => complete(false)}>
+                  Accept &amp; mark complete{review.phase === "done" ? " (+130 XP)" : " (+80 XP)"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setConfirmOverride((v) => !v)}
+                >
+                  Override &amp; mark complete
+                </Button>
+              </div>
+              {confirmOverride && (
+                <div className="chrome-flat flex items-center gap-2 bg-surface-raised p-2.5 text-[12px]">
+                  <span className="text-muted-foreground">
+                    Overriding your PM logs a disagreement in the decline log.
+                  </span>
+                  <Button size="xs" onClick={() => { setConfirmOverride(false); complete(true); }}>
+                    Confirm override
+                  </Button>
+                  <Button size="xs" variant="outline" onClick={() => setConfirmOverride(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

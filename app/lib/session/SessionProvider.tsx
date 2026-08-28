@@ -13,6 +13,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -46,19 +47,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(!configured);
-  // start false on the server AND the first client render so hydration matches;
-  // the real guest flag is read from sessionStorage after mount
-  const [guest, setGuest] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
+  const [guest, setGuest] = useState<boolean>(() => {
     try {
-      if (sessionStorage.getItem(GUEST_KEY) === "1") setGuest(true);
+      return typeof window !== "undefined" && sessionStorage.getItem(GUEST_KEY) === "1";
     } catch {
-      /* private mode */
+      return false;
     }
-  }, []);
+  });
+
+  // false on the server AND the first client render, true after mount — gates
+  // `phase` to "loading" so SSR and first hydration always agree
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     if (!supabase) return;
