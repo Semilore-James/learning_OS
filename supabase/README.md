@@ -51,3 +51,19 @@ npx supabase gen types typescript --project-id <ref> > ../app/lib/supabase/datab
 
 The `service_role` key is only used by `app/lib/supabase/admin.ts` for trusted
 server jobs (e.g. the streak-reminder cron). It is never sent to the browser.
+
+## Auth setup (for the login screens)
+
+The app's sign-up flow expects a **6-digit code**, not a magic link.
+
+1. **Dashboard → Authentication → Providers → Email**: turn on *Confirm email*.
+2. **Dashboard → Authentication → Emails → Templates → Confirm signup**: replace
+   the `{{ .ConfirmationURL }}` line with `{{ .Token }}` so the email sends the
+   code. (Do the same for *Magic Link* if you want passwordless later.)
+3. **Custom SMTP** (Authentication → Emails → SMTP Settings) — without it the
+   built-in sender throttles at ~3 emails/hour. Use Resend:
+   - Host `smtp.resend.com` · Port `465` · User `resend` · Password = a Resend
+     API key · Sender `onboarding@resend.dev` (until a domain is verified).
+4. **Vercel env vars** (Project Settings → Environment Variables):
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Until these are
+   set the app runs guest-only and the login screen says so.

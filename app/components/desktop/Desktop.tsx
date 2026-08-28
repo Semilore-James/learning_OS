@@ -7,6 +7,7 @@ import { useStore } from "@/lib/store";
 import { useWindows } from "@/lib/useWindows";
 import { resolveApp } from "@/lib/appRegistry";
 import { WindowActionsProvider } from "@/lib/windowContext";
+import { useSession } from "@/lib/session/SessionProvider";
 import { ChromeController } from "./ChromeController";
 import { Boot } from "./Boot";
 import { IconGrid } from "./IconGrid";
@@ -16,6 +17,7 @@ const BOOT_KEY = "da-os-booted";
 
 export function Desktop() {
   const { state } = useStore();
+  const { phase, exitGuest } = useSession();
   const wm = useWindows();
 
   // whether the boot sequence already played this browser session
@@ -135,9 +137,12 @@ export function Desktop() {
             </div>
           )}
 
-          {state.mode === "guest" && (
-            <div className="chrome-flat absolute bottom-[52px] left-1/2 z-[150] -translate-x-1/2 bg-surface-raised px-3.5 py-1.5 font-mono text-[11px] text-muted-foreground">
+          {phase === "guest" && (
+            <div className="chrome-flat absolute bottom-[52px] left-1/2 z-[150] flex -translate-x-1/2 items-center gap-2 bg-surface-raised px-3.5 py-1.5 font-mono text-[11px] text-muted-foreground">
               Guest mode. Progress saves to this browser only.
+              <button type="button" onClick={exitGuest} className="text-primary hover:underline">
+                Create account to save
+              </button>
             </div>
           )}
 

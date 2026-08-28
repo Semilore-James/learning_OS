@@ -1,18 +1,35 @@
 "use client";
 
-/* Root client shell. Guest mode for now (localStorage adapter). The auth step
-   wraps this with a session provider that swaps in the Supabase adapter and
-   runs the guest -> account migration on sign-up. */
+/* Root client shell. SessionProvider decides: auth screen, or the desktop with
+   the right store adapter (localStorage for guests, Supabase for accounts). */
 import { StoreProvider } from "@/lib/store";
 import { AnalyticsProvider } from "@/lib/analytics";
+import { SessionProvider, useSession } from "@/lib/session/SessionProvider";
+import { AuthScreen } from "@/components/auth/AuthScreen";
 import { Desktop } from "@/components/desktop/Desktop";
+
+function Shell() {
+  const { phase, adapter } = useSession();
+
+  if (phase === "loading") {
+    return <div className="fixed inset-0 bg-background" />;
+  }
+  if (phase === "signed-out") {
+    return <AuthScreen />;
+  }
+  return (
+    <StoreProvider adapter={adapter}>
+      <Desktop />
+    </StoreProvider>
+  );
+}
 
 export function App() {
   return (
     <AnalyticsProvider>
-      <StoreProvider>
-        <Desktop />
-      </StoreProvider>
+      <SessionProvider>
+        <Shell />
+      </SessionProvider>
     </AnalyticsProvider>
   );
 }

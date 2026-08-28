@@ -4,8 +4,17 @@ import { useEffect, useState } from "react";
 import { Play } from "lucide-react";
 import { useStore, select } from "@/lib/store";
 import { useWindowActions } from "@/lib/windowContext";
+import { useSession } from "@/lib/session/SessionProvider";
 import { TOPICS, TOPICS_BY_ID } from "@/content/curriculum";
 import { CountUp, Pulse } from "@/components/motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function useClock() {
   const [t, setT] = useState("--:--");
@@ -34,6 +43,7 @@ function activeTrack(nodes: Record<string, { state: string; topicId: string | nu
 
 export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const { state, dispatch, syncing } = useStore();
+  const { phase, user, signOut } = useSession();
   const win = useWindowActions();
   const clock = useClock();
   const { current: streak } = select.streak(state);
@@ -87,14 +97,27 @@ export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
         >
           {state.profile.theme === "dark" ? "☾" : "☀"}
         </button>
-        <button
-          type="button"
-          aria-label="Open settings"
-          onClick={onOpenSettings}
-          className="chrome-flat size-7 bg-brand-violet text-[10px] font-bold text-white"
-        >
-          {(state.profile.displayName?.[0] ?? "A").toUpperCase()}
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Account menu"
+              className="chrome-flat size-7 bg-brand-violet text-[10px] font-bold text-white"
+            >
+              {(state.profile.displayName?.[0] ?? user?.email?.[0] ?? "A").toUpperCase()}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top">
+            <DropdownMenuLabel className="max-w-48 truncate text-xs">
+              {phase === "account" ? (user?.email ?? "Account") : "Guest"}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onOpenSettings}>Settings</DropdownMenuItem>
+            {phase === "account" && (
+              <DropdownMenuItem onClick={() => void signOut()}>Log out</DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
