@@ -14,6 +14,8 @@ import { ConstellationWindow } from "@/components/constellation/ConstellationWin
 import { SubConstellationWindow } from "@/components/constellation/SubConstellationWindow";
 import { TextbookWindow } from "@/components/textbook/TextbookWindow";
 import { CheatcodesWindow } from "@/components/cheatcodes/CheatcodesWindow";
+import { DailyLogWindow } from "@/components/dailylog/DailyLogWindow";
+import { HeatmapWindow } from "@/components/heatmap/HeatmapWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -92,7 +94,7 @@ export const APPS: AppDef[] = [
     glyph: <GlyphHeatmap />,
     flag: "heatmap",
     win: { title: "Heatmap", width: 780, height: 420 },
-    Body: ph("Heatmap", "Phase 1 · step 14"),
+    Body: HeatmapWindow,
   },
   {
     id: "canvas",
@@ -128,7 +130,8 @@ export const APPS: AppDef[] = [
     glyph: <GlyphDailyLog />,
     flag: "dailyLog",
     win: { title: "Daily Log", width: 460, height: 560 },
-    Body: ph("Daily Log", "Phase 1 · step 14"),
+    fitContent: true,
+    Body: DailyLogWindow,
   },
   {
     id: "toolkit",
