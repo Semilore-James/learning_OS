@@ -6,8 +6,12 @@
    ========================================================================== */
 import type { ComponentType, ReactNode } from "react";
 import type { Flag } from "@/lib/flags";
+import { TOPICS_BY_ID } from "@/content/curriculum";
+import { subNodesFor } from "@/lib/curriculumLayout";
 import { Placeholder } from "@/components/desktop/Placeholder";
 import { SettingsWindow } from "@/components/settings/SettingsWindow";
+import { ConstellationWindow } from "@/components/constellation/ConstellationWindow";
+import { SubConstellationWindow } from "@/components/constellation/SubConstellationWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -46,8 +50,8 @@ export const APPS: AppDef[] = [
     hint: "Your learning path",
     glyph: <GlyphConstellation />,
     flag: "constellation",
-    win: { title: "Constellation Map", subtitle: "TRACK 01", width: 860, height: 640 },
-    Body: ph("Constellation Map", "Phase 1 · step 11"),
+    win: { title: "Constellation Map", subtitle: "11 TRACKS", width: 900, height: 660 },
+    Body: ConstellationWindow,
   },
   {
     id: "video",
@@ -148,3 +152,40 @@ export const SETTINGS_APP: AppDef = {
 };
 
 export const ALL_APPS: Record<string, AppDef> = { ...APPS_BY_ID, settings: SETTINGS_APP };
+
+/** Cache of synthesized AppDefs so a window id always resolves to the SAME
+ *  object (and the SAME Body component) across renders — otherwise React
+ *  remounts the window and loses its local state on every parent render. */
+const dynamicCache = new Map<string, AppDef>();
+
+/** Resolve any window id, including dynamic ones like `subconstellation:sql`. */
+export function resolveApp(id: string): AppDef | null {
+  if (ALL_APPS[id]) return ALL_APPS[id];
+  const cached = dynamicCache.get(id);
+  if (cached) return cached;
+
+  if (id.startsWith("subconstellation:")) {
+    const topicId = id.slice("subconstellation:".length);
+    const topic = TOPICS_BY_ID[topicId];
+    if (!topic) return null;
+    const count = subNodesFor(topic).length;
+    const Body = () => <SubConstellationWindow topicId={topicId} />;
+    Body.displayName = `SubConstellation(${topicId})`;
+    const def: AppDef = {
+      id,
+      label: topic.label.replace(/\n/g, " "),
+      hint: topic.blurb,
+      glyph: null,
+      win: {
+        title: `${topic.label.replace(/\n/g, " ")} // Sub-constellation`,
+        subtitle: `${count} NODES`,
+        width: 880,
+        height: 660,
+      },
+      Body,
+    };
+    dynamicCache.set(id, def);
+    return def;
+  }
+  return null;
+}

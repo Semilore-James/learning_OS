@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Wallpaper } from "@/components/wallpaper";
 import { Window } from "@/components/window/Window";
 import { useStore } from "@/lib/store";
 import { useWindows } from "@/lib/useWindows";
-import { ALL_APPS } from "@/lib/appRegistry";
+import { resolveApp } from "@/lib/appRegistry";
+import { WindowActionsProvider } from "@/lib/windowContext";
 import { ChromeController } from "./ChromeController";
 import { Boot } from "./Boot";
 import { IconGrid } from "./IconGrid";
@@ -43,6 +44,11 @@ export function Desktop() {
 
   const ready = state.ready;
 
+  const winActions = useMemo(
+    () => ({ open: wm.openWindow, close: wm.closeWindow, focus: wm.focusWindow }),
+    [wm.openWindow, wm.closeWindow, wm.focusWindow],
+  );
+
   return (
     <main
       style={{
@@ -59,11 +65,11 @@ export function Desktop() {
       {(!ready || !booted) && <Boot onDone={finishBoot} />}
 
       {ready && booted && (
-        <>
+        <WindowActionsProvider value={winActions}>
           <IconGrid openIds={wm.open} onOpen={wm.openWindow} />
 
           {wm.open.map((id) => {
-            const app = ALL_APPS[id];
+            const app = resolveApp(id);
             if (!app || wm.isMinimized(id)) return null;
             const pos = wm.posOf(id) ?? { x: 200, y: 80 };
             const { Body } = app;
@@ -102,7 +108,7 @@ export function Desktop() {
               }}
             >
               {wm.minimized.map((id) => {
-                const app = ALL_APPS[id];
+                const app = resolveApp(id);
                 if (!app) return null;
                 return (
                   <button
@@ -151,7 +157,7 @@ export function Desktop() {
           )}
 
           <Taskbar onOpenSettings={() => wm.openWindow("settings")} />
-        </>
+        </WindowActionsProvider>
       )}
     </main>
   );
