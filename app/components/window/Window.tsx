@@ -1,11 +1,66 @@
 "use client";
 
 /* ============================================================================
-   Generic window chrome. Every feature window wraps its body in this. All
-   visual treatment comes from the chrome token contract in globals.css, so a
-   skin swap restyles every window at once.
+   Generic window chrome. All visual treatment comes from the chrome token
+   contract in globals.css, so a skin swap restyles every window at once.
+   Controls: minimise, maximise, close.
    ========================================================================== */
 import type { ReactNode } from "react";
+
+const TASKBAR = 44;
+
+function ControlButton({
+  label,
+  onClick,
+  children,
+  danger,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerDown={(e) => e.stopPropagation()}
+      style={{
+        width: 20,
+        height: 20,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: 1,
+        padding: 0,
+        background: "var(--surface-raised)",
+        border: "var(--bd-inner)",
+        borderRadius: "var(--radius-control)",
+        color: "var(--muted)",
+        cursor: "pointer",
+      }}
+      onMouseEnter={(e) => {
+        if (danger) {
+          e.currentTarget.style.background = "#e5484d";
+          e.currentTarget.style.color = "#fff";
+        } else {
+          e.currentTarget.style.color = "var(--text)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "var(--surface-raised)";
+        e.currentTarget.style.color = "var(--muted)";
+      }}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function Window({
   id,
@@ -16,8 +71,11 @@ export function Window({
   z,
   width,
   height,
+  maximized,
   onClose,
   onFocus,
+  onMinimize,
+  onMaximize,
   onDragStart,
   children,
 }: {
@@ -29,21 +87,24 @@ export function Window({
   z: number;
   width: number;
   height: number;
+  maximized: boolean;
   onClose: () => void;
   onFocus: () => void;
+  onMinimize: () => void;
+  onMaximize: () => void;
   onDragStart: (e: React.PointerEvent) => void;
   children: ReactNode;
 }) {
+  const geom: React.CSSProperties = maximized
+    ? { left: 8, top: 8, width: "calc(100vw - 16px)", height: `calc(100dvh - ${TASKBAR + 16}px)` }
+    : { left: x, top: y, width, height };
+
   return (
     <section
       id={`win-${id}`}
       onPointerDown={onFocus}
       style={{
         position: "absolute",
-        left: x,
-        top: y,
-        width,
-        height,
         zIndex: z,
         display: "flex",
         flexDirection: "column",
@@ -54,12 +115,14 @@ export function Window({
         boxShadow: "var(--shadow)",
         backdropFilter: "var(--panel-blur)",
         WebkitBackdropFilter: "var(--panel-blur)",
-        animation: "fadeIn .18s ease",
+        animation: "fadeIn .16s ease",
         overflow: "hidden",
+        ...geom,
       }}
     >
       <header
         onPointerDown={onDragStart}
+        onDoubleClick={onMaximize}
         style={{
           height: 44,
           minHeight: 44,
@@ -69,17 +132,11 @@ export function Window({
           padding: "0 10px 0 0",
           background: "var(--titlebar)",
           borderBottom: "var(--bd)",
-          cursor: "grab",
+          cursor: maximized ? "default" : "grab",
           touchAction: "none",
         }}
       >
-        <div
-          style={{
-            width: "var(--titlebar-accent-w)",
-            alignSelf: "stretch",
-            background: "var(--primary)",
-          }}
-        />
+        <div style={{ width: "var(--titlebar-accent-w)", alignSelf: "stretch", background: "var(--primary)" }} />
         <span
           style={{
             flex: 1,
@@ -94,33 +151,26 @@ export function Window({
           {title}
         </span>
         {subtitle && (
-          <span style={{ font: "400 9px var(--font-mono)", color: "var(--muted)" }}>
-            {subtitle}
-          </span>
+          <span style={{ font: "400 9px var(--font-mono)", color: "var(--muted)" }}>{subtitle}</span>
         )}
-        <button
-          type="button"
-          aria-label="Close window"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          style={{
-            width: 20,
-            height: 20,
-            display: "grid",
-            placeItems: "center",
-            background: "var(--surface-raised)",
-            border: "var(--bd-inner)",
-            borderRadius: "var(--radius-control)",
-            color: "var(--muted)",
-            font: "700 11px var(--font-mono)",
-            cursor: "pointer",
-          }}
-        >
-          ×
-        </button>
+        <div style={{ display: "flex", gap: 4 }}>
+          <ControlButton label="Minimise" onClick={onMinimize}>
+            <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden>
+              <line x1="1.5" y1="8" x2="8.5" y2="8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </ControlButton>
+          <ControlButton label={maximized ? "Restore" : "Maximise"} onClick={onMaximize}>
+            <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden>
+              <rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="currentColor" strokeWidth="1.4" />
+            </svg>
+          </ControlButton>
+          <ControlButton label="Close" onClick={onClose} danger>
+            <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden>
+              <line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </ControlButton>
+        </div>
       </header>
       <div style={{ flex: 1, overflow: "auto", position: "relative" }}>{children}</div>
     </section>

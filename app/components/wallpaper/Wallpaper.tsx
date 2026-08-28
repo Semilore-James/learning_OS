@@ -31,6 +31,9 @@ export function Wallpaper({
     inset: 0,
     zIndex: 0,
     overflow: "hidden" as const,
+    // the layer itself is transparent to the cursor; individual .wp-dot
+    // circles opt back in so hovering empty desktop still reaches them
+    pointerEvents: "none" as const,
   };
 
   if (def.kind === "image" && def.src) {

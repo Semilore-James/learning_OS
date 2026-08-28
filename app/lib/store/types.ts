@@ -12,13 +12,7 @@
    ========================================================================== */
 
 export type Theme = "dark" | "light";
-export type Skin =
-  | "neobrutalism"
-  | "swiss"
-  | "brutalist-web"
-  | "memphis"
-  | "retro-futurism"
-  | "glassmorphism";
+export type Skin = "neobrutalism" | "swiss" | "glassmorphism";
 export type NodeLevel = "topic" | "sub";
 export type StoredNodeState = "available" | "active" | "completed";
 export type CaseStatus =

@@ -126,7 +126,7 @@ export function SettingsWindow() {
               }}
             >
               {w.kind === "svg" && w.Component && (
-                <div style={{ position: "absolute", inset: 0 }}>
+                <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
                   <w.Component theme={theme} reducedMotion />
                 </div>
               )}

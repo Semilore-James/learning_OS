@@ -30,21 +30,6 @@ export const SKINS: SkinDef[] = [
     blurb: "Thin hairlines, no shadows, strict grid, Helvetica. Nothing decorative.",
   },
   {
-    id: "brutalist-web",
-    label: "Brutalist Web",
-    blurb: "Raw HTML energy. System serif, visible structure, underlined links.",
-  },
-  {
-    id: "memphis",
-    label: "Memphis",
-    blurb: "Colour-clash borders, offset colour shadows, scattered shapes. Loud 80s.",
-  },
-  {
-    id: "retro-futurism",
-    label: "Retro-Futurism",
-    blurb: "Apollo-era consoles. Softened rectangles, wide type, warm glow.",
-  },
-  {
     id: "glassmorphism",
     label: "Viewport / Glass",
     blurb: "Frosted translucent panels, blur, big soft radius. Reads as HUD.",

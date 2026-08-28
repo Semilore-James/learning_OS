@@ -89,68 +89,6 @@
   --press-shadow: none;
 }
 
-/* ---- Brutalist Web Design --------------------------------------------- */
-:root[data-skin="brutalist-web"] {
-  --font-display: Times, "Times New Roman", Georgia, serif;
-  --font-body: Times, "Times New Roman", Georgia, serif;
-  --font-mono: "Courier New", Courier, monospace;
-  --radius: 0px;
-  --radius-control: 0px;
-  --bd-width: 2px;
-  --bd-color: var(--text);
-  --bd: 2px solid var(--text);
-  --bd-inner: 1px solid var(--text);
-  --shadow: none;
-  --shadow-sm: none;
-  --shadow-xs: none;
-  --panel: var(--bg);
-  --titlebar: var(--surface);
-  --titlebar-accent-w: 0px;
-  --press: none;
-  --press-shadow: none;
-  --link-decoration: underline;
-}
-
-/* ---- Memphis Design -------------------------------------------------- */
-:root[data-skin="memphis"] {
-  --radius: 0px;
-  --radius-control: 999px;
-  --bd-width: 3px;
-  --bd-color: var(--accent-3);
-  --bd: 3px solid var(--accent-3);
-  --bd-inner: 2px solid var(--accent-1);
-  --shadow: 6px 6px 0 var(--accent-1);
-  --shadow-sm: 4px 4px 0 var(--accent-2);
-  --shadow-xs: 3px 3px 0 var(--accent-2);
-  --panel: var(--surface);
-  --titlebar: var(--surface-raised);
-  --titlebar-accent-w: 5px;
-  --press: translate(2px, 2px);
-  --press-shadow: 2px 2px 0 var(--accent-1);
-  --deco-opacity: 1;
-}
-
-/* ---- Retro-Futurism / Apollo-Era ----------------------------------- */
-:root[data-skin="retro-futurism"] {
-  --font-display: "Bahnschrift", "DIN Alternate", "Eurostile", "Arial Narrow", sans-serif;
-  --font-body: "Bahnschrift", "DIN Alternate", "Arial Narrow", system-ui, sans-serif;
-  --radius: 10px;
-  --radius-control: 8px;
-  --bd-width: 2px;
-  --bd-color: var(--accent-1);
-  --bd: 2px solid var(--accent-1);
-  --bd-inner: 1px solid var(--accent-1);
-  --shadow: 0 0 0 1px color-mix(in srgb, var(--accent-1) 30%, transparent),
-            0 10px 30px rgba(0, 0, 0, 0.35);
-  --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.3);
-  --shadow-xs: 0 3px 10px rgba(0, 0, 0, 0.28);
-  --panel: color-mix(in srgb, var(--surface) 92%, var(--accent-1));
-  --titlebar: color-mix(in srgb, var(--surface-raised) 85%, var(--accent-1));
-  --titlebar-accent-w: 4px;
-  --press: translateY(1px);
-  --press-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
 /* ---- Glassmorphism / Viewport panels ------------------------------ */
 :root[data-skin="glassmorphism"] {
   --radius: 16px;
@@ -193,6 +131,26 @@ a:hover { color: var(--accent-1); text-decoration: underline; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ---- interactive wallpaper dots ---------------------------------- */
+/* circles marked .wp-dot get pointer events back and a hover pop. They do
+   nothing else — just react to the cursor. */
+.wp-dot {
+  pointer-events: auto;
+  cursor: crosshair;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 160ms ease, opacity 160ms ease, filter 160ms ease;
+}
+.wp-dot:hover {
+  transform: scale(3.4);
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 14px currentColor);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wp-dot { transition: none; }
+  .wp-dot:hover { transform: scale(2); filter: none; }
+}
 
 /* ---- reusable chrome helpers -------------------------------------- */
 .chrome-panel {
