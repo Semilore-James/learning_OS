@@ -61,10 +61,10 @@ export function SubConstellationWindow({ topicId }: { topicId: string }) {
           states={states}
           width={W}
           height={H}
-          labelSize={8}
+          labelSize={9.5}
           selectedId={selected}
           reducedMotion={reduced}
-          onNodeClick={(id) => setSelected(id)}
+          onNodeActivate={(id) => setSelected(id)}
         />
         <Legend />
       </div>

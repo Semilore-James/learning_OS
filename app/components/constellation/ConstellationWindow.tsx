@@ -71,7 +71,7 @@ export function ConstellationWindow() {
           height={MAP_H}
           selectedId={selected}
           reducedMotion={reduced}
-          onNodeClick={(id) => setSelected(id)}
+          onNodeActivate={(id) => setSelected(id)}
         />
         <ZoneLabels />
         <Legend />

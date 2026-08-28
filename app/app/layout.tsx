@@ -1,22 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Outfit, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 // Self-hosted at build time by next/font — no runtime call to Google.
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+});
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "700"],
   variable: "--font-jetbrains-mono",
-});
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["300", "400"],
-  variable: "--font-outfit",
-});
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-space-grotesk",
 });
 
 export const metadata: Metadata = {
@@ -34,12 +29,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${jetbrainsMono.variable} ${outfit.variable} ${spaceGrotesk.variable}`}
-      >
-        {children}
-      </body>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <body>{children}</body>
     </html>
   );
 }

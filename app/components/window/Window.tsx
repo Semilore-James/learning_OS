@@ -6,8 +6,20 @@
    Controls: minimise, maximise, close.
    ========================================================================== */
 import type { ReactNode } from "react";
+import type { ResizeEdge } from "@/lib/useWindows";
 
 const TASKBAR = 44;
+
+const HANDLES: { edge: ResizeEdge; style: React.CSSProperties }[] = [
+  { edge: "n", style: { top: -3, left: 8, right: 8, height: 6, cursor: "ns-resize" } },
+  { edge: "s", style: { bottom: -3, left: 8, right: 8, height: 6, cursor: "ns-resize" } },
+  { edge: "e", style: { right: -3, top: 8, bottom: 8, width: 6, cursor: "ew-resize" } },
+  { edge: "w", style: { left: -3, top: 8, bottom: 8, width: 6, cursor: "ew-resize" } },
+  { edge: "ne", style: { top: -4, right: -4, width: 12, height: 12, cursor: "nesw-resize" } },
+  { edge: "nw", style: { top: -4, left: -4, width: 12, height: 12, cursor: "nwse-resize" } },
+  { edge: "se", style: { bottom: -4, right: -4, width: 14, height: 14, cursor: "nwse-resize" } },
+  { edge: "sw", style: { bottom: -4, left: -4, width: 12, height: 12, cursor: "nesw-resize" } },
+];
 
 function ControlButton({
   label,
@@ -77,6 +89,7 @@ export function Window({
   onMinimize,
   onMaximize,
   onDragStart,
+  onResizeStart,
   children,
 }: {
   id: string;
@@ -93,6 +106,7 @@ export function Window({
   onMinimize: () => void;
   onMaximize: () => void;
   onDragStart: (e: React.PointerEvent) => void;
+  onResizeStart: (edge: ResizeEdge, e: React.PointerEvent) => void;
   children: ReactNode;
 }) {
   const geom: React.CSSProperties = maximized
@@ -173,6 +187,15 @@ export function Window({
         </div>
       </header>
       <div style={{ flex: 1, overflow: "auto", position: "relative" }}>{children}</div>
+
+      {!maximized &&
+        HANDLES.map((h) => (
+          <div
+            key={h.edge}
+            onPointerDown={(e) => onResizeStart(h.edge, e)}
+            style={{ position: "absolute", zIndex: 5, ...h.style }}
+          />
+        ))}
     </section>
   );
 }

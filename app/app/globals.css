@@ -24,10 +24,13 @@
   --muted: #63718c;
   --border: #26344a;
 
-  /* ---- typography (skins may override) -------------------------------- */
+  /* ---- typography (skins may override) --------------------------------
+     Inter for everything readable — clean at every size. JetBrains Mono only
+     for code blocks and hard-technical labels. */
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
-  --font-display: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
-  --font-body: var(--font-outfit), "Outfit", system-ui, sans-serif;
+  --font-display: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-label: var(--font-inter), system-ui, sans-serif;
 
   /* ---- chrome contract : NEOBRUTALISM defaults ----------------------- */
   --radius: 0px;
