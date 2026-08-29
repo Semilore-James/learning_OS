@@ -8,15 +8,14 @@
    ========================================================================== */
 import { useStore, select } from "@/lib/store";
 import { CASES } from "@/content/cases/registry";
-
-const XP_PER_LEVEL = 1000;
+import { XP_PER_LEVEL, levelFromXp } from "@/lib/gamification";
 
 export function ProfileCard() {
   const { state } = useStore();
   const { displayName } = state.profile;
 
   const xp = state.xpTotal;
-  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
+  const level = levelFromXp(xp);
   const intoLevel = xp % XP_PER_LEVEL;
   const streak = select.streak(state);
   const coins = select.gamesScore(state);

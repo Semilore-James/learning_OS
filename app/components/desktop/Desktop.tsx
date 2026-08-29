@@ -16,6 +16,8 @@ import { IconGrid } from "./IconGrid";
 import { Taskbar } from "./Taskbar";
 import { CommandPalette } from "./CommandPalette";
 import { SessionBriefing } from "./SessionBriefing";
+import { DailyGreeting } from "./DailyGreeting";
+import { Celebrations } from "./Celebrations";
 import { DiagnosticScreen } from "./DiagnosticScreen";
 
 const BOOT_KEY = "da-os-booted";
@@ -169,6 +171,8 @@ export function Desktop() {
 
           {flag("commandPalette") && <CommandPalette />}
           <SessionBriefing />
+          <DailyGreeting />
+          <Celebrations />
 
           <Taskbar onOpenSettings={() => openApp("settings")} />
         </WindowActionsProvider>

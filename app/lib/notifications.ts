@@ -5,6 +5,8 @@
    ========================================================================== */
 import type { AppState } from "@/lib/store/types";
 import * as select from "@/lib/store/selectors";
+import { recentMilestones } from "@/lib/milestones";
+import { todaysGreeting } from "@/lib/greeting";
 
 export interface Notif {
   id: string;
@@ -25,6 +27,27 @@ function todayStr() {
 /** the live list, newest-relevant first */
 export function buildNotifs(state: AppState, lastError: string | null): Notif[] {
   const out: Notif[] = [];
+
+  const greeting = todaysGreeting();
+  if (greeting) {
+    out.push({
+      id: `greeting-${greeting.id}`,
+      title: "Your PM",
+      detail: greeting.text,
+      tone: "info",
+    });
+  }
+
+  // recently-earned milestones (level ups, cases cleared, streak marks, ...)
+  for (const m of recentMilestones()) {
+    out.push({
+      id: `ms-${m.key}`,
+      open: m.open,
+      title: m.title,
+      detail: m.detail,
+      tone: "info",
+    });
+  }
 
   const due = select.dueReviewCount(state);
   if (due > 0) {
