@@ -93,8 +93,12 @@ export interface ReviewRequest {
   digest?: CsvDigest | null;
 }
 
-/** Fixed schema for a case review (PRD 18.3: "strength, gap, question"). */
+/** Fixed schema for a case review. The verdict is the PM's call on whether the
+ *  case can be marked complete: "accept" = the work was done and the finding
+ *  holds (a gap is still named for next time); "revise" = the core work is
+ *  missing, wrong, or unsupported and must be resubmitted. */
 export interface ReviewResult {
+  verdict: "accept" | "revise";
   strength: string;
   gap: string;
   question: string;

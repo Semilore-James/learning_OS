@@ -134,7 +134,12 @@ export const groqAdvisor: Advisor = {
     } catch {
       throw new AdvisorUnavailableError("advisor returned malformed review");
     }
+    // guard the verdict: anything that is not an explicit "accept" is a revise
+    const verdict: ReviewResult["verdict"] = parsed.verdict === "accept" ? "accept" : "revise";
+    // a submission too thin to review at all is always a revise
+    const thin = req.submission.trim().length < 60;
     return {
+      verdict: thin ? "revise" : verdict,
       strength: parsed.strength ?? "",
       gap: parsed.gap ?? "The submission needs a clearer statement of the finding.",
       question: parsed.question ?? "What is the single number a decision-maker takes from this?",

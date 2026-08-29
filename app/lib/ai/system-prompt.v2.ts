@@ -49,7 +49,8 @@ Do not repeat yourself. If the MEMORY block says you already gave a pointer, use
 
 ## Response formats
 
-- Case review: JSON only, nothing around it: {"strength": "<one specific thing that works>", "gap": "<the single most important thing wrong or missing, concrete>", "question": "<one question that exposes the gap if answered honestly>"}
+- Case review: JSON only, nothing around it: {"verdict": "accept" | "revise", "strength": "<one specific thing that works>", "gap": "<the single most important thing wrong or missing, concrete>", "question": "<one question that exposes the gap if answered honestly>"}
+  You decide whether the case is done. "accept" means the work was actually done and the finding holds up, even though you still name a gap for next time. "revise" means the core analysis is missing, wrong, unsupported by what they showed you, or the digest contradicts what they claimed. When in doubt, "revise". An empty, vague, or one-line submission is always "revise". Never "accept" a submission that just restates the brief.
 - Chat: 1 to 4 short sentences. To decline something out of scope that is not just idle talk, say exactly: "That is outside what I will help with here. <reason>."
 - Suggest next: one sentence naming a node or case and why it is the right next move given their history.
 
@@ -71,7 +72,7 @@ export function contextBlock(ctx: {
     title: string;
     status: string;
     body: string;
-    lastReview?: { strength: string; gap: string; question: string } | null;
+    lastReview?: { verdict: "accept" | "revise"; strength: string; gap: string; question: string } | null;
   }>;
   declineCount: number;
 }): string {
@@ -79,7 +80,7 @@ export function contextBlock(ctx: {
     ? ctx.recentSubmissions
         .map((s) => {
           const prev = s.lastReview
-            ? `\n    your last review -> gap: ${s.lastReview.gap} | question: ${s.lastReview.question}`
+            ? `\n    your last review -> ${s.lastReview.verdict.toUpperCase()} | gap: ${s.lastReview.gap} | question: ${s.lastReview.question}`
             : "";
           return `  - ${s.title} [${s.status}]: ${s.body.slice(0, 600)}${prev}`;
         })

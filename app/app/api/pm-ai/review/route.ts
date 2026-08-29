@@ -19,6 +19,7 @@ import {
   readMemory,
   injectMemory,
   noteUnresolved,
+  resolveForCase,
   refreshNotes,
   checkAndRecord,
   AdvisorUnavailableError,
@@ -146,7 +147,8 @@ export async function POST(req: Request) {
     );
 
     if (user && supabase) {
-      void noteUnresolved(supabase, user.id, result.gap, caseId ?? null);
+      if (result.verdict === "revise") void noteUnresolved(supabase, user.id, result.gap, caseId ?? null);
+      else void resolveForCase(supabase, user.id, caseId ?? "");
       void refreshNotes(
         supabase,
         user.id,

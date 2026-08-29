@@ -26,7 +26,7 @@ type ReviewState =
   | { phase: "idle" }
   | { phase: "loading" }
   | { phase: "error"; message: string }
-  | { phase: "done"; strength: string; gap: string; question: string };
+  | { phase: "done"; verdict: "accept" | "revise"; strength: string; gap: string; question: string };
 
 function useLearnerContext() {
   const { state } = useStore();
@@ -129,7 +129,13 @@ export function CaseFilesWindow() {
       if (!res.ok) {
         setReview({ phase: "error", message: data.error ?? "review failed" });
       } else {
-        setReview({ phase: "done", ...data });
+        setReview({
+          phase: "done",
+          verdict: data.verdict === "accept" ? "accept" : "revise",
+          strength: data.strength ?? "",
+          gap: data.gap ?? "",
+          question: data.question ?? "",
+        });
         dispatch({ type: "submitCase", caseId: selectedId, body: draft, pmAiResponse: data });
       }
     } catch {
@@ -142,7 +148,7 @@ export function CaseFilesWindow() {
       type: "completeCase",
       caseId: selectedId,
       override,
-      reviewAccepted: review.phase === "done" && !override,
+      reviewAccepted: review.phase === "done" && review.verdict === "accept" && !override,
     });
   };
 
@@ -368,7 +374,12 @@ export function CaseFilesWindow() {
               )}
 
               <div className="flex items-center gap-2">
-                <ParticleButton onClick={submit}>Send to your PM for review</ParticleButton>
+                <ParticleButton
+                  onClick={submit}
+                  disabled={review.phase === "loading" || draft.trim().length < 20}
+                >
+                  {review.phase === "loading" ? "Your PM is reading it…" : "Send to your PM for review"}
+                </ParticleButton>
                 {sub?.startedAt && (
                   <span className="font-mono text-[10px] text-muted-foreground">
                     started {sub.startedAt.slice(0, 10)}
@@ -378,12 +389,25 @@ export function CaseFilesWindow() {
             </div>
           )}
 
-          {review.phase === "loading" && <p className="mt-4 text-sm text-muted-foreground">Your PM is reading your submission…</p>}
+          {review.phase === "loading" && (
+            <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="size-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+              Your PM is reading your submission…
+            </p>
+          )}
           {review.phase === "error" && (
             <div className="chrome-flat mt-4 bg-surface-raised p-3 text-sm text-brand-amber">{review.message}</div>
           )}
           {review.phase === "done" && (
             <div className="chrome-flat mt-4 flex flex-col gap-2 bg-surface-raised p-3.5 text-sm">
+              <span
+                className={cn(
+                  "w-fit font-mono text-[10px] uppercase tracking-widest",
+                  review.verdict === "accept" ? "text-brand-green" : "text-brand-amber",
+                )}
+              >
+                {review.verdict === "accept" ? "PM: accepted" : "PM: needs revision"}
+              </span>
               <p><span className="font-semibold text-brand-green">Strength.</span> {review.strength}</p>
               <p><span className="font-semibold text-brand-amber">Gap.</span> {review.gap}</p>
               <p><span className="font-semibold text-primary">Question.</span> {review.question}</p>
@@ -392,28 +416,44 @@ export function CaseFilesWindow() {
 
           {status === "submitted" && (
             <div className="mt-4 flex flex-col gap-2">
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="secondary" onClick={() => dispatch({ type: "startCase", caseId: selectedId })}>
-                  Revise &amp; resubmit
-                </Button>
-                <Button size="sm" onClick={() => complete(false)}>
-                  Accept &amp; mark complete{review.phase === "done" ? " (+130 XP)" : " (+80 XP)"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setConfirmOverride((v) => !v)}
-                >
-                  Override &amp; mark complete
-                </Button>
-              </div>
+              {review.phase === "loading" ? null : (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={review.phase === "done" && review.verdict === "accept" ? "secondary" : "default"}
+                    onClick={() => dispatch({ type: "startCase", caseId: selectedId })}
+                  >
+                    Revise &amp; resubmit
+                  </Button>
+
+                  {review.phase === "done" && review.verdict === "accept" && (
+                    <ParticleButton onClick={() => complete(false)}>
+                      Accept &amp; mark complete (+130 XP)
+                    </ParticleButton>
+                  )}
+
+                  <Button size="sm" variant="outline" onClick={() => setConfirmOverride((v) => !v)}>
+                    {review.phase === "done" && review.verdict === "revise"
+                      ? "Mark complete anyway"
+                      : "Override and mark complete"}
+                  </Button>
+                </div>
+              )}
+
+              {review.phase === "done" && review.verdict === "revise" && !confirmOverride && (
+                <p className="text-[11px] text-muted-foreground">
+                  Your PM hasn&apos;t signed this off. Address the gap and send it back, or mark it
+                  complete anyway (logged as a disagreement, +80 XP).
+                </p>
+              )}
+
               {confirmOverride && (
                 <div className="chrome-flat flex items-center gap-2 bg-surface-raised p-2.5 text-[12px]">
                   <span className="text-muted-foreground">
-                    Overriding your PM logs a disagreement in the decline log.
+                    Marking this complete against your PM logs a disagreement in the decline log.
                   </span>
                   <Button size="xs" onClick={() => { setConfirmOverride(false); complete(true); }}>
-                    Confirm override
+                    Confirm
                   </Button>
                   <Button size="xs" variant="outline" onClick={() => setConfirmOverride(false)}>
                     Cancel

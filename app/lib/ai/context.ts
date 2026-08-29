@@ -70,6 +70,7 @@ export async function buildContext(sb: DB, userId: string): Promise<LearnerConte
     const r = raw as Record<string, unknown>;
     if (typeof r.gap !== "string" || typeof r.question !== "string") return null;
     return {
+      verdict: r.verdict === "accept" ? "accept" : "revise",
       strength: typeof r.strength === "string" ? r.strength : "",
       gap: r.gap,
       question: r.question,

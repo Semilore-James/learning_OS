@@ -25,17 +25,20 @@ export function ParticleButton({
   onClick,
   className,
   variant = "default",
+  disabled = false,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
   variant?: React.ComponentProps<typeof Button>["variant"];
+  disabled?: boolean;
 }) {
   const allowed = useMotionAllowed();
   const [sparks, setSparks] = useState<Spark[]>([]);
   const seq = useRef(0);
 
   const handle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled) return;
     if (allowed) {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -55,7 +58,12 @@ export function ParticleButton({
   };
 
   return (
-    <Button variant={variant} className={`relative overflow-visible ${className ?? ""}`} onClick={handle}>
+    <Button
+      variant={variant}
+      disabled={disabled}
+      className={`relative overflow-visible ${className ?? ""}`}
+      onClick={handle}
+    >
       <span className="relative z-10">{children}</span>
       <AnimatePresence>
         {sparks.map((sp) => (
