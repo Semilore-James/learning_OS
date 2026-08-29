@@ -4,49 +4,41 @@
 
 ## The situation
 
-A savings app charges a flat monthly fee. The product lead is worried: "Retention looks fine at the top line but I think we are losing our best users and replacing them with worse ones. I need to know if that is true and where it is happening."
+You're the analyst at a payments app. The head of product:
 
-"Churn" here means: a user who had an active subscription and then let it lapse without renewing within 30 days.
+> "Churn ticked up last quarter and nobody can agree on why. Sales says pricing,
+> support says the app feels slow. I need a real answer before the board meeting."
 
 ## The data
 
-**users**
+Two files, meant for SQLite.
 
-| column | type | notes |
-|---|---|---|
-| id | integer | |
-| signup_date | date | |
-| plan | text | 'basic', 'plus', 'premium' |
-| referral_source | text | |
+**users.csv** — `user_id, signup_date, plan, acquisition, app_version`
+**transactions.csv** — `user_id, date, type, amount` (~160k rows)
 
-**subscriptions**
+There's no `churned` flag. Part of the job is defining churn from behaviour — a
+user who stops transacting for long enough.
 
-| column | type | notes |
-|---|---|---|
-| id | integer | |
-| user_id | integer | |
-| started_on | date | |
-| ended_on | date | null if still active |
-| mrr | numeric | monthly recurring revenue for this subscription |
+## How to approach it
 
-**deposits**
+1. Pin down a churn definition you can defend (e.g. no transaction for 30+ days
+   after previously being active). State it.
+2. Churn rate over time. Is it actually up, and by how much?
+3. Now cut the churned users by every attribute you have — plan, acquisition
+   channel, signup month, and `app_version`. One of these splits will be much
+   sharper than the others.
+4. When you find the split that matters, tighten it: *when* do those users go
+   quiet relative to some event? Look at the gap between their last transaction
+   and whatever changed for them.
 
-| column | type | notes |
-|---|---|---|
-| user_id | integer | |
-| deposit_date | date | |
-| amount | numeric | |
+## What to hand back
 
-## Deliverables
-
-1. **Monthly churn rate.** For each of the last 12 months, the number of users who churned that month divided by the number active at the month's start. A `JOIN` between subscriptions and a month series, plus aggregation.
-2. **Are we losing the good ones?** Compare churned users to retained users on two measures: average total deposits, and average months subscribed before churn. State plainly whether the product lead's fear is supported.
-3. **Where.** Break churn rate down by `plan` and by `referral_source`. Name the one or two segments doing most of the damage.
-
-## What "done" looks like
-
-Three result sets with queries, and a three-sentence verdict: is it true, how bad, and which segment to look at first.
+- your churn definition and the overall trend
+- the single factor that explains most of the increase, with the numbers
+- one sentence for the board: is this pricing, speed, or something else — and
+  what's the fix
 
 ## Submit
 
-Paste your queries and your verdict below, then submit for PM-AI review.
+Paste your queries and your answer below, then send it to your PM. Your PM won't
+debug your SQL — they'll tell you where the argument is thin.

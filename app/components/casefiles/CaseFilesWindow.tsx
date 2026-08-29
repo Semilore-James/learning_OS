@@ -12,6 +12,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CASES, CASES_BY_ID, DIFFICULTY_ACCENT, type Difficulty } from "@/content/cases/registry";
 import { useStore, select } from "@/lib/store";
+import { useWindowActions } from "@/lib/windowContext";
 import { TOPICS } from "@/content/curriculum";
 import { subNodesFor } from "@/lib/curriculumLayout";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ function useLearnerContext() {
 
 export function CaseFilesWindow() {
   const { state, dispatch } = useStore();
+  const win = useWindowActions();
   const ctx = useLearnerContext();
   const [selectedId, setSelectedId] = useState(CASES[0].id);
   const [diff, setDiff] = useState<Difficulty | "ALL">("ALL");
@@ -204,6 +206,19 @@ export function CaseFilesWindow() {
             </span>
           </div>
           {status === "open" && <Button size="sm" onClick={start}>Start this case (+10 XP)</Button>}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-3 py-1.5 text-[11px]">
+          <span className="text-muted-foreground">
+            Recommended tool: <span className="font-semibold text-foreground">{def.tool}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => win.open("pmai")}
+            className="text-primary hover:underline"
+          >
+            Stuck? Ask your PM in L_OS COMMS →
+          </button>
         </div>
 
         {def.datasets && def.datasets.length > 0 && (
