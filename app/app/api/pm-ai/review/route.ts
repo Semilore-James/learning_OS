@@ -27,6 +27,9 @@ import {
 } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { createClient } from "@/lib/supabase/server";
+import { publicEnv } from "@/lib/env";
+
+const supabaseConfigured = Boolean(publicEnv.supabaseUrl && publicEnv.supabaseAnonKey);
 
 function fallbackContext(c: Partial<LearnerContext>): LearnerContext {
   return {
@@ -96,16 +99,14 @@ export async function POST(req: Request) {
   }
   const digest = cleanDigest(body.digest);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const supabase = supabaseConfigured ? await createClient() : null;
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
 
   let ctx: LearnerContext;
   let remainingHour: number | null = null;
   let priorNotes = "";
 
-  if (user) {
+  if (user && supabase) {
     const rl = await checkAndRecord(supabase, user.id, "review");
     if (!rl.ok) {
       return NextResponse.json(
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
       ctx,
     );
 
-    if (user) {
+    if (user && supabase) {
       void noteUnresolved(supabase, user.id, result.gap, caseId ?? null);
       void refreshNotes(
         supabase,

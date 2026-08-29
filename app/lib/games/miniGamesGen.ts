@@ -207,99 +207,258 @@ export function pivotRound(n: number): PivotRound {
 }
 
 /* --------------------------------------------------------- Chart Critiquer -- */
-type Flaw =
-  | "truncated_axis"
-  | "wrong_type"
-  | "cherry_picked"
-  | "dual_axis"
-  | "too_many_slices";
+import type { CritiqueStep } from "./miniGames";
 
-const FLAW_LABEL: Record<Flaw, string> = {
-  truncated_axis: "Truncated y-axis",
-  wrong_type: "Wrong chart type",
-  cherry_picked: "Cherry-picked range",
-  dual_axis: "Misleading dual axis",
-  too_many_slices: "Pie with too many slices",
-};
-const FLAW_KIND: Record<Flaw, CritiqueRound["kind"]> = {
-  truncated_axis: "bar-truncated",
-  wrong_type: "line-should-be-bar",
-  cherry_picked: "cherry-picked",
-  dual_axis: "dual-axis",
-  too_many_slices: "pie-many",
-};
-const DISTRACTORS = ["Missing data labels", "Too many colours", "3D effect", "Unlabelled log scale", "No legend"];
+/** the concept strings — kept in sync with P in miniGames.ts */
+const CONCEPTS = {
+  truncated: "Truncated y-axis: the baseline is not zero, so a small change looks huge",
+  dualAxis: "Two independent y-axes scaled to overlap, manufacturing a correlation",
+  wrongType: "A continuous line over discrete categories implies progression that isn't there",
+  tooManySlices: "A pie split into too many wedges to compare",
+  cherryWindow: "Only a flattering slice of the time range is shown",
+  noDenominator: "Raw counts with no population or base to turn them into rates",
+  simpsons: "A rising aggregate can hide every segment falling if the mix shifted (Simpson's paradox)",
+  smoothedVariance: "A smoothed average hides how volatile the underlying values are",
+  survivorship: "The sample is only the people who stayed, so the losers are invisible",
+  shortWindow: "Too few points to claim a trend or a cause",
+  honest: "Nothing wrong: zero baseline, full range shown, the claim matches the data",
+} as const;
+type ConceptKey = keyof typeof CONCEPTS;
+
+const SUBJECTS = ["Revenue", "Sign-ups", "Active users", "Conversion", "NPS", "Engagement", "Retention"];
+const PERIODS: string[][] = [
+  ["Q1", "Q2", "Q3", "Q4"],
+  ["Jan", "Feb", "Mar", "Apr", "May"],
+  ["2021", "2022", "2023", "2024"],
+  ["Wk1", "Wk2", "Wk3", "Wk4"],
+];
+const DECOY_ACTIONS = [
+  "Add data labels to every point",
+  "Use a bolder colour for the top value",
+  "Switch the chart to 3D",
+  "Add a title and a legend",
+  "Make the gridlines darker",
+  "Sort the bars from high to low",
+];
+
+function shuffle<T>(r: () => number, a: T[]): T[] {
+  const out = [...a];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/** step 2: pick the concept. correct + 3 other concepts, one optionally a near-miss. */
+function conceptStep(
+  r: () => number,
+  correct: ConceptKey,
+  explain: string,
+  near?: ConceptKey,
+): CritiqueStep {
+  const pool = (Object.keys(CONCEPTS) as ConceptKey[]).filter((k) => k !== correct);
+  const distract: ConceptKey[] = [];
+  if (near && near !== correct) distract.push(near);
+  while (distract.length < 3) {
+    const k = pick(r, pool);
+    if (!distract.includes(k)) distract.push(k);
+  }
+  const opts = shuffle(r, [correct, ...distract]);
+  return { options: opts.map((k) => CONCEPTS[k]), answer: opts.indexOf(correct), explain };
+}
+
+/** step 3: pick the action that actually helps. */
+function actionStep(r: () => number, correct: string, explain: string): CritiqueStep {
+  const opts = shuffle(r, [correct, ...shuffle(r, DECOY_ACTIONS).slice(0, 3)]);
+  return { options: opts, answer: opts.indexOf(correct), explain };
+}
+
+type Family =
+  | "honest" | "truncated" | "dualAxis" | "wrongType" | "tooManySlices"
+  | "cherryWindow" | "noDenominator" | "simpsons" | "smoothedVariance"
+  | "survivorship" | "shortWindow";
+
+function familiesFor(n: number): Family[] {
+  const base: Family[] = ["honest", "truncated", "dualAxis", "wrongType", "tooManySlices", "cherryWindow"];
+  if (n >= 13) base.push("noDenominator", "simpsons", "smoothedVariance");
+  if (n >= 20) base.push("survivorship", "shortWindow");
+  return base;
+}
 
 export function critiqueRound(n: number): CritiqueRound {
   if (n <= CRITIQUE_AUTHORED) return CRITIQUE_ROUNDS[n - 1];
-  const r = rng(n * 40503);
-  const flaw = pick(r, [
-    "truncated_axis",
-    "wrong_type",
-    "cherry_picked",
-    "dual_axis",
-    "too_many_slices",
-  ] as Flaw[]);
-  const labels = pick(r, [
-    ["Q1", "Q2", "Q3", "Q4"],
-    ["Jan", "Feb", "Mar", "Apr"],
-    ["2020", "2021", "2022", "2023"],
-    ["Wk1", "Wk2", "Wk3", "Wk4"],
-  ]);
+  const r = rng(n * 40503 + 7);
+  const fam = pick(r, familiesFor(n));
+  const subject = pick(r, SUBJECTS);
+  const periods = pick(r, PERIODS);
+  const near = n >= 20; // slip in a near-miss distractor at higher levels
 
-  let series: { label: string; value: number }[];
-  let series2: { label: string; value: number }[] | undefined;
-  let yStart = 0;
-  let caption: string;
-  let explain: string;
+  let round: CritiqueRound;
 
-  if (flaw === "truncated_axis") {
-    const base = int(r, 90, 200);
-    series = labels.map((l) => ({ label: l, value: base + int(r, 1, 9) }));
-    yStart = base;
-    caption = `"Huge growth this period!"`;
-    explain = `The y-axis starts at ${yStart}, not 0, so a small change looks dramatic. Bar axes start at zero.`;
-  } else if (flaw === "wrong_type") {
-    series = labels.map((l) => ({ label: l, value: int(r, 20, 90) }));
-    caption = "Four separate periods drawn as one smooth line, no markers.";
-    explain = "A smooth line implies continuous data between points. For discrete periods use bars or a marked line.";
-  } else if (flaw === "cherry_picked") {
-    const good = [int(r, 60, 90), int(r, 100, 140)];
-    series = [
-      { label: labels[0], value: good[0] },
-      { label: labels[labels.length - 1], value: good[1] },
-    ];
-    caption = "Only the first and last periods are shown — the dips in between are dropped.";
-    explain = "Selecting only the favourable endpoints hides what happened in between. Show the full range.";
-  } else if (flaw === "dual_axis") {
-    const b = int(r, 40, 80);
-    const b2 = int(r, 4000, 8000);
-    series = labels.map((l) => ({ label: l, value: b + int(r, -3, 3) }));
-    series2 = labels.map((l) => ({ label: l, value: b2 + int(r, -200, 200) }));
-    caption = "Two metrics on separate hidden y-axes, scaled to overlap perfectly.";
-    explain = "Independent y-axes can be scaled to manufacture a correlation. Use one axis or an index.";
+  if (fam === "honest") {
+    const v0 = int(r, 40, 80);
+    const step = int(r, 7, 16);
+    round = {
+      title: subject,
+      chart: "bar",
+      series: periods.map((l, i) => ({ label: l, value: v0 + i * step + int(r, -2, 2) })),
+      yStart: 0,
+      caption: `${subject} by period, axis from zero, every period shown.`,
+      claim: `${subject} rose steadily across the whole range and the trend is real.`,
+      verdict: "safe",
+      verdictExplain: "Honest baseline, full range, a consistent rise. The claim follows from the chart.",
+      problem: conceptStep(r, "honest", "Not every chart is a trick. This one is drawn straight and the claim holds.", near ? "cherryWindow" : undefined),
+    };
+  } else if (fam === "truncated") {
+    const base = int(r, 90, 400);
+    round = {
+      title: subject,
+      chart: "bar",
+      series: periods.map((l) => ({ label: l, value: base + int(r, 2, 14) })),
+      yStart: base,
+      caption: `${subject} by period. The bars nearly fill the panel.`,
+      claim: `${subject} jumped sharply this period.`,
+      verdict: "misleading",
+      verdictExplain: "The real change is a few percent. The cut axis turns it into a cliff.",
+      problem: conceptStep(r, "truncated", "The axis starts well above zero. Draw it from zero and the bars are almost level.", near ? "cherryWindow" : undefined),
+      followup: actionStep(r, "Redraw from a zero baseline and state the change as a percentage", "Only the baseline changes what a reader concludes."),
+    };
+  } else if (fam === "dualAxis") {
+    const b = int(r, 30, 90);
+    const b2 = int(r, 3000, 9000);
+    round = {
+      title: `${subject} and spend`,
+      chart: "dual",
+      series: periods.map((l) => ({ label: l, value: b + int(r, -3, 5) })),
+      series2: periods.map((l) => ({ label: l, value: b2 + int(r, -300, 500) })),
+      yStart: 0,
+      caption: "Two metrics on one chart, each on its own hidden axis.",
+      claim: "The two move together, so one is driving the other.",
+      verdict: "misleading",
+      verdictExplain: "The overlap is a scaling choice. Any two rising series can be stacked like this.",
+      problem: conceptStep(r, "dualAxis", "Independent axes scaled to overlap prove nothing about a relationship.", near ? "simpsons" : undefined),
+      followup: actionStep(r, "Index both to 100 at the first period and plot them on one axis", "One shared, indexed axis is the honest view."),
+    };
+  } else if (fam === "wrongType") {
+    round = {
+      title: `${subject} by campaign`,
+      chart: "line-smooth",
+      series: periods.map((l, i) => ({ label: l.replace(/\D+/, "Camp "), value: 30 + i * int(r, 8, 16) + int(r, -3, 3) })),
+      yStart: 0,
+      caption: `${subject} for ${periods.length} separate campaigns, drawn as one smooth curve.`,
+      claim: "Each campaign beats the last. We've found a formula.",
+      verdict: "misleading",
+      verdictExplain: "Separate campaigns are not a continuous process, and this few points is not a formula.",
+      problem: conceptStep(r, "wrongType", "A smooth line implies flow between points that aren't connected. Use bars.", near ? "shortWindow" : undefined),
+      followup: actionStep(r, "Redraw as bars and run more campaigns before calling it a pattern", "Bars stop the eye inventing a trend."),
+    };
+  } else if (fam === "tooManySlices") {
+    const cnt = int(r, 8, 12);
+    round = {
+      title: `${subject} share`,
+      chart: "pie",
+      series: "ABCDEFGHIJKL".slice(0, cnt).split("").map((l) => ({ label: l, value: int(r, 5, 16) })),
+      yStart: 0,
+      caption: `${subject.toLowerCase()} share across ${cnt} categories, as a pie.`,
+      claim: "You can see at a glance which categories lead.",
+      verdict: "misleading",
+      verdictExplain: `With ${cnt} similar wedges you cannot rank them by eye.`,
+      problem: conceptStep(r, "tooManySlices", "Past about five slices a pie is unreadable. A ranked bar chart compares many categories.", near ? "noDenominator" : undefined),
+      followup: actionStep(r, "Redraw as a horizontal bar chart sorted high to low", "Sorted bars make the ranking instant."),
+    };
+  } else if (fam === "cherryWindow") {
+    const full = periods.map((l) => ({ label: l, value: int(r, 40, 130) }));
+    round = {
+      title: subject,
+      chart: "bar",
+      series: [full[0], full[full.length - 1]],
+      yStart: 0,
+      caption: `${subject} for the first and last period only. The ones in between are not shown.`,
+      claim: `${subject} is up over the period.`,
+      verdict: "cant-tell",
+      verdictExplain: "The two endpoints might be the only good months. Without the middle you cannot call it a trend.",
+      problem: conceptStep(r, "cherryWindow", "Only the flattering endpoints are shown. The path between them is hidden.", near ? "shortWindow" : undefined),
+      followup: actionStep(r, "Ask for every period in the range and redraw the full series", "The middle is where the story is."),
+    };
+  } else if (fam === "noDenominator") {
+    const groups = pick(r, [["City A", "City B", "City C"], ["Team 1", "Team 2", "Team 3"], ["Region N", "Region S", "Region E"]]);
+    round = {
+      title: `${subject} by group`,
+      chart: "bar",
+      series: groups.map((l) => ({ label: l, value: int(r, 200, 1200) })),
+      yStart: 0,
+      caption: `Total ${subject.toLowerCase()} count by group, last quarter.`,
+      claim: "The group with the tallest bar is the worst performer.",
+      verdict: "cant-tell",
+      verdictExplain: "A bigger group produces more of everything. Without the group sizes this is just headcount.",
+      problem: conceptStep(r, "noDenominator", "Raw counts with no population. You need it per customer, per user, per capita.", near ? "simpsons" : undefined),
+      followup: actionStep(r, "Get the size of each group and switch to a per-member rate", "Rates, not counts, when the groups differ in size."),
+    };
+  } else if (fam === "simpsons") {
+    round = {
+      title: `${subject} overall`,
+      chart: "line",
+      series: periods.map((l, i) => ({ label: l, value: Math.round((3 + i * 0.3 + r() * 0.2) * 10) / 10 })),
+      yStart: 0,
+      caption: `Overall ${subject.toLowerCase()}, all segments combined, trending up.`,
+      claim: "Things are improving across the board.",
+      verdict: "cant-tell",
+      verdictExplain: "The blended number can rise while every segment falls, if the mix shifted toward the stronger segment.",
+      problem: conceptStep(r, "simpsons", "A rising total can hide every part falling. The aggregate alone will not show it.", near ? "smoothedVariance" : undefined),
+      followup: actionStep(r, "Break the same metric out by segment for the same periods", "If each segment rose too, the claim holds. If the mix moved, it doesn't."),
+    };
+  } else if (fam === "smoothedVariance") {
+    round = {
+      title: `${subject} monthly average`,
+      chart: "line",
+      series: periods.map((l) => ({ label: l, value: int(r, 48, 52) })),
+      yStart: 0,
+      caption: `Monthly average ${subject.toLowerCase()}. A note says daily values swing from near zero to double the average.`,
+      claim: `${subject} is stable and predictable.`,
+      verdict: "misleading",
+      verdictExplain: "A flat monthly average can sit on top of wild daily swings. Stable on average is not stable.",
+      problem: conceptStep(r, "smoothedVariance", "The smoothing hides the spread. Plot the daily range or a distribution.", near ? "simpsons" : undefined),
+      followup: actionStep(r, "Plot the daily values or a min-max band, not just the monthly mean", "The variation is the whole point here."),
+    };
+  } else if (fam === "survivorship") {
+    round = {
+      title: `${subject} survey`,
+      chart: "bar",
+      series: [
+        { label: "Rated 1-6", value: int(r, 5, 15) },
+        { label: "Rated 7-8", value: int(r, 20, 30) },
+        { label: "Rated 9-10", value: int(r, 55, 70) },
+      ],
+      yStart: 0,
+      caption: "Satisfaction survey results. The survey went to people who logged in this week.",
+      claim: "Users love the product.",
+      verdict: "cant-tell",
+      verdictExplain: "Everyone who hated it already left and never saw the survey. You are measuring the fans.",
+      problem: conceptStep(r, "survivorship", "The sample is only the survivors. The unhappy ones churned and are invisible here.", near ? "noDenominator" : undefined),
+      followup: actionStep(r, "Survey recently churned users too, or read this next to the retention curve", "Ask the people who left."),
+    };
   } else {
-    const brands = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
-    series = brands.slice(0, int(r, 8, 11)).map((l) => ({ label: l, value: int(r, 6, 18) }));
-    caption = `A pie chart split into ${series.length} thin wedges.`;
-    explain = "Pies get unreadable past ~5 slices. A ranked bar chart compares many categories far better.";
+    // shortWindow
+    const p3 = periods.slice(0, 3);
+    round = {
+      title: subject,
+      chart: "line",
+      series: p3.map((l, i) => ({ label: l, value: 50 + i * int(r, 10, 20) })),
+      yStart: 0,
+      caption: `${subject} for three periods after a change shipped.`,
+      claim: "The change caused the jump.",
+      verdict: "cant-tell",
+      verdictExplain: "Three rising points can be noise, seasonality, or something else that changed at the same time.",
+      problem: conceptStep(r, "shortWindow", "Too few points, and nothing rules out the other things that moved that week.", near ? "simpsons" : undefined),
+      followup: actionStep(r, "Compare against a control group or the same weeks last year", "You need a counterfactual, not just before and after."),
+    };
   }
 
-  // build 4 options: the right label + 3 distractors, shuffled
-  const opts = [FLAW_LABEL[flaw], ...[...DISTRACTORS].sort(() => r() - 0.5).slice(0, 3)];
-  for (let i = opts.length - 1; i > 0; i--) {
-    const j = Math.floor(r() * (i + 1));
-    [opts[i], opts[j]] = [opts[j], opts[i]];
-  }
-  return {
-    title: pick(r, ["Revenue", "Sign-ups", "Market share", "Engagement", "Growth"]),
-    kind: FLAW_KIND[flaw],
-    series,
-    series2,
-    yStart,
-    caption,
-    options: opts,
-    answer: opts.indexOf(FLAW_LABEL[flaw]),
-    explain,
-  };
+  // early rounds stay short: drop the follow-up until level 13 unless the flaw
+  // is one where "what would you actually do" is the real lesson
+  const keepFollowup = n >= 13 || fam === "truncated" || fam === "dualAxis";
+  if (!keepFollowup) round = { ...round, followup: undefined };
+
+  return round;
 }

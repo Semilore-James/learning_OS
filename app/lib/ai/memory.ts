@@ -27,7 +27,7 @@ const POINTERS_MAX = 12;
 const GREETINGS_MAX = 30;
 
 const BASE_URL = process.env.GROQ_BASE_URL ?? "https://api.groq.com/openai/v1";
-const NOTES_MODEL = process.env.GROQ_NOTES_MODEL ?? "llama-3.1-8b-instant";
+const NOTES_MODEL = process.env.GROQ_NOTES_MODEL ?? "openai/gpt-oss-20b";
 
 /* ------------------------------------------------------------------ read --- */
 
@@ -182,7 +182,8 @@ export async function refreshNotes(
       body: JSON.stringify({
         model: NOTES_MODEL,
         temperature: 0.2,
-        max_tokens: 700,
+        max_tokens: 1400, // headroom: gpt-oss is a reasoning model
+        reasoning_effort: "low",
         messages: [
           { role: "system", content: NOTES_SYSTEM },
           {

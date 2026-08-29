@@ -11,7 +11,7 @@
    "not reachable" line.
    ========================================================================== */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Hash, Send } from "lucide-react";
+import { Hash, Plus, Send, X } from "lucide-react";
 import { useStore, select } from "@/lib/store";
 import { TOPICS } from "@/content/curriculum";
 import { subNodesFor } from "@/lib/curriculumLayout";
@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
 import { sleep, beforeTyping, TYPING_MIN_MS, nowMs } from "@/lib/pace";
 import { pmClientKey } from "@/lib/pmai/clientKey";
+import { downscaleImage } from "@/lib/pmai/downscaleImage";
+import { flag } from "@/lib/flags";
 import { Button } from "@/components/ui/button";
 
 /** rough bucket for analytics — not shown to the learner */
@@ -43,6 +45,7 @@ interface Msg {
   role: "user" | "assistant";
   content: string;
   declined?: boolean;
+  images?: string[];
 }
 
 function Row({ who, tone, children }: { who: "PM" | "You"; tone?: string; children: React.ReactNode }) {
@@ -85,7 +88,23 @@ export function PmAiWindow() {
   const [attention, setAttention] = useState<number | null>(null); // calls left this hour
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const [now, setNow] = useState(nowMs);
+  const [pendingImg, setPendingImg] = useState<string | null>(null);
+  const [attaching, setAttaching] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const visionOn = flag("pmVision");
+
+  const attachImage = async (file: File | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setAttaching(true);
+    try {
+      setPendingImg(await downscaleImage(file));
+    } catch {
+      setPendingImg(null);
+    }
+    setAttaching(false);
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
   const cooling = cooldownUntil != null && now < cooldownUntil;
 
@@ -121,9 +140,14 @@ export function PmAiWindow() {
     const t = text.trim();
     if (!t || sending || cooling) return;
     track("pm_ai_prompt", { prompt_category: classifyPrompt(t) });
-    const next: Msg[] = [...messages, { role: "user", content: t }];
+    const img = pendingImg;
+    const next: Msg[] = [
+      ...messages,
+      { role: "user", content: t, ...(img ? { images: [img] } : {}) },
+    ];
     setMessages(next);
     setInput("");
+    setPendingImg(null);
     setSending(true);
     setTyping(false);
 
@@ -133,7 +157,11 @@ export function PmAiWindow() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          messages: next.map(({ role, content }) => ({ role, content })),
+          messages: next.map((m, i) =>
+            i === next.length - 1 && m.images
+              ? { role: m.role, content: m.content, images: m.images }
+              : { role: m.role, content: m.content },
+          ),
           context: ctx,
           clientKey: pmClientKey(),
         }),
@@ -221,6 +249,14 @@ export function PmAiWindow() {
 
         {messages.map((m, i) => (
           <Row key={i} who={m.role === "user" ? "You" : "PM"} tone={m.declined ? "text-brand-amber" : undefined}>
+            {m.images?.[0] && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={m.images[0]}
+                alt="attached screenshot"
+                className="mb-1.5 max-h-40 rounded-[var(--radius-control)] border border-border"
+              />
+            )}
             {m.content}
           </Row>
         ))}
@@ -246,7 +282,39 @@ export function PmAiWindow() {
         </div>
       )}
 
+      {pendingImg && (
+        <div className="flex items-center gap-2 px-3 pt-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pendingImg} alt="attachment preview" className="h-12 rounded-[var(--radius-control)] border border-border" />
+          <span className="text-[11px] text-muted-foreground">Screenshot attached</span>
+          <button type="button" onClick={() => setPendingImg(null)} className="text-muted-foreground hover:text-foreground">
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
+
       <div className="flex items-end gap-2 border-t border-border p-2.5">
+        {visionOn && (
+          <>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => attachImage(e.target.files?.[0])}
+            />
+            <Button
+              size="icon-sm"
+              variant="outline"
+              onClick={() => fileRef.current?.click()}
+              disabled={attaching || cooling || Boolean(pendingImg)}
+              aria-label="Attach a screenshot"
+              title="Attach a screenshot"
+            >
+              <Plus className="size-3.5" />
+            </Button>
+          </>
+        )}
         <textarea
           rows={1}
           value={input}

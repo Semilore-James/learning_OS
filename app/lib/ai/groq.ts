@@ -26,9 +26,11 @@ import {
 } from "./types";
 
 const BASE_URL = process.env.GROQ_BASE_URL ?? "https://api.groq.com/openai/v1";
-const MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
-const VISION_MODEL =
-  process.env.GROQ_VISION_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
+const MODEL = process.env.GROQ_MODEL ?? "openai/gpt-oss-120b";
+/** empty = no vision provider wired; images are dropped and the turn runs
+ *  text-only. Groq has no vision model on this account yet. */
+const VISION_MODEL = process.env.GROQ_VISION_MODEL ?? "";
+export const visionAvailable = Boolean(VISION_MODEL);
 
 type ContentPart =
   | { type: "text"; text: string }
@@ -46,6 +48,9 @@ async function complete(
   if (!serverEnv.groqApiKey) {
     throw new AdvisorUnavailableError("GROQ_API_KEY is not set");
   }
+  // GPT-OSS / Qwen3 on Groq are reasoning models: without a low effort setting
+  // the reasoning trace eats the token budget and `content` comes back empty.
+  const maxTokens = opts.maxTokens ?? 500;
   let res: Response;
   try {
     res = await fetch(`${BASE_URL}/chat/completions`, {
@@ -58,7 +63,8 @@ async function complete(
         model: opts.model ?? MODEL,
         messages,
         temperature: 0.4,
-        max_tokens: opts.maxTokens ?? 500,
+        max_tokens: maxTokens + 512, // headroom for the reasoning trace
+        reasoning_effort: "low",
         ...(opts.json ? { response_format: { type: "json_object" } } : {}),
       }),
     });
@@ -136,9 +142,9 @@ export const groqAdvisor: Advisor = {
   },
 
   async chat(messages: ChatMessage[], ctx: LearnerContext): Promise<AdvisorReply> {
-    const hasImages = messages.some((m) => m.images && m.images.length > 0);
+    const useVision = visionAvailable && messages.some((m) => m.images && m.images.length > 0);
     const turns: ChatCompletionMessage[] = messages.map((m) => {
-      if (m.role === "user" && m.images && m.images.length > 0) {
+      if (useVision && m.role === "user" && m.images && m.images.length > 0) {
         return {
           role: "user",
           content: [
@@ -149,7 +155,9 @@ export const groqAdvisor: Advisor = {
           ],
         };
       }
-      return { role: m.role, content: m.content };
+      // no vision provider: fall back to text, note the screenshot was dropped
+      const note = m.images && m.images.length > 0 ? `${m.content}\n[a screenshot was attached but the PM cannot view images right now]` : m.content;
+      return { role: m.role, content: note };
     });
 
     const content = await complete(
@@ -158,7 +166,7 @@ export const groqAdvisor: Advisor = {
         ...contextMessages(ctx),
         ...turns,
       ],
-      { maxTokens: 400, model: hasImages ? VISION_MODEL : undefined },
+      { maxTokens: 400, model: useVision ? VISION_MODEL : undefined },
     );
     if (/^that is outside what i will help with here\.?/i.test(content)) {
       return { kind: "decline", reason: content };

@@ -1,8 +1,10 @@
 "use client";
 
 /* ============================================================================
-   Renders the (deliberately flawed) chart for a Chart Critiquer round using
-   Recharts, so the flaw is actually visible instead of described.
+   Renders the chart for a Chart Critiquer round with Recharts, so the flaw (or
+   the absence of one) is actually visible instead of described. The chart is
+   drawn as honestly as the round's `chart` type allows; the judgment happens
+   in the questions, not in a caption.
    ========================================================================== */
 import {
   Bar,
@@ -23,7 +25,7 @@ import type { CritiqueRound } from "@/lib/games/miniGames";
 
 const PIE_COLORS = [
   "var(--primary)", "var(--accent-2)", "var(--accent-1)", "var(--accent-3)",
-  "#e5484d", "#f5a623", "#4cc9f0", "#b298dc", "#57cc99", "#ff9770", "#9b5de5",
+  "#e5484d", "#f5a623", "#4cc9f0", "#b298dc", "#57cc99", "#ff9770", "#9b5de5", "#f15bb5",
 ];
 
 const axis = { stroke: "var(--text-muted)", fontSize: 10 };
@@ -36,7 +38,7 @@ export function FlawedChart({ round }: { round: CritiqueRound }) {
     value2: round.series2?.[i]?.value,
   }));
 
-  if (round.kind === "pie-many") {
+  if (round.chart === "pie") {
     return (
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
@@ -52,20 +54,28 @@ export function FlawedChart({ round }: { round: CritiqueRound }) {
     );
   }
 
-  if (round.kind === "line-should-be-bar") {
+  if (round.chart === "line" || round.chart === "line-smooth") {
+    const smooth = round.chart === "line-smooth";
     return (
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 10, bottom: 4, left: -18 }}>
           <CartesianGrid {...grid} vertical={false} />
           <XAxis dataKey="label" {...axis} />
-          <YAxis {...axis} domain={[0, "auto"]} />
-          <Line type="monotone" dataKey="value" stroke="var(--primary)" strokeWidth={2} dot={false} isAnimationActive={false} />
+          <YAxis {...axis} domain={[round.yStart, "auto"]} allowDataOverflow />
+          <Line
+            type={smooth ? "monotone" : "linear"}
+            dataKey="value"
+            stroke="var(--primary)"
+            strokeWidth={2}
+            dot={!smooth}
+            isAnimationActive={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     );
   }
 
-  if (round.kind === "dual-axis") {
+  if (round.chart === "dual") {
     return (
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 6, bottom: 4, left: -18 }}>
@@ -81,7 +91,7 @@ export function FlawedChart({ round }: { round: CritiqueRound }) {
     );
   }
 
-  // bar-truncated, cherry-picked, bar-clean — all bar charts, the flaw is in the data/axis
+  // bar
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 10, bottom: 4, left: -18 }}>

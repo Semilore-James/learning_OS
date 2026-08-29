@@ -26,7 +26,10 @@ import {
 } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { createClient } from "@/lib/supabase/server";
+import { publicEnv } from "@/lib/env";
 import { flag } from "@/lib/flags";
+
+const supabaseConfigured = Boolean(publicEnv.supabaseUrl && publicEnv.supabaseAnonKey);
 
 function fallbackContext(c: Partial<LearnerContext>): LearnerContext {
   return {
@@ -71,16 +74,14 @@ export async function POST(req: Request) {
   const usesImage = Boolean(last.images && last.images.length > 0);
   for (const m of messages.slice(0, -1)) m.images = undefined;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const supabase = supabaseConfigured ? await createClient() : null;
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
 
   let ctx: LearnerContext;
   let remainingHour: number | null = null;
   let priorNotes = "";
 
-  if (user) {
+  if (user && supabase) {
     const rl = await checkAndRecord(supabase, user.id, usesImage ? "chat_image" : "chat", usesImage ? 3 : 1);
     if (!rl.ok) {
       return NextResponse.json(
@@ -110,7 +111,7 @@ export async function POST(req: Request) {
   try {
     const out = await getAdvisor().chat(messages, ctx);
 
-    if (user) {
+    if (user && supabase) {
       const reply = out.kind === "reply" ? out.content : out.reason;
       // persist the visible pair (transcript store already exists from 0001)
       void supabase.from("pm_ai_messages").insert([
