@@ -17,7 +17,7 @@ import { Wallpaper } from "@/components/wallpaper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type View = "login" | "signup" | "otp" | "forgot";
+type View = "login" | "signup" | "otp" | "forgot" | "mfa";
 
 export function AuthScreen() {
   const { continueAsGuest, onSignedUp, configured } = useSession();
@@ -26,6 +26,8 @@ export function AuthScreen() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
+  const [mfaFactorId, setMfaFactorId] = useState("");
+  const [mfaChallengeId, setMfaChallengeId] = useState("");
   const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -51,7 +53,34 @@ export function AuthScreen() {
       if (!supabase) throw new Error("Accounts are not configured yet.");
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      // session change is picked up by SessionProvider
+      // if the account has 2FA, ask for a code before SessionProvider proceeds
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.currentLevel === "aal1" && aal?.nextLevel === "aal2") {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const totp = factors?.totp?.[0];
+        if (totp) {
+          const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: totp.id });
+          if (chErr) throw chErr;
+          setMfaFactorId(totp.id);
+          setMfaChallengeId(ch.id);
+          setCode("");
+          setView("mfa");
+          setNotice("Enter the 6-digit code from your authenticator app.");
+        }
+      }
+      // otherwise the session change is picked up by SessionProvider
+    });
+
+  const verifyMfa = () =>
+    run(async () => {
+      if (!supabase) throw new Error("Accounts are not configured yet.");
+      const { error } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: mfaChallengeId,
+        code: code.trim(),
+      });
+      if (error) throw error;
+      // now at aal2 — SessionProvider proceeds
     });
 
   const signup = () =>
@@ -94,7 +123,7 @@ export function AuthScreen() {
         <div className="mt-1 text-[13px] font-light text-muted-foreground">Data Analyst Operating System</div>
 
         <div className="mt-8 flex flex-col gap-3">
-          {view !== "otp" && (
+          {view !== "otp" && view !== "mfa" && (
             <label className="flex flex-col gap-1">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Email</span>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
@@ -120,7 +149,7 @@ export function AuthScreen() {
             </label>
           )}
 
-          {view === "otp" && (
+          {(view === "otp" || view === "mfa") && (
             <label className="flex flex-col gap-1">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">6-digit code</span>
               <Input
@@ -146,7 +175,17 @@ export function AuthScreen() {
           <Button
             className="mt-1 w-full uppercase tracking-wide"
             disabled={busy}
-            onClick={view === "login" ? login : view === "signup" ? signup : view === "otp" ? verify : forgot}
+            onClick={
+              view === "login"
+                ? login
+                : view === "signup"
+                  ? signup
+                  : view === "otp"
+                    ? verify
+                    : view === "mfa"
+                      ? verifyMfa
+                      : forgot
+            }
           >
             {busy
               ? "…"
@@ -156,7 +195,9 @@ export function AuthScreen() {
                   ? "Create account"
                   : view === "otp"
                     ? "Verify"
-                    : "Send reset link"}
+                    : view === "mfa"
+                      ? "Verify code"
+                      : "Send reset link"}
           </Button>
         </div>
 
@@ -171,7 +212,7 @@ export function AuthScreen() {
               </button>
             </>
           )}
-          {(view === "signup" || view === "forgot" || view === "otp") && (
+          {(view === "signup" || view === "forgot" || view === "otp" || view === "mfa") && (
             <button type="button" className="text-muted-foreground hover:underline" onClick={() => setView("login")}>
               Back to sign in
             </button>

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ProfileCard } from "./ProfileCard";
+import { TwoFactor } from "./TwoFactor";
 import type { Skin, Theme } from "@/lib/store/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -201,6 +202,8 @@ export function SettingsWindow() {
           )}
         </section>
       )}
+
+      {phase === "account" && <TwoFactor />}
 
       <section className="flex flex-col gap-3 border-t border-border p-5">
         <SectionLabel>Data</SectionLabel>
