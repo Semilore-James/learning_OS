@@ -1,40 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { DETECTIVE_ROUNDS } from "@/lib/games/miniGames";
+import { detectiveRound } from "@/lib/games/miniGamesGen";
 
 export function DataDetective() {
   const { state, dispatch } = useStore();
   const best = state.games.data_detective?.level ?? 0;
-  const [i, setI] = useState(Math.min(best, DETECTIVE_ROUNDS.length - 1));
+  const [n, setN] = useState(Math.max(1, best + 1));
   const [guess, setGuess] = useState<number | null>(null);
 
-  const round = DETECTIVE_ROUNDS[i];
+  const round = useMemo(() => detectiveRound(n), [n]);
   const solved = guess === round.badRow;
 
   const submit = (rowIdx: number) => {
     if (guess !== null) return;
     setGuess(rowIdx);
-    if (rowIdx === round.badRow) {
-      dispatch({ type: "recordGameScore", game: "data_detective", level: i + 1, score: i + 1 });
-      dispatch({ type: "recordGameAttempt", game: "data_detective", level: i + 1, passed: true });
-    } else {
-      dispatch({ type: "recordGameAttempt", game: "data_detective", level: i + 1, passed: false });
-    }
+    const ok = rowIdx === round.badRow;
+    dispatch({ type: "recordGameAttempt", game: "data_detective", level: n, passed: ok });
+    if (ok) dispatch({ type: "recordGameScore", game: "data_detective", level: n, score: n });
   };
 
   const next = () => {
     setGuess(null);
-    setI((n) => Math.min(n + 1, DETECTIVE_ROUNDS.length - 1));
+    setN((x) => x + 1);
   };
 
   return (
     <div className="flex h-full flex-col gap-3 overflow-auto p-4">
       <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-        Round {i + 1} / {DETECTIVE_ROUNDS.length}
+        Round {n}
       </span>
       <p className="text-sm font-semibold text-foreground">{round.prompt}</p>
 
@@ -87,17 +84,13 @@ export function DataDetective() {
             {solved ? "Correct." : "Not quite."}
           </p>
           <p className="mt-1 text-muted-foreground">{round.because}</p>
-          {i < DETECTIVE_ROUNDS.length - 1 ? (
-            <button
-              type="button"
-              onClick={next}
-              className="chrome-flat mt-2 bg-surface px-3 py-1.5 text-[11px] font-semibold text-foreground hover:text-primary"
-            >
-              Next round →
-            </button>
-          ) : (
-            <p className="mt-2 font-semibold text-foreground">That&apos;s the last round — nice work.</p>
-          )}
+          <button
+            type="button"
+            onClick={next}
+            className="chrome-flat mt-2 bg-surface px-3 py-1.5 text-[11px] font-semibold text-foreground hover:text-primary"
+          >
+            Next round →
+          </button>
         </div>
       )}
     </div>

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { CRITIQUE_ROUNDS } from "@/lib/games/miniGames";
+import { critiqueRound } from "@/lib/games/miniGamesGen";
 
 export function ChartCritiquer() {
   const { state, dispatch } = useStore();
   const best = state.games.chart_critiquer?.level ?? 0;
-  const [i, setI] = useState(Math.min(best, CRITIQUE_ROUNDS.length - 1));
+  const [n, setN] = useState(Math.max(1, best + 1));
   const [pick, setPick] = useState<number | null>(null);
 
-  const round = CRITIQUE_ROUNDS[i];
+  const round = useMemo(() => critiqueRound(n), [n]);
   const correct = pick === round.answer;
   const max = Math.max(...round.series.map((s) => s.value));
   const min = round.yStart;
@@ -19,23 +19,20 @@ export function ChartCritiquer() {
   const choose = (o: number) => {
     if (pick !== null) return;
     setPick(o);
-    if (o === round.answer) {
-      dispatch({ type: "recordGameScore", game: "chart_critiquer", level: i + 1, score: i + 1 });
-      dispatch({ type: "recordGameAttempt", game: "chart_critiquer", level: i + 1, passed: true });
-    } else {
-      dispatch({ type: "recordGameAttempt", game: "chart_critiquer", level: i + 1, passed: false });
-    }
+    const ok = o === round.answer;
+    dispatch({ type: "recordGameAttempt", game: "chart_critiquer", level: n, passed: ok });
+    if (ok) dispatch({ type: "recordGameScore", game: "chart_critiquer", level: n, score: n });
   };
 
   const next = () => {
     setPick(null);
-    setI((n) => Math.min(n + 1, CRITIQUE_ROUNDS.length - 1));
+    setN((x) => x + 1);
   };
 
   return (
     <div className="flex h-full flex-col gap-3 overflow-auto p-4">
       <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-        Round {i + 1} / {CRITIQUE_ROUNDS.length}
+        Round {n}
       </span>
       <h3 className="font-display text-sm font-bold text-foreground">{round.title}</h3>
 
@@ -81,17 +78,13 @@ export function ChartCritiquer() {
             {correct ? "Right." : "The flagged answer is highlighted."}
           </p>
           <p className="mt-1 text-muted-foreground">{round.explain}</p>
-          {i < CRITIQUE_ROUNDS.length - 1 ? (
-            <button
-              type="button"
-              onClick={next}
-              className="chrome-flat mt-2 bg-surface px-3 py-1.5 text-[11px] font-semibold text-foreground hover:text-primary"
-            >
-              Next round →
-            </button>
-          ) : (
-            <p className="mt-2 font-semibold text-foreground">Last round done.</p>
-          )}
+          <button
+            type="button"
+            onClick={next}
+            className="chrome-flat mt-2 bg-surface px-3 py-1.5 text-[11px] font-semibold text-foreground hover:text-primary"
+          >
+            Next round →
+          </button>
         </div>
       )}
     </div>
