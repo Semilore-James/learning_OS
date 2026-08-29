@@ -178,11 +178,21 @@ export const PIVOT_ROUNDS: PivotRound[] = [
   },
 ];
 
-/* ---- Chart Critiquer : name the flaw in a described chart ----------------- */
+/* ---- Chart Critiquer : name the flaw in a rendered chart ----------------- */
+export type ChartKind =
+  | "bar-truncated" // bars with a non-zero y-axis
+  | "line-should-be-bar" // smooth line over discrete categories
+  | "cherry-picked" // only the flattering points shown
+  | "dual-axis" // two series, two independent y-axes
+  | "pie-many" // pie with too many slices
+  | "bar-clean"; // a legitimate chart (the "no flaw" control)
+
 export interface CritiqueRound {
   title: string;
-  /** simple bar series for the mini preview */
+  kind: ChartKind;
   series: { label: string; value: number }[];
+  /** dual-axis only: the second series */
+  series2?: { label: string; value: number }[];
   yStart: number;
   caption: string;
   options: string[];
@@ -193,6 +203,7 @@ export interface CritiqueRound {
 export const CRITIQUE_ROUNDS: CritiqueRound[] = [
   {
     title: "Quarterly revenue",
+    kind: "bar-truncated",
     series: [
       { label: "Q1", value: 102 },
       { label: "Q2", value: 104 },
@@ -203,64 +214,58 @@ export const CRITIQUE_ROUNDS: CritiqueRound[] = [
     caption: "“Revenue is exploding!”",
     options: ["Truncated y-axis", "Wrong chart type", "Missing data labels", "Too many colours"],
     answer: 0,
-    explain:
-      "The y-axis starts at 100, not 0, so a ~4% change looks like a huge climb. Start bar axes at zero.",
+    explain: "The y-axis starts at 100, not 0, so a ~4% change looks like a huge climb. Start bar axes at zero.",
   },
   {
-    title: "Market share by brand (12 slices)",
+    title: "Market share by brand",
+    kind: "pie-many",
     series: [
-      { label: "A", value: 22 },
-      { label: "B", value: 18 },
-      { label: "C", value: 14 },
-      { label: "D", value: 11 },
+      { label: "A", value: 15 }, { label: "B", value: 13 }, { label: "C", value: 12 },
+      { label: "D", value: 11 }, { label: "E", value: 10 }, { label: "F", value: 9 },
+      { label: "G", value: 8 }, { label: "H", value: 8 }, { label: "I", value: 7 }, { label: "J", value: 7 },
     ],
     yStart: 0,
-    caption: "A pie chart split into 12 thin wedges.",
+    caption: "Ten brands, one pie.",
     options: ["Truncated y-axis", "Pie with too many slices", "Log scale not labelled", "Cherry-picked dates"],
     answer: 1,
-    explain:
-      "Pies get unreadable past ~5 slices. A ranked bar chart compares many categories far better.",
+    explain: "Pies get unreadable past ~5 slices. A ranked bar chart compares many categories far better.",
   },
   {
-    title: "Sign-ups over time",
+    title: "Weekly sign-ups",
+    kind: "line-should-be-bar",
     series: [
-      { label: "Wk1", value: 30 },
-      { label: "Wk2", value: 55 },
-      { label: "Wk3", value: 40 },
-      { label: "Wk4", value: 60 },
+      { label: "Wk1", value: 30 }, { label: "Wk2", value: 55 },
+      { label: "Wk3", value: 40 }, { label: "Wk4", value: 60 },
     ],
     yStart: 0,
-    caption: "Four discrete weeks shown as a single smooth curve with no markers.",
+    caption: "Four discrete weeks drawn as one smooth curve.",
     options: ["Should be a bar/point chart", "Truncated y-axis", "Dual axis", "3D effect"],
     answer: 0,
-    explain:
-      "A smooth line implies continuous data between points. For weekly counts, use bars or a marked line.",
+    explain: "A smooth line implies continuous data between points. For weekly counts, use bars or a marked line.",
   },
   {
     title: "Ad spend vs. revenue",
+    kind: "dual-axis",
     series: [
-      { label: "Jan", value: 50 },
-      { label: "Feb", value: 52 },
-      { label: "Mar", value: 51 },
-      { label: "Apr", value: 53 },
+      { label: "Jan", value: 50 }, { label: "Feb", value: 52 }, { label: "Mar", value: 51 }, { label: "Apr", value: 53 },
+    ],
+    series2: [
+      { label: "Jan", value: 5000 }, { label: "Feb", value: 5100 }, { label: "Mar", value: 5050 }, { label: "Apr", value: 5200 },
     ],
     yStart: 0,
-    caption: "Two lines on separate hidden y-axes, scaled so they overlap perfectly.",
+    caption: "Spend and revenue, each on its own hidden y-axis, scaled to overlap.",
     options: ["Misleading dual axis", "Truncated y-axis", "Too few data points", "Wrong colour order"],
     answer: 0,
-    explain:
-      "Independent y-axes can be scaled to manufacture a correlation. Show both on one axis or use an index.",
+    explain: "Independent y-axes can be scaled to manufacture a correlation. Show both on one axis or use an index.",
   },
   {
     title: "Annual growth",
+    kind: "cherry-picked",
     series: [
-      { label: "2019", value: 80 },
-      { label: "2020", value: 120 },
-      { label: "2021", value: 95 },
-      { label: "2022", value: 130 },
+      { label: "2020", value: 120 }, { label: "2022", value: 130 },
     ],
     yStart: 0,
-    caption: "Chart shows only 2020 and 2022 — the down years are dropped.",
+    caption: "Only 2020 and 2022 are shown — 2021 is missing.",
     options: ["Cherry-picked range", "Truncated y-axis", "Wrong chart type", "Missing legend"],
     answer: 0,
     explain: "Selecting only the favourable years hides the 2021 dip. Show the full time range.",

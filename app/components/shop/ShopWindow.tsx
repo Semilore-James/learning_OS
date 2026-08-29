@@ -6,7 +6,7 @@
    window shows the plan and the learner's current XP balance.
    ========================================================================== */
 import { Lock, Palette, Sparkles, Wallpaper as WallpaperIcon } from "lucide-react";
-import { useStore } from "@/lib/store";
+import { useStore, select } from "@/lib/store";
 
 const SHELVES = [
   { icon: WallpaperIcon, title: "Wallpapers", note: "Premium procedural scenes and, later, hand-made art." },
@@ -16,15 +16,16 @@ const SHELVES = [
 
 export function ShopWindow() {
   const { state } = useStore();
+  const coins = select.gamesScore(state);
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-base font-bold text-foreground">Shop</h2>
-          <p className="text-xs text-muted-foreground">Spend XP on things that are purely for the vibe.</p>
+          <p className="text-xs text-muted-foreground">Spend coins on things that are purely for the vibe.</p>
         </div>
         <span className="chrome-flat bg-surface-raised px-3 py-1.5 text-sm font-bold text-brand-amber">
-          {state.xpTotal.toLocaleString()} XP
+          {coins.toLocaleString()} coins
         </span>
       </div>
 
@@ -44,8 +45,8 @@ export function ShopWindow() {
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Everything that affects learning stays free forever. The shop is cosmetic only — a reason to keep
-        the XP counter climbing.
+        Everything that affects learning stays free forever. The shop is cosmetic only. Coins come from
+        Games — XP is your learning progress and cannot be spent.
       </p>
     </div>
   );

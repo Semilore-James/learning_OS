@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { critiqueRound } from "@/lib/games/miniGamesGen";
+import { FlawedChart } from "./FlawedChart";
 
 export function ChartCritiquer() {
   const { state, dispatch } = useStore();
@@ -13,8 +14,6 @@ export function ChartCritiquer() {
 
   const round = useMemo(() => critiqueRound(n), [n]);
   const correct = pick === round.answer;
-  const max = Math.max(...round.series.map((s) => s.value));
-  const min = round.yStart;
 
   const choose = (o: number) => {
     if (pick !== null) return;
@@ -36,19 +35,8 @@ export function ChartCritiquer() {
       </span>
       <h3 className="font-display text-sm font-bold text-foreground">{round.title}</h3>
 
-      <div className="chrome-flat flex h-40 items-end gap-3 bg-surface-raised p-3">
-        {round.series.map((s) => {
-          const h = ((s.value - min) / (max - min || 1)) * 100;
-          return (
-            <div key={s.label} className="flex flex-1 flex-col items-center gap-1">
-              <div className="flex w-full flex-1 items-end">
-                <div className="w-full bg-primary" style={{ height: `${Math.max(3, h)}%` }} />
-              </div>
-              <span className="font-mono text-[9px] text-muted-foreground">{s.label}</span>
-            </div>
-          );
-        })}
-        <span className="self-start font-mono text-[9px] text-muted-foreground">y from {round.yStart}</span>
+      <div className="chrome-flat h-48 bg-surface-raised p-2">
+        <FlawedChart round={round} />
       </div>
       <p className="text-xs italic text-muted-foreground">{round.caption}</p>
 

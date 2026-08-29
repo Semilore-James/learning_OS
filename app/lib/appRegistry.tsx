@@ -177,8 +177,7 @@ export const SETTINGS_APP: AppDef = {
   label: "Settings",
   hint: "Theme, skin, wallpaper",
   glyph: <GlyphSettings />,
-  win: { title: "Settings", width: 560, height: 600 },
-  fitContent: true,
+  win: { title: "Settings", width: 480, height: 600 },
   Body: SettingsWindow,
 };
 

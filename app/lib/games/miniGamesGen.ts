@@ -221,6 +221,13 @@ const FLAW_LABEL: Record<Flaw, string> = {
   dual_axis: "Misleading dual axis",
   too_many_slices: "Pie with too many slices",
 };
+const FLAW_KIND: Record<Flaw, CritiqueRound["kind"]> = {
+  truncated_axis: "bar-truncated",
+  wrong_type: "line-should-be-bar",
+  cherry_picked: "cherry-picked",
+  dual_axis: "dual-axis",
+  too_many_slices: "pie-many",
+};
 const DISTRACTORS = ["Missing data labels", "Too many colours", "3D effect", "Unlabelled log scale", "No legend"];
 
 export function critiqueRound(n: number): CritiqueRound {
@@ -241,6 +248,7 @@ export function critiqueRound(n: number): CritiqueRound {
   ]);
 
   let series: { label: string; value: number }[];
+  let series2: { label: string; value: number }[] | undefined;
   let yStart = 0;
   let caption: string;
   let explain: string;
@@ -265,12 +273,15 @@ export function critiqueRound(n: number): CritiqueRound {
     explain = "Selecting only the favourable endpoints hides what happened in between. Show the full range.";
   } else if (flaw === "dual_axis") {
     const b = int(r, 40, 80);
+    const b2 = int(r, 4000, 8000);
     series = labels.map((l) => ({ label: l, value: b + int(r, -3, 3) }));
+    series2 = labels.map((l) => ({ label: l, value: b2 + int(r, -200, 200) }));
     caption = "Two metrics on separate hidden y-axes, scaled to overlap perfectly.";
     explain = "Independent y-axes can be scaled to manufacture a correlation. Use one axis or an index.";
   } else {
-    series = labels.map((l) => ({ label: l, value: int(r, 8, 24) }));
-    caption = "A pie chart split into 11 thin wedges.";
+    const brands = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+    series = brands.slice(0, int(r, 8, 11)).map((l) => ({ label: l, value: int(r, 6, 18) }));
+    caption = `A pie chart split into ${series.length} thin wedges.`;
     explain = "Pies get unreadable past ~5 slices. A ranked bar chart compares many categories far better.";
   }
 
@@ -282,7 +293,9 @@ export function critiqueRound(n: number): CritiqueRound {
   }
   return {
     title: pick(r, ["Revenue", "Sign-ups", "Market share", "Engagement", "Growth"]),
+    kind: FLAW_KIND[flaw],
     series,
+    series2,
     yStart,
     caption,
     options: opts,

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { ProfileCard } from "./ProfileCard";
 import type { Skin, Theme } from "@/lib/store/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -44,7 +45,9 @@ export function SettingsWindow() {
   };
 
   return (
-    <div className="w-[420px] max-w-full">
+    <div className="mx-auto w-full max-w-[440px]">
+      <ProfileCard />
+
       <section className="flex flex-col gap-2 border-b border-border p-5">
         <SectionLabel>Display name</SectionLabel>
         <div className="flex gap-2">
