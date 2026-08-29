@@ -88,8 +88,14 @@ export function AuthScreen() {
       if (!supabase) throw new Error("Accounts are not configured yet.");
       if (password.length < 8) throw new Error("Password must be at least 8 characters.");
       if (password !== confirm) throw new Error("Passwords do not match.");
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
+      // when email confirmation is disabled, signUp returns a live session and
+      // there is no code to enter — go straight in
+      if (data.session) {
+        await onSignedUp();
+        return;
+      }
       setView("otp");
       setNotice(`Enter the 6-digit code sent to ${email}.`);
     });
