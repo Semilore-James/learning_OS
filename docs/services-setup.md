@@ -65,10 +65,10 @@ at Resend for real deliverability.
 
 ## Two-factor auth (TOTP)
 
-Supabase has built-in TOTP MFA. **Enrolment + challenge UI is a small remaining
-build** (`components/settings/TwoFactor.tsx` for enrol, a code step in
-`AuthScreen` on login when the account has an active factor). To enable the
-backend now:
+Supabase has built-in TOTP MFA. The UI is built:
+`components/settings/TwoFactor.tsx` (Settings, account phase) does enrol +
+verify + turn-off, and `AuthScreen` shows a 6-digit code step on login when the
+account has an active factor. To enable the backend:
 
 1. Supabase Dashboard → **Authentication → Providers / MFA** → ensure TOTP is
    enabled (it is by default on new projects).
