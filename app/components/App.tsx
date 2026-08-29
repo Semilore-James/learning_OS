@@ -7,6 +7,7 @@ import { AnalyticsProvider } from "@/lib/analytics";
 import { SessionProvider, useSession } from "@/lib/session/SessionProvider";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { Desktop } from "@/components/desktop/Desktop";
+import { CloudSync } from "@/components/CloudSync";
 
 function Shell() {
   const { phase, adapter } = useSession();
@@ -19,6 +20,7 @@ function Shell() {
   }
   return (
     <StoreProvider adapter={adapter}>
+      <CloudSync />
       <Desktop />
     </StoreProvider>
   );

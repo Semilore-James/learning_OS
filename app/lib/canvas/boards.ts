@@ -101,3 +101,27 @@ export function deleteBoard(id: string) {
   delete store.boards[id];
   write(store);
 }
+
+/* ---- cloud sync helpers (used by lib/sync/cloud) ------------------------- */
+
+export function allBoards(): Board[] {
+  return Object.values(read().boards);
+}
+
+/** merge a board fetched from the server; server wins only if strictly newer */
+export function upsertLocalBoard(b: Board): void {
+  const store = read();
+  const cur = store.boards[b.id];
+  if (!cur || cur.updatedAt < b.updatedAt) {
+    store.boards[b.id] = b;
+    write(store);
+  }
+}
+
+export function removeLocalBoard(id: string): void {
+  const store = read();
+  if (store.boards[id]) {
+    delete store.boards[id];
+    write(store);
+  }
+}

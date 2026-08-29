@@ -43,3 +43,15 @@ export function fmt(seconds: number): string {
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
+
+/* ---- cloud sync helpers ------------------------------------------------- */
+
+export function allProgress(): Store {
+  return read();
+}
+
+/** take a server value only if it's further along than what we have locally */
+export function mergeProgress(videoId: string, seconds: number): void {
+  const cur = getProgress(videoId);
+  if (seconds > cur) setProgress(videoId, seconds);
+}
