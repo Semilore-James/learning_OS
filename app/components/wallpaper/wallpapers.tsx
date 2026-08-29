@@ -164,41 +164,75 @@ export function Orbital({ theme, reducedMotion }: WallpaperProps) {
   const dark = theme === "dark";
   const cx = W * 0.5;
   const cy = H * 0.5;
-  const rings = [110, 190, 285, 395, 520, 650];
-  const ringOp = dark ? 0.42 : 0.55;
+  const FLAT = 0.4; // vertical squash — perspective on the orbit plane
+  const ringOp = dark ? 0.6 : 0.62;
+  const r = rng(23);
+  const rings = [110, 190, 285, 395, 520, 650].map((rad, i) => ({
+    rad,
+    col: ACCENTS[i % ACCENTS.length],
+    size: i === 2 ? 7 : 4 + r() * 3,
+    dur: 26 + rad * 0.14, // outer orbits slower
+    phase: Math.round(r() * 360),
+    retro: i % 3 === 2,
+  }));
   return (
     <svg style={frame} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden>
       <defs>
         <radialGradient id="orb-c" cx="50%" cy="50%" r="10%">
-          <stop offset="0%" stopColor="var(--accent-1)" stopOpacity={dark ? 0.9 : 0.7} />
+          <stop offset="0%" stopColor="var(--accent-1)" stopOpacity={dark ? 0.95 : 0.7} />
           <stop offset="100%" stopColor="var(--accent-1)" stopOpacity="0" />
         </radialGradient>
       </defs>
       <rect width={W} height={H} fill="var(--bg)" />
-      <circle cx={cx} cy={cy} r={90} fill="url(#orb-c)" />
+      <circle cx={cx} cy={cy} r={100} fill="url(#orb-c)" />
       <g transform={`translate(${cx} ${cy})`}>
-        {rings.map((rad, i) => {
-          const col = ACCENTS[i % ACCENTS.length];
+        {rings.map((ring, i) => (
+          <ellipse
+            key={`r${i}`}
+            rx={ring.rad}
+            ry={ring.rad * FLAT}
+            fill="none"
+            stroke={ring.col}
+            strokeWidth={1.5}
+            opacity={ringOp}
+          />
+        ))}
+        {/* each planet follows its own ellipse via animateMotion, so it stays
+            exactly on the ring line and stays perfectly round */}
+        {rings.map((ring, i) => {
+          const ry = ring.rad * FLAT;
+          const rad = (ring.phase * Math.PI) / 180;
+          if (reducedMotion) {
+            return (
+              <circle
+                key={`p${i}`}
+                className="wp-dot"
+                cx={Math.cos(rad) * ring.rad}
+                cy={Math.sin(rad) * ry}
+                r={ring.size}
+                fill={ring.col}
+                opacity={0.96}
+                style={{ color: ring.col }}
+              />
+            );
+          }
+          const path = `M ${ring.rad},0 A ${ring.rad},${ry} 0 1 1 ${-ring.rad},0 A ${ring.rad},${ry} 0 1 1 ${ring.rad},0 Z`;
+          const off = -(ring.phase / 360) * ring.dur;
           return (
-            <g key={i}>
-              <ellipse rx={rad} ry={rad * 0.4} fill="none" stroke={i % 2 ? "var(--border)" : col} strokeWidth={i % 2 ? 1 : 1.4} opacity={ringOp} />
-              <g>
-                {!reducedMotion && (
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    from="0"
-                    to={i % 2 ? "-360" : "360"}
-                    dur={`${34 + i * 20}s`}
-                    repeatCount="indefinite"
-                  />
-                )}
-                <circle className="wp-dot" cx={rad} cy={0} r={i === 2 ? 6 : 4} fill={col} opacity={0.95} style={{ color: col }} />
-              </g>
-            </g>
+            <circle key={`p${i}`} className="wp-dot" r={ring.size} fill={ring.col} opacity={0.96} style={{ color: ring.col }}>
+              <animateMotion
+                path={path}
+                dur={`${ring.dur}s`}
+                begin={`${off}s`}
+                repeatCount="indefinite"
+                keyPoints={ring.retro ? "1;0" : "0;1"}
+                keyTimes="0;1"
+                calcMode="linear"
+              />
+            </circle>
           );
         })}
-        <circle r={9} fill="var(--accent-1)" opacity={0.95} />
+        <circle r={10} fill="var(--accent-1)" opacity={0.97} />
       </g>
     </svg>
   );
@@ -383,12 +417,19 @@ export function Quasar({ theme, reducedMotion }: WallpaperProps) {
   const cx = W * 0.5;
   const cy = H * 0.52;
   const r = rng(41);
-  const dust = Array.from({ length: 160 }, (_, i) => ({
-    a: r() * Math.PI * 2,
-    d: 40 + r() * 520,
-    rad: 0.6 + r() * 1.8,
-    c: ACCENTS[i % ACCENTS.length],
-  }));
+  const dust = Array.from({ length: 190 }, (_, i) => {
+    const base = dark ? 0.32 + r() * 0.4 : 0.2 + r() * 0.25;
+    return {
+      a: r() * Math.PI * 2,
+      d: 40 + r() * 520,
+      rad: 0.6 + r() * 1.8,
+      c: ACCENTS[i % ACCENTS.length],
+      base,
+      dur: 2.2 + r() * 5,
+      delay: r() * 6,
+      blink: i % 3 === 0,
+    };
+  });
   return (
     <svg style={frame} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden>
       <defs>
@@ -419,9 +460,19 @@ export function Quasar({ theme, reducedMotion }: WallpaperProps) {
             cy={Math.sin(p.a) * p.d * 0.36}
             r={p.rad}
             fill={p.c}
-            opacity={dark ? 0.5 : 0.32}
+            opacity={p.base}
             style={{ color: p.c }}
-          />
+          >
+            {!reducedMotion && p.blink && (
+              <animate
+                attributeName="opacity"
+                values={`${p.base};${Math.min(1, p.base * 2.6)};${p.base}`}
+                dur={`${p.dur}s`}
+                begin={`${p.delay}s`}
+                repeatCount="indefinite"
+              />
+            )}
+          </circle>
         ))}
         <rect x={-26} y={-560} width={52} height={1120} fill="url(#q-jet)">
           {!reducedMotion && <animate attributeName="opacity" values="0.7;1;0.7" dur="6s" repeatCount="indefinite" />}
@@ -434,106 +485,117 @@ export function Quasar({ theme, reducedMotion }: WallpaperProps) {
 }
 
 /* ==================================================== 10. nightside ====== */
-/* inspired by a dark planet crescent with city-light rings on the terminator */
+/* the overview effect — looking across a planet's limb from low orbit, the
+   atmosphere lit as a thin band on the horizon, deep space above */
 export function Nightside({ theme, reducedMotion }: WallpaperProps) {
   const dark = theme === "dark";
-  const cx = W * 0.4;
-  const cy = H * 0.52;
-  const R = 430;
+  const pcx = W * 0.5;
+  const pcy = H * 1.72; // planet centre well below frame — we see only the top arc
+  const R = H * 1.45;
   const r = rng(53);
-  const cities = Array.from({ length: 150 }, () => {
-    const a = -Math.PI * 0.55 + r() * Math.PI * 0.5; // hug the terminator
-    const dd = R * (0.55 + r() * 0.42);
-    return { x: cx + Math.cos(a) * dd, y: cy + Math.sin(a) * dd, rad: 0.5 + r() * 1.6 };
-  });
+  const stars = Array.from({ length: 150 }, (_, i) => ({
+    x: r() * W,
+    y: r() * (pcy - R) * 0.98,
+    rad: i % 13 === 0 ? 1.4 + r() * 1.4 : 0.4 + r() * 1,
+    base: dark ? 0.15 + r() * 0.4 : 0.2 + r() * 0.25,
+    dur: 3 + r() * 6,
+    delay: r() * 8,
+    blink: i % 4 === 0,
+  }));
   return (
     <svg style={frame} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden>
       <defs>
-        <radialGradient id="ns-limb" cx="50%" cy="50%" r="50%">
-          <stop offset="82%" stopColor="var(--accent-1)" stopOpacity="0" />
-          <stop offset="97%" stopColor="var(--accent-1)" stopOpacity={dark ? 0.85 : 0.5} />
-          <stop offset="100%" stopColor="var(--accent-1)" stopOpacity="0" />
+        <linearGradient id="ns-space" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--bg)" />
+          <stop offset="100%" stopColor={dark ? "#0a1120" : "#dfe6f0"} />
+        </linearGradient>
+        <linearGradient id="ns-atmo" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--primary)" stopOpacity="0" />
+          <stop offset="55%" stopColor="var(--primary)" stopOpacity={dark ? 0.5 : 0.3} />
+          <stop offset="78%" stopColor="var(--accent-2)" stopOpacity={dark ? 0.55 : 0.32} />
+          <stop offset="100%" stopColor="var(--accent-1)" stopOpacity={dark ? 0.5 : 0.28} />
+        </linearGradient>
+        <radialGradient id="ns-terra" cx="50%" cy="0%" r="60%">
+          <stop offset="0%" stopColor={dark ? "#12203a" : "#c9d4e6"} />
+          <stop offset="100%" stopColor={dark ? "#050810" : "#e9edf4"} />
         </radialGradient>
-        <clipPath id="ns-clip">
-          <circle cx={cx} cy={cy} r={R} />
-        </clipPath>
       </defs>
-      <rect width={W} height={H} fill="var(--bg)" />
-      <circle cx={cx} cy={cy} r={R} fill={dark ? "#05070d" : "#e6e1d4"} />
-      <circle cx={cx} cy={cy} r={R + 6} fill="url(#ns-limb)" />
-      <g clipPath="url(#ns-clip)">
-        <circle cx={cx + R * 0.5} cy={cy - R * 0.2} r={R} fill="var(--bg)" opacity={0.94} />
-        {cities.map((p, i) => (
-          <circle
-            key={i}
-            className="wp-dot"
-            cx={p.x}
-            cy={p.y}
-            r={p.rad}
-            fill="var(--accent-1)"
-            opacity={dark ? 0.5 + (i % 3) * 0.15 : 0.4}
-            style={{ color: "var(--accent-1)" }}
-          >
-            {!reducedMotion && i % 9 === 0 && (
-              <animate attributeName="opacity" values="0.3;0.9;0.3" dur={`${4 + (i % 5)}s`} repeatCount="indefinite" />
-            )}
-          </circle>
-        ))}
-      </g>
+      <rect width={W} height={H} fill="url(#ns-space)" />
+      {stars.map((s, i) => (
+        <circle key={i} className="wp-dot" cx={s.x} cy={s.y} r={s.rad} fill={dark ? "#fff" : "var(--text)"} opacity={s.base} style={{ color: dark ? "#fff" : "var(--text)" }}>
+          {!reducedMotion && s.blink && (
+            <animate attributeName="opacity" values={`${s.base};${Math.min(1, s.base * 2.6)};${s.base}`} dur={`${s.dur}s`} begin={`${s.delay}s`} repeatCount="indefinite" />
+          )}
+        </circle>
+      ))}
+      {/* atmosphere band follows the limb */}
+      <path d={`M ${pcx - R},${pcy} A ${R} ${R} 0 0 1 ${pcx + R},${pcy}`} fill="none" stroke="url(#ns-atmo)" strokeWidth={70} opacity={0.9} />
+      {/* the planet body */}
+      <circle cx={pcx} cy={pcy} r={R} fill="url(#ns-terra)" />
+      <circle cx={pcx} cy={pcy} r={R} fill="none" stroke="var(--accent-2)" strokeWidth={2} opacity={dark ? 0.5 : 0.3} />
     </svg>
   );
 }
 
 /* ==================================================== 11. luna =========== */
-/* a large moon, close and quiet */
-export function Luna({ theme }: WallpaperProps) {
+/* a crescent moon — real terminator, shadowed craters near the lit edge */
+export function Luna({ theme, reducedMotion }: WallpaperProps) {
   const dark = theme === "dark";
-  const cx = W * 0.52;
-  const cy = H * 0.5;
-  const R = 360;
+  const cx = W * 0.56;
+  const cy = H * 0.46;
+  const R = 300;
   const r = rng(67);
-  const craters = Array.from({ length: 46 }, () => {
+  const stars = Array.from({ length: 110 }, (_, i) => ({
+    x: r() * W,
+    y: r() * H,
+    rad: i % 15 === 0 ? 1.3 + r() * 1.3 : 0.4 + r() * 1,
+    base: dark ? 0.12 + r() * 0.36 : 0.18 + r() * 0.22,
+    dur: 3 + r() * 6,
+    delay: r() * 8,
+    blink: i % 5 === 0,
+  }));
+  // craters sit on the whole disc; those near the lit (right) edge read best
+  const craters = Array.from({ length: 30 }, () => {
     const a = r() * Math.PI * 2;
-    const d = r() * R * 0.92;
-    return { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, rad: 4 + r() * 34 };
+    const d = Math.sqrt(r()) * R * 0.9;
+    return { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, rad: 6 + r() * 26 };
   });
-  const maria = [
-    { x: cx - 90, y: cy - 70, rad: 150 },
-    { x: cx + 110, y: cy + 40, rad: 120 },
-    { x: cx - 20, y: cy + 140, rad: 90 },
-  ];
   return (
     <svg style={frame} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden>
       <defs>
-        <radialGradient id="lu-body" cx="42%" cy="40%" r="70%">
-          <stop offset="0%" stopColor={dark ? "#cfd4de" : "#d9d5c8"} />
-          <stop offset="70%" stopColor={dark ? "#8b93a6" : "#b7b2a2"} />
-          <stop offset="100%" stopColor={dark ? "#4a5165" : "#8f8a79"} />
+        <radialGradient id="lu2-lit" cx="72%" cy="40%" r="75%">
+          <stop offset="0%" stopColor={dark ? "#eef0f4" : "#f0ece0"} />
+          <stop offset="60%" stopColor={dark ? "#b9c0cd" : "#cdc7b6"} />
+          <stop offset="100%" stopColor={dark ? "#7c8494" : "#a49d8b"} />
         </radialGradient>
-        <clipPath id="lu-clip">
+        <clipPath id="lu2-clip">
           <circle cx={cx} cy={cy} r={R} />
         </clipPath>
+        <radialGradient id="lu2-halo" cx="50%" cy="50%" r="50%">
+          <stop offset="72%" stopColor="var(--primary)" stopOpacity="0" />
+          <stop offset="100%" stopColor="var(--primary)" stopOpacity={dark ? 0.14 : 0.07} />
+        </radialGradient>
       </defs>
       <rect width={W} height={H} fill="var(--bg)" />
-      <circle cx={cx} cy={cy} r={R + 3} fill="var(--primary)" opacity={dark ? 0.16 : 0.08} />
-      <circle cx={cx} cy={cy} r={R} fill="url(#lu-body)" />
-      <g clipPath="url(#lu-clip)">
-        {maria.map((m, i) => (
-          <circle key={`m${i}`} cx={m.x} cy={m.y} r={m.rad} fill={dark ? "#5b6373" : "#9a9484"} opacity={0.5} />
-        ))}
+      {stars.map((s, i) => (
+        <circle key={i} className="wp-dot" cx={s.x} cy={s.y} r={s.rad} fill={dark ? "#fff" : "var(--text)"} opacity={s.base} style={{ color: dark ? "#fff" : "var(--text)" }}>
+          {!reducedMotion && s.blink && (
+            <animate attributeName="opacity" values={`${s.base};${Math.min(1, s.base * 2.6)};${s.base}`} dur={`${s.dur}s`} begin={`${s.delay}s`} repeatCount="indefinite" />
+          )}
+        </circle>
+      ))}
+      <circle cx={cx} cy={cy} r={R * 1.5} fill="url(#lu2-halo)" />
+      <circle cx={cx} cy={cy} r={R} fill="url(#lu2-lit)" />
+      <g clipPath="url(#lu2-clip)">
         {craters.map((c, i) => (
-          <circle
-            key={i}
-            cx={c.x}
-            cy={c.y}
-            r={c.rad}
-            fill="none"
-            stroke={dark ? "#3d4353" : "#7c7869"}
-            strokeWidth={1.4}
-            opacity={0.6}
-          />
+          <g key={i}>
+            <circle cx={c.x} cy={c.y} r={c.rad} fill={dark ? "#6b7383" : "#948d7b"} opacity={0.45} />
+            <circle cx={c.x - c.rad * 0.22} cy={c.y - c.rad * 0.22} r={c.rad * 0.82} fill={dark ? "#c6cdd9" : "#ddd7c6"} opacity={0.4} />
+          </g>
         ))}
-        <circle cx={cx + R * 0.5} cy={cy - R * 0.35} r={R} fill="var(--bg)" opacity={dark ? 0.5 : 0.35} />
+        {/* terminator: a shadow disc offset left carves the crescent */}
+        <circle cx={cx - R * 0.62} cy={cy - R * 0.06} r={R * 1.06} fill="var(--bg)" opacity={0.97} />
+        <circle cx={cx - R * 0.5} cy={cy - R * 0.04} r={R * 1.02} fill="var(--bg)" opacity={0.55} />
       </g>
     </svg>
   );
