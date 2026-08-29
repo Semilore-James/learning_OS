@@ -89,6 +89,26 @@ export const BOOKS: Book[] = [
       { slug: "git/15-git-for-analysts", title: "Git for analysts: versioning SQL, never data", nodeId: "git-for-analysts" },
     ],
   },
+  {
+    id: "excel-mastery",
+    title: "Excel and Spreadsheets",
+    subtitle: "Where every analyst starts, and where half the work still happens.",
+    chapters: [
+      { slug: "excel/01-navigation-and-shortcuts", title: "Navigation and keyboard shortcuts", nodeId: "navigation" },
+      { slug: "excel/02-cell-referencing", title: "Cell referencing: relative, absolute, mixed", nodeId: "cell-referencing" },
+      { slug: "excel/03-formulas-and-functions", title: "Formulas and functions", nodeId: "formulas-functions", tryThis: { label: "Case 01: Retail Sales Audit", target: "casefiles" } },
+      { slug: "excel/04-named-ranges", title: "Named ranges", nodeId: "named-ranges" },
+      { slug: "excel/05-pivot-tables", title: "Pivot tables", nodeId: "pivot-tables", tryThis: { label: "Pivot Puzzle", target: "games" } },
+      { slug: "excel/06-data-validation", title: "Data validation", nodeId: "data-validation" },
+      { slug: "excel/07-conditional-formatting", title: "Conditional formatting", nodeId: "conditional-formatting" },
+      { slug: "excel/08-data-cleaning-in-excel", title: "Data cleaning in Excel", nodeId: "cleaning-in-excel", tryThis: { label: "Case 03: Restaurant Revenue by Location", target: "casefiles" } },
+      { slug: "excel/09-charts", title: "Charts: bar, line, scatter, combo", nodeId: "excel-charts", tryThis: { label: "Chart Critiquer", target: "games" } },
+      { slug: "excel/10-power-query-get-and-transform", title: "Power Query: get and transform data", nodeId: "power-query-load" },
+      { slug: "excel/11-power-query-m", title: "Power Query (M): custom columns, parameters, reusable queries", nodeId: "power-query-m" },
+      { slug: "excel/12-vba-editor-and-macros", title: "VBA: the editor, recording and running macros", nodeId: "vba-intro" },
+      { slug: "excel/13-vba-automation", title: "VBA: variables, loops, and a small automation", nodeId: "vba-automation" },
+    ],
+  },
 ];
 
 export const BOOKS_BY_ID: Record<string, Book> = Object.fromEntries(BOOKS.map((b) => [b.id, b]));

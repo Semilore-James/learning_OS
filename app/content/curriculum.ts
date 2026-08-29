@@ -136,6 +136,26 @@ const GIT_SUBNODES: SubNode[] = [
 ];
 
 /* ----------------------------------------------------------------------------
+   EXCEL & SPREADSHEETS — hand-wired to the same depth as SQL and Git.
+   Book: content/textbook/excel/*.md
+   -------------------------------------------------------------------------- */
+const EXCEL_SUBNODES: SubNode[] = [
+  { id: "navigation", label: "Navigation and keyboard shortcuts", prerequisites: [], chapters: ["01-navigation-and-shortcuts"], estHours: 1, pos: { x: 80, y: 300, r: 12 } },
+  { id: "cell-referencing", label: "Cell referencing: relative, absolute, mixed", prerequisites: ["navigation"], chapters: ["02-cell-referencing"], estHours: 1.5, pos: { x: 150, y: 250, r: 12 } },
+  { id: "formulas-functions", label: "Formulas and functions (SUM, IF, VLOOKUP, INDEX-MATCH)", prerequisites: ["cell-referencing"], chapters: ["03-formulas-and-functions"], estHours: 3, pos: { x: 240, y: 300, r: 14 } },
+  { id: "named-ranges", label: "Named ranges", prerequisites: ["cell-referencing"], chapters: ["04-named-ranges"], estHours: 1, pos: { x: 190, y: 400, r: 10 } },
+  { id: "pivot-tables", label: "Pivot tables", prerequisites: ["formulas-functions"], chapters: ["05-pivot-tables"], estHours: 2.5, pos: { x: 350, y: 255, r: 14 } },
+  { id: "data-validation", label: "Data validation", prerequisites: ["formulas-functions"], chapters: ["06-data-validation"], estHours: 1, pos: { x: 350, y: 375, r: 10 } },
+  { id: "conditional-formatting", label: "Conditional formatting", prerequisites: ["formulas-functions"], chapters: ["07-conditional-formatting"], estHours: 1, pos: { x: 420, y: 320, r: 10 } },
+  { id: "cleaning-in-excel", label: "Data cleaning in Excel", prerequisites: ["formulas-functions", "pivot-tables"], chapters: ["08-data-cleaning-in-excel"], estHours: 2.5, pos: { x: 470, y: 410, r: 13 } },
+  { id: "excel-charts", label: "Charts: bar, line, scatter, combo", prerequisites: ["pivot-tables"], chapters: ["09-charts"], estHours: 2, pos: { x: 480, y: 240, r: 12 } },
+  { id: "power-query-load", label: "Power Query: get and transform data", prerequisites: ["cleaning-in-excel"], chapters: ["10-power-query-get-and-transform"], estHours: 3, pos: { x: 580, y: 335, r: 13 } },
+  { id: "power-query-m", label: "Power Query (M): custom columns, parameters, reusable queries", prerequisites: ["power-query-load"], chapters: ["11-power-query-m"], estHours: 3, pos: { x: 670, y: 300, r: 12 } },
+  { id: "vba-intro", label: "VBA: the editor, recording and running macros", prerequisites: ["formulas-functions"], chapters: ["12-vba-editor-and-macros"], estHours: 2, pos: { x: 640, y: 440, r: 11 } },
+  { id: "vba-automation", label: "VBA: variables, loops, and a small automation", prerequisites: ["vba-intro"], chapters: ["13-vba-automation"], estHours: 3, pos: { x: 730, y: 400, r: 12 } },
+];
+
+/* ----------------------------------------------------------------------------
    LEVEL 1 — topic nodes
    Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
    Clusters: FOUNDATIONS (bottom-left) / ANALYSIS (center) / OUTPUT (top-right)
@@ -149,22 +169,7 @@ export const TOPICS: TopicNode[] = [
     prerequisites: [],
     pos: { x: 130, y: 440, r: 21 },
     book: "excel-mastery",
-    subNodes: [],
-    plannedSubNodes: [
-      "Navigation and keyboard shortcuts",
-      "Cell referencing (relative, absolute, mixed)",
-      "Formulas and functions (SUM, IF, VLOOKUP, INDEX-MATCH)",
-      "Pivot tables",
-      "Data validation",
-      "Conditional formatting",
-      "Charts (bar, line, scatter, combo)",
-      "Named ranges",
-      "Data cleaning in Excel",
-      "Power Query in Excel: get and transform data",
-      "Power Query (M): custom columns, parameters, reusable queries",
-      "VBA: the editor, recording macros, running them",
-      "VBA: variables, loops, and writing a small automation",
-    ],
+    subNodes: EXCEL_SUBNODES,
   },
   {
     id: "sql",
