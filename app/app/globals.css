@@ -267,6 +267,12 @@
 .prose-da blockquote { margin: 22px 0; padding: 14px 16px; background: var(--surface-raised); border-left: 3px solid var(--accent-3); }
 .prose-da blockquote p { margin: 0 0 6px; }
 .prose-da blockquote p:last-child { margin: 0; }
+.prose-da table { width: 100%; border-collapse: collapse; margin: 0 0 20px; font-size: 13.5px; display: block; overflow-x: auto; }
+.prose-da thead { background: var(--surface-raised); }
+.prose-da th { text-align: left; font: 600 12px/1.3 var(--font-display); padding: 8px 12px; border: 1px solid var(--border); white-space: nowrap; }
+.prose-da td { padding: 7px 12px; border: 1px solid var(--border); vertical-align: top; }
+.prose-da tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface-raised) 45%, transparent); }
+.prose-da td code, .prose-da th code { white-space: nowrap; }
 .hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-name { color: var(--primary); font-weight: 600; }
 .hljs-string, .hljs-attr, .hljs-number, .hljs-literal { color: var(--accent-1); }
 .hljs-comment, .hljs-quote { color: var(--muted-foreground); font-style: italic; }

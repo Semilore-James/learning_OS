@@ -6,7 +6,7 @@
    submission state machine: open -> in progress -> submitted -> complete, with
    an accept / revise / override branch after PM-AI review.
    ========================================================================== */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Download, FileSpreadsheet, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -55,6 +55,7 @@ export function CaseFilesWindow() {
   const win = useWindowActions();
   const ctx = useLearnerContext();
   const [selectedId, setSelectedId] = useState(CASES[0].id);
+  const [view, setView] = useState<"board" | "table">("table");
   const [diff, setDiff] = useState<Difficulty | "ALL">("ALL");
   const [brief, setBrief] = useState<{ id: string; md: string } | null>(null);
   const [draft, setDraft] = useState("");
@@ -163,8 +164,44 @@ export function CaseFilesWindow() {
 
   const touched = Object.keys(state.cases).length;
 
+  const openCase = (id: string) => {
+    setSelectedId(id);
+    setDraft(state.cases[id]?.body ?? "");
+    setReview({ phase: "idle" });
+    clearDigest();
+    setView("board");
+  };
+
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b border-border px-2 py-1.5">
+        <div className="flex gap-1">
+          {(["table", "board"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              className={cn(
+                "chrome-flat px-2.5 py-1 font-mono text-[9px] uppercase tracking-wide",
+                view === v ? "bg-primary text-primary-foreground" : "bg-surface-raised text-muted-foreground",
+              )}
+            >
+              {v === "table" ? "All cases" : "Case board"}
+            </button>
+          ))}
+        </div>
+        <span className="font-mono text-[9px] text-brand-green">{touched} of {CASES.length} touched</span>
+      </div>
+
+      {view === "table" ? (
+        <AllCasesTable
+          cases={CASES}
+          statusOf={(id) => state.cases[id]?.status ?? "open"}
+          chip={statusChip}
+          onOpen={openCase}
+        />
+      ) : (
+    <div className="flex min-h-0 flex-1">
       {/* list */}
       <div className="flex w-64 min-w-64 flex-col border-r border-border bg-surface">
         <div className="flex gap-1 border-b border-border p-2">
@@ -189,11 +226,7 @@ export function CaseFilesWindow() {
               <button
                 key={c.id}
                 type="button"
-                onClick={() => {
-                  setSelectedId(c.id);
-                  setDraft(state.cases[c.id]?.body ?? "");
-                  setReview({ phase: "idle" });
-                }}
+                onClick={() => openCase(c.id)}
                 className={cn(
                   "chrome-flat flex flex-col gap-1 bg-surface-raised p-2.5 text-left",
                   c.id === selectedId && "outline outline-1 outline-primary",
@@ -397,6 +430,71 @@ export function CaseFilesWindow() {
           )}
         </div>
       </div>
+    </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------- all cases --- */
+function AllCasesTable({
+  cases,
+  statusOf,
+  chip,
+  onOpen,
+}: {
+  cases: typeof CASES;
+  statusOf: (id: string) => string;
+  chip: (s: string) => ReactNode;
+  onOpen: (id: string) => void;
+}) {
+  return (
+    <div className="min-h-0 flex-1 overflow-auto">
+      <table className="w-full border-collapse text-[12px]">
+        <thead className="sticky top-0 bg-surface">
+          <tr className="border-b border-border text-left font-mono text-[9px] uppercase tracking-wide text-muted-foreground">
+            <th className="p-2 font-normal">#</th>
+            <th className="p-2 font-normal">Case</th>
+            <th className="p-2 font-normal">Level</th>
+            <th className="p-2 font-normal">Industry</th>
+            <th className="p-2 font-normal">Recommended tool</th>
+            <th className="p-2 font-normal">Data</th>
+            <th className="p-2 font-normal">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cases.map((c) => {
+            const rows = (c.datasets ?? []).reduce((n, d) => n + d.rows, 0);
+            return (
+              <tr
+                key={c.id}
+                onClick={() => onOpen(c.id)}
+                className="cursor-pointer border-b border-border hover:bg-surface-raised"
+              >
+                <td className="p-2 font-mono text-[10px] text-muted-foreground">{c.num}</td>
+                <td className="p-2">
+                  <span className="font-semibold text-foreground">{c.title}</span>
+                  {!c.written && <span className="ml-2 font-mono text-[9px] text-brand-amber">brief pending</span>}
+                  <span className="block font-mono text-[9px] text-muted-foreground">
+                    {c.skills.join(" · ")}
+                  </span>
+                </td>
+                <td className="p-2">
+                  <span className="font-mono text-[10px]" style={{ color: DIFFICULTY_ACCENT[c.difficulty] }}>
+                    {c.difficulty}
+                  </span>
+                </td>
+                <td className="p-2 text-muted-foreground">{c.industry}</td>
+                <td className="p-2 text-muted-foreground">{c.tool}</td>
+                <td className="p-2 font-mono text-[10px] text-muted-foreground">
+                  {c.datasets?.length ? `${c.datasets.length} file${c.datasets.length > 1 ? "s" : ""} · ${rows.toLocaleString()} rows` : "—"}
+                </td>
+                <td className="p-2">{chip(statusOf(c.id))}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
