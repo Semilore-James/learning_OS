@@ -9,9 +9,12 @@ export interface DetectiveRound {
   prompt: string;
   columns: string[];
   rows: (string | number)[][];
-  /** index of the row containing the defect */
-  badRow: number;
-  because: string;
+  /** indices of the defective rows (0 to a few; some rounds are clean) */
+  badRows: number[];
+  /** what the defects were, shown after the round */
+  explain: string;
+  /** wrong flags allowed before the round fails (default 3) */
+  strikeLimit?: number;
 }
 
 export const DETECTIVE_ROUNDS: DetectiveRound[] = [
@@ -24,8 +27,8 @@ export const DETECTIVE_ROUNDS: DetectiveRound[] = [
       [3, "Alan", "2023-02-30", 41],
       [4, "Katherine", "2023-03-15", 38],
     ],
-    badRow: 2,
-    because: "February never has 30 days — 2023-02-30 is not a real date.",
+    badRows: [2],
+    explain: "February never has 30 days — 2023-02-30 is not a real date.",
   },
   {
     prompt: "A quantity column should never allow this. Which row?",
@@ -36,8 +39,8 @@ export const DETECTIVE_ROUNDS: DetectiveRound[] = [
       [13, "Hub", -3, 45],
       [14, "Webcam", 1, 60],
     ],
-    badRow: 2,
-    because: "A negative quantity (-3) can't be shipped — likely a bad return adjustment.",
+    badRows: [2],
+    explain: "A negative quantity (-3) can't be shipped — likely a bad return adjustment.",
   },
   {
     prompt: "Primary keys must be unique. Which row breaks that?",
@@ -48,8 +51,8 @@ export const DETECTIVE_ROUNDS: DetectiveRound[] = [
       [103, "HB-0C", "USB-C Hub"],
       [102, "ST-01", "Laptop Stand"],
     ],
-    badRow: 3,
-    because: "id 102 already belongs to the Monitor row — the id is duplicated.",
+    badRows: [3],
+    explain: "id 102 already belongs to the Monitor row — the id is duplicated.",
   },
   {
     prompt: "One revenue figure is a clear outlier from a units error. Which row?",
@@ -60,8 +63,8 @@ export const DETECTIVE_ROUNDS: DetectiveRound[] = [
       ["Mar", 1280, 115200],
       ["Apr", 141, 12690],
     ],
-    badRow: 2,
-    because: "March units (1280) is ~10x its neighbours — a trailing zero slipped in.",
+    badRows: [2],
+    explain: "March units (1280) is ~10x its neighbours — a trailing zero slipped in.",
   },
   {
     prompt: "A percentage column has an invalid value. Which row?",
@@ -72,8 +75,8 @@ export const DETECTIVE_ROUNDS: DetectiveRound[] = [
       ["Email", 400, 140.0],
       ["Display", 2200, 0.6],
     ],
-    badRow: 2,
-    because: "A click-through rate of 140% is impossible — clicks can't exceed impressions.",
+    badRows: [2],
+    explain: "A click-through rate of 140% is impossible — clicks can't exceed impressions.",
   },
   {
     prompt: "One row's total doesn't add up. Which row?",
@@ -84,8 +87,8 @@ export const DETECTIVE_ROUNDS: DetectiveRound[] = [
       ["A-3", 80, 16, 132],
       ["A-4", 200, 40, 240],
     ],
-    badRow: 2,
-    because: "80 + 16 = 96, not 132 — the total column is wrong for invoice A-3.",
+    badRows: [2],
+    explain: "80 + 16 = 96, not 132 — the total column is wrong for invoice A-3.",
   },
 ];
 

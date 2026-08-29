@@ -26,125 +26,119 @@ export const DETECTIVE_AUTHORED = DETECTIVE_ROUNDS.length;
 export const PIVOT_AUTHORED = PIVOT_ROUNDS.length;
 export const CRITIQUE_AUTHORED = CRITIQUE_ROUNDS.length;
 
-/* ---------------------------------------------------------- Data Detective -- */
-const NAMES = ["Ada", "Kai", "Sam", "Ivy", "Ron", "Mia", "Leo", "Nia", "Tom", "Zoe"];
-const PRODUCTS = ["Keyboard", "Monitor", "Hub", "Webcam", "Stand", "Mat", "Cable"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+/* ---------------------------------------------------------- Data Detective --
+   Past the 6 authored intro rounds, real scale: 20-48 rows, 0-4 defects (some
+   rounds are clean), a 3-strike limit so you scan instead of clicking the
+   ugliest number. Defects graduate from blatant to "valid value that breaks an
+   inferable business rule" as the level climbs (Council). */
+const DD_STORES = ["Ikeja", "Lekki", "Yaba", "Victoria Is.", "Ajah", "Surulere"];
+const DD_CATS = ["Plants", "Tools", "Soil", "Pots", "Furniture", "Seeds"];
+// June 2024: weekdays vs weekend/holiday days (the store is B2B, weekdays only)
+const DD_WEEKDAYS = [3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 17, 18, 19, 20, 21, 24, 25, 26, 27, 28];
+const DD_NONWEEKDAYS = [1, 2, 8, 9, 15, 16, 22, 23, 29, 30];
 
-type Defect =
+type DDefect =
   | "impossible_date"
   | "negative_qty"
   | "dup_id"
-  | "outlier"
-  | "bad_pct"
-  | "total_mismatch";
+  | "outlier_10x"
+  | "impossible_pct"
+  | "total_mismatch"
+  | "weekend_order"
+  | "price_inconsistent";
+
+const DD_BLATANT: DDefect[] = [
+  "impossible_date", "negative_qty", "dup_id", "outlier_10x", "impossible_pct", "total_mismatch",
+];
+const DD_SUBTLE: DDefect[] = ["weekend_order", "price_inconsistent", "total_mismatch", "outlier_10x"];
 
 export function detectiveRound(n: number): DetectiveRound {
   if (n <= DETECTIVE_AUTHORED) return DETECTIVE_ROUNDS[n - 1];
-  const r = rng(n * 2246822519);
-  const defect = pick(r, [
-    "impossible_date",
-    "negative_qty",
-    "dup_id",
-    "outlier",
-    "bad_pct",
-    "total_mismatch",
-  ] as Defect[]);
-  const rowCount = int(r, 4, 5);
-  const bad = int(r, 0, rowCount - 1);
+  const r = rng(n * 2246822519 + 11);
 
-  if (defect === "impossible_date") {
-    const rows = Array.from({ length: rowCount }, (_, i) => {
-      const mm = int(r, 1, 12);
-      const dd = i === bad ? pick(r, [31, 32, 30]) : int(r, 1, 28);
-      const badMonth = i === bad && pick(r, [true, false]);
-      const m = badMonth ? "13" : String(mm).padStart(2, "0");
-      return [100 + i, pick(r, NAMES), `2024-${m}-${String(i === bad && !badMonth ? dd : int(r, 1, 28)).padStart(2, "0")}`];
-    });
-    // force the bad row to be clearly impossible
-    rows[bad][2] = pick(r, ["2024-02-30", "2024-04-31", "2024-13-05", "2024-06-31"]);
-    return {
-      prompt: "One signup date can't be real. Which row?",
-      columns: ["id", "name", "signup_date"],
-      rows,
-      badRow: bad,
-      because: `${rows[bad][2]} isn't a valid calendar date.`,
-    };
+  const rowN = Math.min(48, 18 + n + int(r, 0, 6));
+  const defectN = pick(r, [0, 1, 1, 2, 2, 3, 4]);
+  const subtleUnlocked = n >= 15;
+  const pool: DDefect[] = !subtleUnlocked
+    ? DD_BLATANT
+    : n >= 25
+      ? DD_SUBTLE
+      : [...DD_BLATANT, ...DD_SUBTLE];
+
+  const columns = ["id", "store", "category", "date", "units", "unit_price", "total"];
+  // one "correct" price per category, so an inconsistent one stands out
+  const priceByCat: Record<string, number> = {};
+  for (const c of DD_CATS) priceByCat[c] = int(r, 800, 9000);
+
+  const rows: (string | number)[][] = [];
+  for (let i = 0; i < rowN; i++) {
+    const cat = pick(r, DD_CATS);
+    const units = int(r, 1, 9);
+    const price = priceByCat[cat] + int(r, -40, 40); // small honest noise
+    const day = String(pick(r, DD_WEEKDAYS)).padStart(2, "0");
+    rows.push([2000 + i, pick(r, DD_STORES), cat, `2024-06-${day}`, units, price, units * price]);
   }
 
-  if (defect === "negative_qty") {
-    const rows = Array.from({ length: rowCount }, (_, i) => [
-      10 + i,
-      pick(r, PRODUCTS),
-      i === bad ? -int(r, 1, 5) : int(r, 1, 6),
-      int(r, 20, 200),
-    ]);
-    return {
-      prompt: "A quantity column shouldn't allow this value. Which row?",
-      columns: ["order_id", "product", "qty", "unit_price"],
-      rows,
-      badRow: bad,
-      because: `A quantity of ${rows[bad][2]} can't be shipped — likely a bad return adjustment.`,
-    };
+  const bad = new Set<number>();
+  const reasons: string[] = [];
+  let guard = 0;
+  while (bad.size < defectN && guard++ < 200) {
+    const idx = int(r, 0, rowN - 1);
+    if (bad.has(idx)) continue;
+    const row = rows[idx];
+    const def = pick(r, pool);
+
+    if (def === "impossible_date") {
+      row[3] = pick(r, ["2024-02-30", "2024-06-31", "2024-13-04", "2024-04-31"]);
+      reasons.push(`Row ${idx + 1}: ${row[3]} is not a real calendar date.`);
+    } else if (def === "negative_qty") {
+      row[4] = -int(r, 1, 6);
+      row[6] = (row[4] as number) * (row[5] as number);
+      reasons.push(`Row ${idx + 1}: units is ${row[4]} — you cannot sell negative units.`);
+    } else if (def === "dup_id") {
+      const other = idx === 0 ? 1 : idx - 1;
+      row[0] = rows[other][0];
+      reasons.push(`Row ${idx + 1}: id ${row[0]} is already used by row ${other + 1}.`);
+    } else if (def === "outlier_10x") {
+      row[4] = (row[4] as number) * 10 + int(r, 0, 5);
+      row[6] = (row[4] as number) * (row[5] as number);
+      reasons.push(`Row ${idx + 1}: ${row[4]} units is ~10x every other row — a trailing zero.`);
+    } else if (def === "impossible_pct") {
+      // repurpose unit_price as a discount_pct that went past 100
+      columns[5] = "discount_pct";
+      row[5] = int(r, 110, 260);
+      row[6] = "";
+      reasons.push(`Row ${idx + 1}: a discount of ${row[5]}% is impossible.`);
+    } else if (def === "total_mismatch") {
+      row[6] = (row[6] as number) + int(r, 200, 2000);
+      reasons.push(`Row ${idx + 1}: total does not equal units x unit_price.`);
+    } else if (def === "weekend_order") {
+      const wd = String(pick(r, DD_NONWEEKDAYS)).padStart(2, "0");
+      row[3] = `2024-06-${wd}`;
+      reasons.push(`Row ${idx + 1}: 2024-06-${wd} is a weekend. This is a B2B store, no weekend orders.`);
+    } else {
+      // price_inconsistent
+      const cat = row[2] as string;
+      row[5] = priceByCat[cat] * 3 + int(r, -50, 50);
+      row[6] = (row[4] as number) * (row[5] as number);
+      reasons.push(`Row ${idx + 1}: ${cat} is ~${priceByCat[cat]} everywhere else here, this row prices it at ${row[5]}.`);
+    }
+    bad.add(idx);
   }
 
-  if (defect === "dup_id") {
-    const base = int(r, 100, 180);
-    const rows = Array.from({ length: rowCount }, (_, i) => [base + i, `SKU-${int(r, 10, 99)}`, pick(r, PRODUCTS)]);
-    const clash = bad === 0 ? 1 : 0;
-    rows[bad][0] = rows[clash][0];
-    return {
-      prompt: "Primary keys must be unique. Which row breaks that?",
-      columns: ["id", "sku", "name"],
-      rows,
-      badRow: bad,
-      because: `id ${rows[bad][0]} already belongs to row ${clash + 1}.`,
-    };
-  }
+  const badRows = [...bad].sort((a, b) => a - b);
+  const prompt =
+    defectN === 0
+      ? "Scan the table and flag every row that breaks a rule. This one may be clean — flagging nothing is a valid answer."
+      : `Scan the table and flag every row that breaks a rule. Three wrong flags ends the round.`;
 
-  if (defect === "outlier") {
-    const nom = int(r, 90, 160);
-    const rows = Array.from({ length: rowCount }, (_, i) => {
-      const units = i === bad ? nom * 10 + int(r, 0, 30) : nom + int(r, -12, 12);
-      return [MONTHS[i], units, units * 90];
-    });
-    return {
-      prompt: "One month's figures are a clear outlier from a units error. Which row?",
-      columns: ["month", "units", "revenue"],
-      rows,
-      badRow: bad,
-      because: `${rows[bad][0]} units (${rows[bad][1]}) is ~10x its neighbours — a trailing zero slipped in.`,
-    };
-  }
-
-  if (defect === "bad_pct") {
-    const rows = Array.from({ length: rowCount }, (_, i) => [
-      pick(r, ["Search", "Social", "Email", "Display", "Video"]),
-      int(r, 200, 2000),
-      i === bad ? int(r, 120, 260) + r() : Math.round((0.3 + r() * 4) * 10) / 10,
-    ]);
-    return {
-      prompt: "A rate column has an impossible value. Which row?",
-      columns: ["channel", "clicks", "ctr_pct"],
-      rows: rows.map((x) => [x[0], x[1], typeof x[2] === "number" ? Math.round((x[2] as number) * 10) / 10 : x[2]]),
-      badRow: bad,
-      because: `A click-through rate of ${Math.round((rows[bad][2] as number) * 10) / 10}% is impossible — clicks can't exceed impressions.`,
-    };
-  }
-
-  // total_mismatch
-  const rows = Array.from({ length: rowCount }, (_, i) => {
-    const sub = int(r, 40, 220);
-    const tax = Math.round(sub * 0.2);
-    const total = i === bad ? sub + tax + int(r, 8, 40) : sub + tax;
-    return [`INV-${i + 1}`, sub, tax, total];
-  });
   return {
-    prompt: "One invoice's total doesn't add up. Which row?",
-    columns: ["invoice", "subtotal", "tax", "total"],
+    prompt,
+    columns,
     rows,
-    badRow: bad,
-    because: `${rows[bad][1]} + ${rows[bad][2]} = ${(rows[bad][1] as number) + (rows[bad][2] as number)}, not ${rows[bad][3]}.`,
+    badRows,
+    explain: reasons.length ? reasons.join(" ") : "Nothing was wrong with this table.",
+    strikeLimit: 3,
   };
 }
 
