@@ -4,36 +4,61 @@
 
 ## The situation
 
-A regional chain of six garden centres has handed you a year of transaction data in a single spreadsheet and a vague ask from the operations manager: "Something is off with our numbers versus what the stores are telling me. Can you check it and tell me what stands out?"
+A small chain of six garden centres has sent you a year of till data — one file,
+`transactions.csv`, about 4,600 rows. The operations manager's message is short:
 
-There is no specific question yet. Part of the job is finding the questions worth asking, then answering them.
+> "Something doesn't line up between our reports and what the stores tell me on
+> the phone. Have a look and tell me what you find."
+
+That's the whole brief. There is no single question to answer yet. Finding the
+questions worth asking is part of the work.
 
 ## The data
 
-One sheet, `transactions`, roughly 40,000 rows.
+`transactions.csv` — one row per sale.
 
 | column | example | notes |
 |---|---|---|
-| date | 2025-06-03 | transaction date |
-| store | Ikeja | one of six store names |
+| date | 2024-06-03 | |
+| store | Ikeja | one of six shops |
 | category | Plants | Plants, Tools, Soil, Pots, Furniture, Other |
-| units | 3 | |
-| unit_price | 4500 | in NGN |
-| discount_pct | 0.1 | fraction, 0 to 1 |
+| units | 3 | how many sold |
+| unit_price | 4500 | Naira; **sometimes blank** |
+| discount_pct | 0.1 | a fraction from 0 to 1 |
 | payment_method | card | card, cash, transfer |
 
-Known issues you should expect: some `unit_price` values are blank, a few `store` names are misspelled, and there is at least one row with `units` of 0.
+It is *lightly* dirty. Expect a few blank prices, a handful of store names typed
+wrong, and some rows where `units` is 0. Cleaning that is the easy part — and it
+is also where the interesting thread starts to show.
 
-## Deliverables
+## How to approach it
 
-1. **Clean the data.** Document every cleaning decision: what you found, what you did, and why. Keep a "removed / corrected" count.
-2. **Revenue by store and category.** A pivot table of net revenue (after discount) by store (rows) and category (columns), plus a total column and row.
-3. **What stands out.** Three findings the operations manager should look into, each one sentence, each backed by a number from your pivot. At least one should be about the data quality itself.
+Start by getting the data into a state you trust: decide what to do with the
+blanks, the misspellings, the zero-unit rows, and write down each decision as you
+go. Keep a rough count of what you removed or corrected.
 
-## What "done" looks like
+Then look at the money. Net revenue (after discount) by store, by category, by
+month, by payment method — whichever cuts help you see the shape of the business.
 
-A cleaned sheet, a pivot table, a short "cleaning log", and three findings. The findings are the point; the pivot is how you got there.
+Somewhere in there, one store behaves differently from the other five. When you
+notice it, follow it: slice it by payment method, by discount, by time of day if
+you can infer it. Ask yourself what an honest explanation would look like, and
+whether the numbers support it.
+
+There may be more than one thing worth reporting. A data-quality problem is a
+finding. An odd pattern at one store is a finding. Don't stop at the first one.
+
+## What to hand back
+
+A short write-up for the operations manager:
+
+- what you did to the data and why (a few lines)
+- two or three things that stand out, each backed by a number
+- for the one that matters most, what you think is going on and what you'd
+  check next
+
+The findings are the deliverable. The pivot tables are just how you got there.
 
 ## Submit
 
-Describe your cleaning decisions and paste your three findings below, then submit for PM-AI review.
+Paste your cleaning notes and your findings below, then send it to your PM.

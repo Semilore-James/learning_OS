@@ -7,6 +7,7 @@
    an accept / revise / override branch after PM-AI review.
    ========================================================================== */
 import { useEffect, useMemo, useState } from "react";
+import { Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CASES, CASES_BY_ID, DIFFICULTY_ACCENT, type Difficulty } from "@/content/cases/registry";
@@ -204,6 +205,35 @@ export function CaseFilesWindow() {
           </div>
           {status === "open" && <Button size="sm" onClick={start}>Start this case (+10 XP)</Button>}
         </div>
+
+        {def.datasets && def.datasets.length > 0 && (
+          <div className="flex flex-col gap-1.5 border-b border-border bg-surface-raised px-3 py-2.5">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+              Dataset{def.datasets.length > 1 ? "s" : ""} — download and work in your own tool
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {def.datasets.map((d) => (
+                <a
+                  key={d.file}
+                  href={`/cases/data/${def.id}/${d.file}`}
+                  download
+                  className="chrome-flat flex items-center gap-1.5 bg-surface px-2 py-1 text-[11px] text-foreground hover:text-primary"
+                  title={`${d.rows.toLocaleString()} rows · ${d.quality}`}
+                >
+                  <Download className="size-3" /> {d.file}
+                  <span className="font-mono text-[9px] text-muted-foreground">{d.rows.toLocaleString()} rows</span>
+                </a>
+              ))}
+            </div>
+            <ul className="flex flex-col gap-0.5 pt-0.5">
+              {def.datasets.map((d) => (
+                <li key={d.file} className="font-mono text-[9px] text-muted-foreground">
+                  {d.file}: {d.quality}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="min-h-0 flex-1 overflow-auto p-5">
           {!def.written ? (
