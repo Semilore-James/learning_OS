@@ -104,7 +104,11 @@ export interface AppState {
   cases: Record<string, CaseState>;
 
   /** game -> best level reached + best score */
-  games: Record<string, { level: number; score: number }>;
+  /** per game: highest level reached, running points, and attempt accuracy */
+  games: Record<
+    string,
+    { level: number; score: number; attempts: number; wins: number; streak: number; bestStreak: number }
+  >;
 
   review: ReviewItem[];
 

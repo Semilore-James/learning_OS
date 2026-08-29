@@ -68,7 +68,13 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         mine(sb.from("video_watches").select("video_id,watched_at,note").eq("user_id", userId)),
         mine(sb.from("watch_queue").select("video_id").eq("user_id", userId)),
         mine(sb.from("case_submissions").select("*").eq("user_id", userId)),
-        mine(sb.from("game_scores").select("game,level,score").eq("user_id", userId)),
+        mine(
+          sb
+            .from("game_attempts")
+            .select("game,level,passed,created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true }),
+        ),
         mine(sb.from("review_items").select("*").eq("user_id", userId)),
         mine(sb.from("tool_installs").select("tool_id").eq("user_id", userId)),
         mine(sb.from("pm_ai_declines").select("id").eq("user_id", userId)),
@@ -77,10 +83,22 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
       const heatmap: Record<string, number> = {};
       for (const r of heat ?? []) heatmap[r.day] = (heatmap[r.day] ?? 0) + r.weight;
 
+      // replay every attempt in order to reconstruct level / points / accuracy,
+      // matching the reducer's scoring logic exactly
       const games: AppState["games"] = {};
-      for (const s of scores ?? []) {
-        const cur = games[s.game] ?? { level: 0, score: 0 };
-        games[s.game] = { level: Math.max(cur.level, s.level), score: Math.max(cur.score, s.score) };
+      for (const a of scores ?? []) {
+        const g = (games[a.game] ??= { level: 0, score: 0, attempts: 0, wins: 0, streak: 0, bestStreak: 0 });
+        g.attempts += 1;
+        if (a.passed) {
+          g.wins += 1;
+          g.streak += 1;
+          g.bestStreak = Math.max(g.bestStreak, g.streak);
+          const newLevel = a.level > g.level;
+          g.score += newLevel ? 10 + a.level * 2 : 3;
+          g.level = Math.max(g.level, a.level);
+        } else {
+          g.streak = 0;
+        }
       }
 
       return {

@@ -23,7 +23,8 @@ export type Flag =
   | "reviewQueue"
   | "diagnostic"
   | "commandPalette"
-  | "sharePage";
+  | "sharePage"
+  | "shop";
 
 const enabled = new Set(
   (process.env.NEXT_PUBLIC_FLAGS ?? "")

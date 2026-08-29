@@ -48,6 +48,18 @@ export function dueReviewCount(state: AppState): number {
   return state.review.filter((r) => isDue(r, t)).length;
 }
 
+/** total game points across all games */
+export function gamesScore(state: AppState): number {
+  return Object.values(state.games).reduce((t, g) => t + (g.score ?? 0), 0);
+}
+
+/** accuracy 0-1 for one game, or null if never attempted */
+export function gameAccuracy(state: AppState, game: string): number | null {
+  const g = state.games[game];
+  if (!g || !g.attempts) return null;
+  return g.wins / g.attempts;
+}
+
 /** review items due today or overdue, oldest due date first */
 export function dueReviewItems(state: AppState) {
   const t = todayUTC();

@@ -10,7 +10,7 @@
    ========================================================================== */
 import { useState } from "react";
 import { ArrowLeft, BarChart3, Database, Search, Table2 } from "lucide-react";
-import { useStore, type Game } from "@/lib/store";
+import { useStore, select, type Game } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { SqlDojo } from "./SqlDojo";
 import { DataDetective } from "./DataDetective";
@@ -60,10 +60,19 @@ export function GamesWindow() {
     );
   }
 
+  const totalPoints = select.gamesScore(state);
+
   return (
-    <div className="grid grid-cols-2 gap-3 overflow-auto p-4">
+    <div className="flex h-full flex-col overflow-auto p-4">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h3 className="font-display text-sm font-bold text-foreground">Games</h3>
+        <span className="font-mono text-[11px] text-brand-amber">{totalPoints.toLocaleString()} pts</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
       {GAMES.map((g) => {
-        const best = state.games[g.id]?.level ?? 0;
+        const gs = state.games[g.id];
+        const best = gs?.level ?? 0;
+        const acc = select.gameAccuracy(state, g.id);
         return (
           <button
             key={g.id}
@@ -76,18 +85,24 @@ export function GamesWindow() {
             <g.icon className="size-6 text-primary" />
             <span className="font-display text-sm font-bold text-foreground">{g.title}</span>
             <span className="text-xs text-muted-foreground">{g.blurb}</span>
-            <span className="mt-auto pt-2 font-mono text-[10px] text-muted-foreground">
-              {g.levels === null
-                ? best > 0
-                  ? `level ${best} · endless`
-                  : "endless levels"
-                : best > 0
-                  ? `cleared ${best}/${g.levels}`
-                  : `${g.levels} levels`}
-            </span>
+            <div className="mt-auto flex w-full flex-wrap gap-x-3 gap-y-0.5 pt-2 font-mono text-[10px] text-muted-foreground">
+              <span>
+                {g.levels === null
+                  ? best > 0
+                    ? `lvl ${best}`
+                    : "not started"
+                  : best > 0
+                    ? `${best}/${g.levels}`
+                    : `${g.levels} lvls`}
+              </span>
+              {gs && gs.score > 0 && <span className="text-brand-amber">{gs.score} pts</span>}
+              {acc !== null && <span>{Math.round(acc * 100)}% acc</span>}
+              {gs && gs.bestStreak > 1 && <span>🔥 {gs.bestStreak}</span>}
+            </div>
           </button>
         );
       })}
+      </div>
     </div>
   );
 }

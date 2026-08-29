@@ -22,6 +22,7 @@ import { ToolkitWindow } from "@/components/toolkit/ToolkitWindow";
 import { CanvasWindow } from "@/components/canvas/CanvasWindow";
 import { GamesWindow } from "@/components/games/GamesWindow";
 import { ReviewWindow } from "@/components/review/ReviewWindow";
+import { ShopWindow } from "@/components/shop/ShopWindow";
 import {
   GlyphCanvas,
   GlyphCaseFiles,
@@ -33,6 +34,7 @@ import {
   GlyphPmAi,
   GlyphReview,
   GlyphSettings,
+  GlyphShop,
   GlyphToolkit,
   GlyphVideo,
 } from "@/components/desktop/glyphs";
@@ -124,6 +126,15 @@ export const APPS: AppDef[] = [
     win: { title: "Review", width: 460, height: 520 },
     fitContent: true,
     Body: ReviewWindow,
+  },
+  {
+    id: "shop",
+    label: "Shop",
+    hint: "Spend XP on cosmetics (soon)",
+    glyph: <GlyphShop />,
+    flag: "shop",
+    win: { title: "Shop", subtitle: "COMING SOON", width: 620, height: 480 },
+    Body: ShopWindow,
   },
   {
     id: "cheatcodes",

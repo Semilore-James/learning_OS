@@ -242,27 +242,45 @@ export function reducer(state: AppState, action: Action): AppState {
     }
 
     case "recordGameScore": {
-      const prev = state.games[action.game] ?? { level: 0, score: 0 };
-      const improved = action.level > prev.level || action.score > prev.score;
+      const prev = state.games[action.game] ?? { level: 0, score: 0, attempts: 0, wins: 0, streak: 0, bestStreak: 0 };
+      const newLevel = action.level > prev.level;
+      // points: a new level is worth more the further you are; a re-clear is a nibble
+      const points = newLevel ? 10 + action.level * 2 : 3;
       let next: AppState = {
         ...state,
         games: {
           ...state.games,
           [action.game]: {
+            ...prev,
             level: Math.max(prev.level, action.level),
-            score: Math.max(prev.score, action.score),
+            score: prev.score + points,
           },
         },
       };
-      if (improved) {
+      if (newLevel) {
         next = bump(next, XP.game_level);
         next = heat(next, "game");
       }
       return next;
     }
 
-    case "recordGameAttempt":
-      return state; // attempt history is write-only (persist.ts handles it)
+    case "recordGameAttempt": {
+      const prev = state.games[action.game] ?? { level: 0, score: 0, attempts: 0, wins: 0, streak: 0, bestStreak: 0 };
+      const streak = action.passed ? prev.streak + 1 : 0;
+      return {
+        ...state,
+        games: {
+          ...state.games,
+          [action.game]: {
+            ...prev,
+            attempts: prev.attempts + 1,
+            wins: prev.wins + (action.passed ? 1 : 0),
+            streak,
+            bestStreak: Math.max(prev.bestStreak, streak),
+          },
+        },
+      };
+    }
 
     case "answerReview": {
       const idx = state.review.findIndex((r) => r.id === action.itemId);

@@ -20,6 +20,12 @@ export const GlyphConstellation = (p: SVGProps<SVGSVGElement>) => (
     <line x1="8" y1="8" x2="12" y2="12" /><line x1="16" y1="8" x2="12" y2="12" />
   </svg>
 );
+export const GlyphShop = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M4 8h16l-1 12H5L4 8z" />
+    <path d="M8 8V6a4 4 0 0 1 8 0v2" />
+  </svg>
+);
 export const GlyphReview = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <path d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
