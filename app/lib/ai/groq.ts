@@ -27,9 +27,9 @@ import {
 
 const BASE_URL = process.env.GROQ_BASE_URL ?? "https://api.groq.com/openai/v1";
 const MODEL = process.env.GROQ_MODEL ?? "openai/gpt-oss-120b";
-/** empty = no vision provider wired; images are dropped and the turn runs
- *  text-only. Groq has no vision model on this account yet. */
-const VISION_MODEL = process.env.GROQ_VISION_MODEL ?? "";
+/** qwen3 on Groq accepts images. Empty = drop images, run the turn text-only.
+ *  A failed vision call (e.g. model over capacity) also falls back to text. */
+const VISION_MODEL = process.env.GROQ_VISION_MODEL ?? "qwen/qwen3.8-27b";
 export const visionAvailable = Boolean(VISION_MODEL);
 
 type ContentPart =
@@ -147,32 +147,50 @@ export const groqAdvisor: Advisor = {
   },
 
   async chat(messages: ChatMessage[], ctx: LearnerContext): Promise<AdvisorReply> {
-    const useVision = visionAvailable && messages.some((m) => m.images && m.images.length > 0);
-    const turns: ChatCompletionMessage[] = messages.map((m) => {
-      if (useVision && m.role === "user" && m.images && m.images.length > 0) {
-        return {
-          role: "user",
-          content: [
-            { type: "text", text: m.content },
-            ...m.images.slice(0, 1).map(
-              (url): ContentPart => ({ type: "image_url", image_url: { url } }),
-            ),
-          ],
-        };
-      }
-      // no vision provider: fall back to text, note the screenshot was dropped
-      const note = m.images && m.images.length > 0 ? `${m.content}\n[a screenshot was attached but the PM cannot view images right now]` : m.content;
-      return { role: m.role, content: note };
-    });
+    const hasImages = messages.some((m) => m.images && m.images.length > 0);
 
-    const content = await complete(
-      [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...contextMessages(ctx),
-        ...turns,
-      ],
-      { maxTokens: 400, model: useVision ? VISION_MODEL : undefined },
-    );
+    const buildTurns = (withImages: boolean): ChatCompletionMessage[] =>
+      messages.map((m) => {
+        if (withImages && m.role === "user" && m.images && m.images.length > 0) {
+          return {
+            role: "user",
+            content: [
+              { type: "text", text: m.content },
+              ...m.images.slice(0, 1).map(
+                (url): ContentPart => ({ type: "image_url", image_url: { url } }),
+              ),
+            ],
+          };
+        }
+        const note =
+          m.images && m.images.length > 0
+            ? `${m.content}\n[a screenshot was attached but the PM cannot view it right now]`
+            : m.content;
+        return { role: m.role, content: note };
+      });
+
+    const run = (withImages: boolean) =>
+      complete(
+        [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...contextMessages(ctx),
+          ...buildTurns(withImages),
+        ],
+        { maxTokens: 400, model: withImages ? VISION_MODEL : undefined },
+      );
+
+    let content: string;
+    if (hasImages && visionAvailable) {
+      try {
+        content = await run(true);
+      } catch {
+        // vision model unreachable / over capacity — answer text-only instead
+        content = await run(false);
+      }
+    } else {
+      content = await run(false);
+    }
+
     if (/^that is outside what i will help with here\.?/i.test(content)) {
       return { kind: "decline", reason: content };
     }
