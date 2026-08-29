@@ -8,12 +8,14 @@
    ========================================================================== */
 import { useMemo, useState } from "react";
 import { Check, ExternalLink, Play } from "lucide-react";
-import { VIDEOS, embedUrl, watchUrl } from "@/lib/video";
+import { VIDEOS, watchUrl } from "@/lib/video";
+import { getProgress, fmt } from "@/lib/video/progress";
 import { TOPICS } from "@/content/curriculum";
 import { useStore } from "@/lib/store";
 import { openExternal } from "@/lib/openExternal";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { YouTubePlayer } from "./YouTubePlayer";
 
 const TOPIC_OPTS = TOPICS.filter((t) => !t.special).map((t) => ({
   id: t.id,
@@ -99,12 +101,11 @@ export function VideoLibraryWindow() {
               >
                 {isPlaying ? (
                   <div className="aspect-video w-full overflow-hidden" style={{ borderRadius: "var(--radius-control)" }}>
-                    <iframe
-                      src={embedUrl(v.id, { autoplay: true })}
-                      title={v.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="h-full w-full border-0"
+                    <YouTubePlayer
+                      videoId={v.id}
+                      onWatched={() => {
+                        if (!state.videoWatches[v.id]) dispatch({ type: "markVideoWatched", videoId: v.id, note: null });
+                      }}
                     />
                   </div>
                 ) : null}
@@ -115,6 +116,9 @@ export function VideoLibraryWindow() {
                     <div className="mt-0.5 flex items-center gap-2 font-mono text-[9px] text-muted-foreground">
                       <span>{v.channel}</span>
                       {v.difficulty && <span className="chrome-flat bg-background px-1.5 py-0.5">{v.difficulty}</span>}
+                      {!isPlaying && getProgress(v.id) > 0 && !watched && (
+                        <span className="text-brand-amber">paused at {fmt(getProgress(v.id))}</span>
+                      )}
                     </div>
                   </div>
                   {watched && <Check className="size-4 shrink-0 text-brand-green" />}
@@ -122,7 +126,8 @@ export function VideoLibraryWindow() {
 
                 <div className="flex flex-wrap gap-1.5">
                   <Button size="xs" onClick={() => setPlaying(isPlaying ? null : v.id)}>
-                    <Play className="size-3" /> {isPlaying ? "Close" : "Play in app"}
+                    <Play className="size-3" />{" "}
+                    {isPlaying ? "Close" : getProgress(v.id) > 0 && !watched ? "Resume" : "Play in app"}
                   </Button>
                   <Button size="xs" variant="outline" onClick={() => openExternal(watchUrl(v.id))}>
                     <ExternalLink className="size-3" /> YouTube
