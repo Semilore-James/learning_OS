@@ -6,14 +6,17 @@
 
    - the in-progress shape lives in draftRef; pointerup reads the ref, not state
    - the SVG captures the pointer so a drag that leaves it still finishes
-   - text / sticky use an inline <textarea>, never window.prompt (a no-op in
-     embedded browsers); editingRef makes the commit reliable
-   - a selected shape gets 8 resize handles
+   - move / resize only engage after the pointer travels a few px, so a plain
+     click never nudges a shape
+   - text / sticky are typed into a docked bar at the bottom of the canvas, not
+     an in-place overlay (window.prompt is a no-op in embedded browsers, and a
+     tiny floating box is easy to lose)
    Autosaves to localStorage; 2 minutes of use -> logCanvasSession (+15 XP).
    ========================================================================== */
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
+  Check,
   Circle as CircleIcon,
   Download,
   Eraser,
@@ -24,6 +27,7 @@ import {
   StickyNote,
   Trash2,
   Type,
+  X,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -33,6 +37,7 @@ type Tool = "select" | "pan" | "pen" | "rect" | "ellipse" | "arrow" | "text" | "
 type Handle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 const KEY = "da-os-canvas";
+const DRAG_START_PX = 4; // pointer travel before a move/resize engages
 const COLORS = ["var(--primary)", "var(--accent-2)", "var(--accent-1)", "var(--accent-3)", "var(--text)"];
 const TOOLS: { id: Tool; icon: typeof Pencil; label: string }[] = [
   { id: "select", icon: MousePointer2, label: "Select / move / resize" },
@@ -77,36 +82,44 @@ function nextBox(b0: Box, handle: Handle, dx: number, dy: number): Box {
     h = b0.h - dy;
   }
   if (handle.includes("s")) h = b0.h + dy;
-  // keep a minimum size, flipping the anchor if needed
-  if (w < 8) {
-    x = handle.includes("w") ? b0.x + b0.w - 8 : x;
-    w = 8;
+  if (w < 10) {
+    if (handle.includes("w")) x = b0.x + b0.w - 10;
+    w = 10;
   }
-  if (h < 8) {
-    y = handle.includes("n") ? b0.y + b0.h - 8 : y;
-    h = 8;
+  if (h < 10) {
+    if (handle.includes("n")) y = b0.y + b0.h - 10;
+    h = 10;
   }
   return { x, y, w, h };
+}
+
+interface Drag {
+  kind: "move" | "resize";
+  id: string;
+  handle: Handle;
+  b0: Box;
+  startX: number;
+  startY: number;
+  engaged: boolean;
 }
 
 export function CanvasWindow() {
   const { dispatch } = useStore();
   const svgRef = useRef<SVGSVGElement>(null);
+  const editRef = useRef<HTMLTextAreaElement>(null);
 
   const [tool, setTool] = useState<Tool>("pen");
   const [color, setColor] = useState(COLORS[0]);
   const [els, setEls] = useState<El[]>(loadEls);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
   const [draft, setDraft] = useState<El | null>(null);
-  const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; value: string; kind: "text" | "sticky" } | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const draftRef = useRef<El | null>(null);
   const viewRef = useRef(view);
-  const editingRef = useRef(editing);
-  const dragRef = useRef<{ id: string; sx: number; sy: number } | null>(null);
-  const resizeRef = useRef<{ id: string; handle: Handle; b0: Box; sx: number; sy: number } | null>(null);
+  const dragRef = useRef<Drag | null>(null);
   const panRef = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
   const usedMs = useRef(0);
   const loggedSession = useRef(false);
@@ -114,8 +127,10 @@ export function CanvasWindow() {
   useEffect(() => {
     viewRef.current = view;
   }, [view]);
+
+  // focus the docked editor whenever it opens
   useEffect(() => {
-    editingRef.current = editing;
+    if (editing) editRef.current?.focus();
   }, [editing]);
 
   const putDraft = (next: El | null) => {
@@ -155,10 +170,10 @@ export function CanvasWindow() {
     return () => clearInterval(id);
   }, [dispatch]);
 
-  // Delete / Backspace removes the selected element (unless typing)
+  // Delete / Backspace removes the selected element (unless the editor is open)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!selectedId || editingRef.current) return;
+      if (!selectedId) return;
       const t = e.target as HTMLElement;
       if (t.tagName === "INPUT" || t.tagName === "TEXTAREA") return;
       if (e.key === "Delete" || e.key === "Backspace") {
@@ -179,16 +194,21 @@ export function CanvasWindow() {
     return { x: (clientX - r.left - v.x) / v.k, y: (clientY - r.top - v.y) / v.k };
   };
 
-  /** write the inline editor's text back onto its element (or drop it if blank) */
-  const commitEditing = () => {
-    const cur = editingRef.current;
-    if (!cur) return;
-    const text = cur.value.trim();
-    setEls((prev) =>
-      text ? prev.map((e) => (e.id === cur.id ? { ...e, text } : e)) : prev.filter((e) => e.id !== cur.id),
-    );
-    editingRef.current = null;
-    setEditing(null);
+  const commitText = () => {
+    setEditing((cur) => {
+      if (!cur) return null;
+      const text = cur.value.trim();
+      setEls((prev) =>
+        text ? prev.map((e) => (e.id === cur.id ? { ...e, text } : e)) : prev.filter((e) => e.id !== cur.id),
+      );
+      return null;
+    });
+  };
+  const cancelText = () => {
+    setEditing((cur) => {
+      if (cur) setEls((prev) => prev.filter((e) => e.id !== cur.id));
+      return null;
+    });
   };
 
   const startResize = (e: React.PointerEvent, handle: Handle) => {
@@ -196,16 +216,20 @@ export function CanvasWindow() {
     e.stopPropagation();
     const el = els.find((x) => x.id === selectedId);
     if (!el) return;
-    const p = toLocal(e.clientX, e.clientY);
-    resizeRef.current = { id: selectedId, handle, b0: bbox(el), sx: p.x, sy: p.y };
+    dragRef.current = {
+      kind: "resize",
+      id: selectedId,
+      handle,
+      b0: bbox(el),
+      startX: e.clientX,
+      startY: e.clientY,
+      engaged: false,
+    };
     capture(e.pointerId);
   };
 
   const onDown = (e: React.PointerEvent) => {
-    if (editingRef.current) {
-      commitEditing();
-      return;
-    }
+    if (editing) return; // the docked editor owns input
     const p = toLocal(e.clientX, e.clientY);
 
     if (tool === "pan") {
@@ -221,7 +245,15 @@ export function CanvasWindow() {
     if (tool === "select") {
       const hit = hitTest(els, p.x, p.y);
       if (hit) {
-        dragRef.current = { id: hit.id, sx: p.x, sy: p.y };
+        dragRef.current = {
+          kind: "move",
+          id: hit.id,
+          handle: "se",
+          b0: bbox(hit),
+          startX: e.clientX,
+          startY: e.clientY,
+          engaged: false,
+        };
         setSelectedId(hit.id);
         capture(e.pointerId);
       } else {
@@ -233,11 +265,10 @@ export function CanvasWindow() {
       const id = crypto.randomUUID();
       const el: El =
         tool === "sticky"
-          ? { id, type: "sticky", x: p.x, y: p.y, w: 180, h: 130, text: "", color }
-          : { id, type: "text", x: p.x, y: p.y + 16, text: "", fontSize: 15, color };
+          ? { id, type: "sticky", x: p.x, y: p.y, w: 190, h: 140, text: "", color }
+          : { id, type: "text", x: p.x, y: p.y + 16, text: "", fontSize: 16, color };
       setEls((prev) => [...prev, el]);
-      editingRef.current = { id, value: "" };
-      setEditing({ id, value: "" });
+      setEditing({ id, value: "", kind: tool });
       return;
     }
     // drag-drawing tools
@@ -252,33 +283,41 @@ export function CanvasWindow() {
       setView((v) => ({ ...v, x: pr.vx + (e.clientX - pr.x), y: pr.vy + (e.clientY - pr.y) }));
       return;
     }
-    const p = toLocal(e.clientX, e.clientY);
 
-    if (resizeRef.current) {
-      const rz = resizeRef.current;
-      const b1 = nextBox(rz.b0, rz.handle, p.x - rz.sx, p.y - rz.sy);
-      setEls((prev) => prev.map((el) => (el.id === rz.id ? resizeEl(el, rz.b0, b1) : el)));
+    const d = dragRef.current;
+    if (d) {
+      if (!d.engaged) {
+        if (Math.abs(e.clientX - d.startX) + Math.abs(e.clientY - d.startY) < DRAG_START_PX) return;
+        d.engaged = true;
+      }
+      const p0 = toLocal(d.startX, d.startY);
+      const p1 = toLocal(e.clientX, e.clientY);
+      const dx = p1.x - p0.x;
+      const dy = p1.y - p0.y;
+      if (d.kind === "resize") {
+        const b1 = nextBox(d.b0, d.handle, dx, dy);
+        setEls((prev) => prev.map((el) => (el.id === d.id ? resizeEl(el, d.b0, b1) : el)));
+      } else {
+        // translate so the element's box origin sits at (b0 origin + total delta)
+        setEls((prev) =>
+          prev.map((el) => {
+            if (el.id !== d.id) return el;
+            const b = bbox(el);
+            const tx = d.b0.x + dx - b.x;
+            const ty = d.b0.y + dy - b.y;
+            if (el.type === "pen" && el.points) {
+              return { ...el, points: el.points.map(([px, py]) => [px + tx, py + ty] as [number, number]) };
+            }
+            return { ...el, x: el.x + tx, y: el.y + ty };
+          }),
+        );
+      }
       return;
     }
-    if (dragRef.current) {
-      const d = dragRef.current;
-      const dx = p.x - d.sx;
-      const dy = p.y - d.sy;
-      d.sx = p.x;
-      d.sy = p.y;
-      setEls((prev) =>
-        prev.map((el) => {
-          if (el.id !== d.id) return el;
-          if (el.type === "pen" && el.points) {
-            return { ...el, points: el.points.map(([px, py]) => [px + dx, py + dy] as [number, number]) };
-          }
-          return { ...el, x: el.x + dx, y: el.y + dy };
-        }),
-      );
-      return;
-    }
+
     const cur = draftRef.current;
     if (!cur) return;
+    const p = toLocal(e.clientX, e.clientY);
     const next: El =
       cur.type === "pen"
         ? { ...cur, points: [...(cur.points ?? []), [p.x, p.y]] }
@@ -294,7 +333,6 @@ export function CanvasWindow() {
     }
     panRef.current = null;
     dragRef.current = null;
-    resizeRef.current = null;
     const d = draftRef.current;
     if (d) {
       const empty =
@@ -303,7 +341,7 @@ export function CanvasWindow() {
           : Math.abs(d.w ?? 0) < 4 && Math.abs(d.h ?? 0) < 4;
       if (!empty) {
         setEls((prev) => [...prev, d]);
-        if (tool !== "pen") {
+        if (d.type !== "pen") {
           setSelectedId(d.id);
           setTool("select");
         }
@@ -317,7 +355,7 @@ export function CanvasWindow() {
     const mx = e.clientX - r.left;
     const my = e.clientY - r.top;
     setView((v) => {
-      const k = Math.min(4, Math.max(0.3, v.k * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
+      const k = Math.min(4, Math.max(0.3, v.k * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
       const ratio = k / v.k;
       return { k, x: mx - (mx - v.x) * ratio, y: my - (my - v.y) * ratio };
     });
@@ -349,10 +387,9 @@ export function CanvasWindow() {
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));
   };
 
-  const editingEl = editing ? els.find((e) => e.id === editing.id) : null;
-  const selEl = selectedId && tool === "select" ? els.find((e) => e.id === selectedId) : null;
+  const selEl = selectedId && tool === "select" && !editing ? els.find((e) => e.id === selectedId) : null;
   const selBox = selEl ? bbox(selEl) : null;
-  const hs = 7 / view.k; // handle half-size in canvas units, constant on screen
+  const hs = 9 / view.k; // handle half-size in canvas units, ~18px on screen
 
   return (
     <div className="flex h-full">
@@ -364,7 +401,7 @@ export function CanvasWindow() {
             title={t.label}
             aria-pressed={tool === t.id}
             onClick={() => {
-              commitEditing();
+              commitText();
               setTool(t.id);
               if (t.id !== "select") setSelectedId(null);
             }}
@@ -407,7 +444,6 @@ export function CanvasWindow() {
                 setEls([]);
                 putDraft(null);
                 setEditing(null);
-                editingRef.current = null;
                 setSelectedId(null);
               }
               setConfirmClear((v) => !v);
@@ -438,7 +474,7 @@ export function CanvasWindow() {
           onWheel={onWheel}
         >
           <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
-            {els.map((el) => (el.id === editing?.id ? null : <ShapeEl key={el.id} el={el} />))}
+            {els.map((el) => <ShapeEl key={el.id} el={el} />)}
             {draft && <ShapeEl el={draft} ghost />}
             {selBox && (
               <>
@@ -460,9 +496,10 @@ export function CanvasWindow() {
                     y={selBox.y + selBox.h * hnd.fy - hs}
                     width={hs * 2}
                     height={hs * 2}
+                    rx={2 / view.k}
                     fill="var(--primary)"
                     stroke="var(--bg)"
-                    strokeWidth={1 / view.k}
+                    strokeWidth={1.5 / view.k}
                     style={{ cursor: hnd.cursor }}
                     onPointerDown={(e) => startResize(e, hnd.id)}
                   />
@@ -472,32 +509,48 @@ export function CanvasWindow() {
           </g>
         </svg>
 
-        {editing && editingEl && (
-          <textarea
-            autoFocus
-            value={editing.value}
-            onChange={(e) => {
-              const v = { id: editing.id, value: e.target.value };
-              editingRef.current = v;
-              setEditing(v);
-            }}
-            onBlur={commitEditing}
-            onKeyDown={(e) => {
-              if (e.key === "Escape" || (e.key === "Enter" && !e.shiftKey)) {
-                e.preventDefault();
-                commitEditing();
-              }
-            }}
-            placeholder={editingEl.type === "sticky" ? "Sticky note…" : "Text…"}
-            className="absolute resize-none border border-primary bg-surface p-1 text-foreground shadow-lg outline-none"
-            style={{
-              left: view.x + editingEl.x * view.k,
-              top: view.y + (editingEl.type === "text" ? editingEl.y - 16 : editingEl.y) * view.k,
-              width: (editingEl.w ?? 200) * view.k,
-              height: (editingEl.h ?? 44) * view.k,
-              font: `${(editingEl.fontSize ?? 13) * view.k}px/1.35 var(--font-body)`,
-            }}
-          />
+        {editing && (
+          <div className="absolute inset-x-0 bottom-0 flex items-end gap-2 border-t border-primary bg-surface p-2.5 shadow-lg">
+            <div className="flex-1">
+              <span className="mb-1 block font-mono text-[9px] uppercase tracking-widest text-primary">
+                {editing.kind === "sticky" ? "Sticky note" : "Text"} — Enter to add, Esc to cancel
+              </span>
+              <textarea
+                ref={editRef}
+                rows={editing.kind === "sticky" ? 3 : 1}
+                value={editing.value}
+                onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelText();
+                  } else if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    commitText();
+                  }
+                }}
+                placeholder={editing.kind === "sticky" ? "Write the note…" : "Type your label…"}
+                className="w-full resize-none border border-border bg-background px-2 py-1.5 text-[13px] text-foreground outline-none"
+                style={{ borderRadius: "var(--radius-control)" }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={commitText}
+              className="chrome-flat chrome-press grid size-8 place-items-center bg-primary text-primary-foreground"
+              aria-label="Add"
+            >
+              <Check className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={cancelText}
+              className="chrome-flat grid size-8 place-items-center bg-surface-raised text-muted-foreground hover:text-foreground"
+              aria-label="Cancel"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -19,7 +19,6 @@ import { CASES } from "@/content/cases/registry";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
-import { Typewriter } from "@/components/motion";
 
 /** rough bucket for analytics — not shown to the learner */
 function classifyPrompt(t: string): string {
@@ -47,7 +46,7 @@ interface Msg {
 function Row({ who, tone, children }: { who: "PM" | "You"; tone?: string; children: React.ReactNode }) {
   const isPm = who === "PM";
   return (
-    <div className="flex gap-2.5 px-4 py-1.5 hover:bg-surface-raised/40">
+    <div className="da-msg-in flex gap-2.5 px-4 py-1.5 hover:bg-surface-raised/40">
       <div
         className={cn(
           "mt-0.5 grid size-7 shrink-0 place-items-center rounded-[var(--radius-control)] text-[10px] font-bold",
@@ -58,9 +57,19 @@ function Row({ who, tone, children }: { who: "PM" | "You"; tone?: string; childr
       </div>
       <div className="min-w-0 flex-1">
         <span className="text-[12px] font-bold text-foreground">{isPm ? "PM" : "You"}</span>
-        <div className={cn("text-[13px] leading-relaxed", tone ?? "text-foreground")}>{children}</div>
+        <div className={cn("whitespace-pre-wrap text-[13px] leading-relaxed", tone ?? "text-foreground")}>{children}</div>
       </div>
     </div>
+  );
+}
+
+function Dots() {
+  return (
+    <span className="inline-flex gap-1">
+      <span className="da-dot size-1.5 rounded-full bg-muted-foreground" />
+      <span className="da-dot size-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+      <span className="da-dot size-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+    </span>
   );
 }
 
@@ -175,21 +184,13 @@ export function PmAiWindow() {
         )}
 
         {messages.map((m, i) => (
-          <Row
-            key={i}
-            who={m.role === "user" ? "You" : "PM"}
-            tone={m.declined ? "text-brand-amber" : undefined}
-          >
-            {m.role === "assistant" && i === messages.length - 1 ? (
-              <Typewriter key={m.content} text={m.content} />
-            ) : (
-              <span className="whitespace-pre-wrap">{m.content}</span>
-            )}
+          <Row key={i} who={m.role === "user" ? "You" : "PM"} tone={m.declined ? "text-brand-amber" : undefined}>
+            {m.content}
           </Row>
         ))}
         {busy && (
           <Row who="PM" tone="text-muted-foreground">
-            <span className="font-mono text-xs">typing…</span>
+            <Dots />
           </Row>
         )}
       </div>
