@@ -7,6 +7,7 @@ import { useWindowActions } from "@/lib/windowContext";
 import { useSession } from "@/lib/session/SessionProvider";
 import { TOPICS, TOPICS_BY_ID } from "@/content/curriculum";
 import { CountUp, Pulse } from "@/components/motion";
+import { NotificationBell } from "./NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,6 +90,7 @@ export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
         <Pulse trigger={streak} className="items-center gap-1 text-[11px] font-bold text-brand-amber">
           🔥 {streak}
         </Pulse>
+        <NotificationBell />
         <button
           type="button"
           aria-label={`Switch to ${nextTheme} theme`}
