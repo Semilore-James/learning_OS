@@ -188,9 +188,15 @@ export function pivotRound(n: number): PivotRound {
     expect.push([k, Math.round(out * 100) / 100]);
   }
   expect.sort((a, b) => a[0].localeCompare(b[0]));
-  const verb = agg === "count" ? "Number of records" : `${agg[0].toUpperCase()}${agg.slice(1)} of ${measure}`;
+  const scene = pick(r, [
+    "The ops lead wants a summary for the weekly review.",
+    "Finance asked for this cut before the board deck.",
+    "You're building a dashboard tile and need the right rollup.",
+    "A stakeholder emailed asking for exactly this number.",
+  ]);
+  const verb = agg === "count" ? "the number of records" : `the ${agg} of ${measure}`;
   return {
-    prompt: `${verb} per ${dim.col}.`,
+    prompt: `${scene} Rebuild ${verb} per ${dim.col} from the raw rows.`,
     columns: cols,
     rows,
     groupBy: dim.col,

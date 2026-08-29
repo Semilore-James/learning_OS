@@ -39,6 +39,18 @@ INSERT INTO order_items VALUES
  (5,6,2),(5,7,1),(6,2,1),(6,5,1),(7,3,1),(8,4,2),(9,1,1),(9,2,1);
 `;
 
+/* the shop the whole Dojo runs on — shown as a reference panel so you're never
+   guessing what tables or columns exist */
+export const SCHEMA_STORY =
+  "A small online shop. Customers place orders; each order has one or more line items; each line item is a product and a quantity.";
+
+export const SCHEMA: { table: string; columns: string[]; note: string }[] = [
+  { table: "customers", columns: ["id", "name", "city", "signup_date"], note: "one row per customer" },
+  { table: "products", columns: ["id", "name", "category", "price"], note: "the catalogue; price is per unit" },
+  { table: "orders", columns: ["id", "customer_id", "order_date"], note: "customer_id → customers.id" },
+  { table: "order_items", columns: ["order_id", "product_id", "qty"], note: "order_id → orders.id, product_id → products.id" },
+];
+
 export interface DojoLevel {
   n: number;
   title: string;

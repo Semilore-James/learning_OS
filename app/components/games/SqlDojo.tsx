@@ -1,11 +1,42 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Check, Infinity as InfinityIcon, Lock, Play } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Infinity as InfinityIcon, Lock, Play } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { getLevel, AUTHORED_LEVELS, SEED_SQL } from "@/lib/games/sqlDojoGen";
+import { SCHEMA, SCHEMA_STORY } from "@/lib/games/sqlDojo";
 import { runQuery, resultsMatch, type QueryResult } from "@/lib/games/sqlEngine";
+
+function SchemaPanel() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="chrome-flat bg-surface-raised">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-1 px-2.5 py-1.5 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+      >
+        {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        Schema
+      </button>
+      {open && (
+        <div className="border-t border-border px-2.5 py-2">
+          <p className="mb-2 text-[11px] text-muted-foreground">{SCHEMA_STORY}</p>
+          <div className="flex flex-col gap-1.5">
+            {SCHEMA.map((t) => (
+              <div key={t.table} className="font-mono text-[11px]">
+                <span className="font-bold text-primary">{t.table}</span>
+                <span className="text-foreground"> ({t.columns.join(", ")})</span>
+                <span className="text-muted-foreground"> — {t.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ResultTable({ r }: { r: QueryResult }) {
   if (!r.columns.length) return <p className="p-3 font-mono text-[11px] text-muted-foreground">(no rows)</p>;
@@ -121,6 +152,8 @@ export function SqlDojo() {
           <h3 className="font-display text-sm font-bold text-foreground">{level.title}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{level.brief}</p>
         </div>
+
+        <SchemaPanel />
 
         <textarea
           value={sql}
