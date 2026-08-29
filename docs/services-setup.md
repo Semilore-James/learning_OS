@@ -51,8 +51,14 @@ free tier — no card required to start.
 
 ## Resend (auth emails: confirm, OTP, magic link, reset)
 
-Supabase sends auth emails from a shared address with a low rate limit. Point it
-at Resend for real deliverability.
+**Skip this until you own a domain.** Resend needs a verified sending domain,
+and until then Supabase's built-in email sender works fine: signup confirm,
+OTP, and password reset all send today with no setup. The only downside is a
+low rate limit (~2–4 emails/hour on the shared address), which matters for
+heavy testing and a busy launch day, not for personal use or a soft launch.
+
+When you have a domain (a ~$10/yr `.xyz` or the app's own name from Cloudflare
+Registrar / Porkbun / Namecheap is plenty):
 
 1. Create a [resend.com](https://resend.com) account, add and **verify your
    sending domain** (DNS: SPF + DKIM records they give you).
