@@ -25,23 +25,29 @@ adblockers don't drop events, hashed user id (never the raw id/email),
 4. Redeploy. Open the app, click around, check PostHog → Activity for
    `session_start`, `module_opened`, etc.
 
-## Grok / xAI (PM-AI a.k.a. L_OS COMMS) — code is DONE, needs the key
+## Groq (PM-AI a.k.a. L_OS COMMS) — code is DONE, needs the key
 
 `/api/pm-ai/chat` and `/api/pm-ai/review` return a graceful 503 until
-`GROK_API_KEY` is set.
+`GROQ_API_KEY` is set. Groq serves open models (Llama, GPT-OSS) on a fast,
+free tier — no card required to start.
 
-1. Get a key at [console.x.ai](https://console.x.ai).
-2. Set (server-only — **no** `NEXT_PUBLIC_` prefix):
+1. Sign up at [console.groq.com](https://console.groq.com).
+2. Left nav → **API Keys** → **Create API Key** → copy it (starts `gsk_`).
+3. In Vercel → Settings → Environment Variables, set (server-only — **no**
+   `NEXT_PUBLIC_` prefix; mark `GROQ_API_KEY` visibility **Secret/Sensitive**,
+   the other two can be plain/Config):
    ```
-   GROK_API_KEY=xai-xxx
-   GROK_BASE_URL=https://api.x.ai/v1
-   GROK_MODEL=grok-3-mini
+   GROQ_API_KEY=gsk_xxx
+   GROQ_BASE_URL=https://api.groq.com/openai/v1
+   GROQ_MODEL=llama-3.3-70b-versatile
    ```
-3. Rate limiting for that route uses Upstash — optional, set
+   Other good model ids: `openai/gpt-oss-120b`, `llama-3.1-8b-instant` (cheaper/faster).
+4. Rate limiting for that route uses Upstash — optional, set
    `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` if you want it, else the
    route runs without a limiter.
-4. To swap providers later (Anthropic/OpenAI), implement another `Advisor` in
-   `lib/ai/` and set `AI_PROVIDER`. The route is the only thing that changes.
+5. To swap providers later (Anthropic/OpenAI/xAI), implement another `Advisor`
+   in `lib/ai/`, register it in `lib/ai/index.ts`, and set `AI_PROVIDER`. The
+   route is the only other thing involved, and it does not change.
 
 ## Resend (auth emails: confirm, OTP, magic link, reset)
 

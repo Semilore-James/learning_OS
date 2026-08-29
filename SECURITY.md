@@ -13,7 +13,7 @@ secret is committed. `app/.env.example` holds variable names only.
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | just an address |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | public by design; **Row Level Security** is what protects the data. Every table has RLS on and a policy that limits a user to their own rows. |
 | `SUPABASE_SERVICE_ROLE_KEY` | **no** | bypasses RLS entirely. Server-only, used only by `app/lib/supabase/admin.ts` for trusted jobs (cron). |
-| `GROK_API_KEY`, `ANTHROPIC_API_KEY` | **no** | billable; used only inside `app/api/pm-ai/*` route handlers |
+| `GROQ_API_KEY`, `ANTHROPIC_API_KEY` | **no** | billable; used only inside `app/api/pm-ai/*` route handlers |
 | `YOUTUBE_API_KEY` | **no** | quota-limited; used only by `scripts/import-videos.mjs` at build time |
 | `UPSTASH_*`, `CRON_SECRET` | **no** | server-only |
 

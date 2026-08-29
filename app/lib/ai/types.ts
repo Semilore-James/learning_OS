@@ -1,14 +1,14 @@
 /* ============================================================================
    PM-AI — the Advisor interface. You integrate this interface, not a vendor.
-   Grok (xAI) implements it today; swapping to Anthropic/OpenAI is one new file
-   plus an env var, with nothing else in the app changed.
+   Groq implements it today; swapping to Anthropic/OpenAI is one new file plus
+   an env var, with nothing else in the app changed.
 
    Operating mandate (PRD section 9) lives in system-prompt.v1.ts and is applied
    by every implementation.
    ========================================================================== */
 
 /** Full learner history, assembled server-side and injected into every call.
- *  Grok keeps no state between calls, so this IS the memory. Nothing trimmed. */
+ *  The model keeps no state between calls, so this IS the memory. Nothing trimmed. */
 export interface LearnerContext {
   displayName: string | null;
   activeNode: { id: string; label: string; topic: string } | null;

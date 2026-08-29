@@ -1,22 +1,22 @@
 /* ============================================================================
-   getAdvisor() — picks the implementation by env. Default grok. Swapping to a
+   getAdvisor() — picks the implementation by env. Default groq. Swapping to a
    paid provider at launch (PRD 18.3) is: add `anthropic.ts` implementing
    Advisor, register it here, set AI_PROVIDER=anthropic. Nothing else changes.
    ========================================================================== */
 import "server-only";
-import { grokAdvisor } from "./grok";
+import { groqAdvisor } from "./groq";
 import type { Advisor } from "./types";
 
-const PROVIDER = process.env.AI_PROVIDER ?? "grok";
+const PROVIDER = process.env.AI_PROVIDER ?? "groq";
 
 const REGISTRY: Record<string, Advisor> = {
-  grok: grokAdvisor,
+  groq: groqAdvisor,
   // anthropic: anthropicAdvisor,
   // openai: openaiAdvisor,
 };
 
 export function getAdvisor(): Advisor {
-  return REGISTRY[PROVIDER] ?? grokAdvisor;
+  return REGISTRY[PROVIDER] ?? groqAdvisor;
 }
 
 export { buildContext } from "./context";

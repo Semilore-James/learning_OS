@@ -16,8 +16,8 @@ export const serverEnv = {
    *  request on behalf of a logged-in user; use their session + RLS instead. */
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
 
-  /** xAI / Grok API key for the PM-AI route */
-  grokApiKey: process.env.GROK_API_KEY ?? "",
+  /** Groq API key for the PM-AI route (serves open models, OpenAI-compatible) */
+  groqApiKey: process.env.GROQ_API_KEY ?? "",
   /** fallback LLM provider, decision deferred to launch week */
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
 

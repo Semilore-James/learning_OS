@@ -1,7 +1,8 @@
 /* ============================================================================
-   Grok (xAI) implementation of Advisor. xAI's API is OpenAI-compatible, so the
-   HTTP shape here is the same one Anthropic-compatible or OpenAI providers use
-   — a future provider is a copy of this file with a different base URL / model.
+   Groq implementation of Advisor. Groq serves open models (Llama, GPT-OSS)
+   behind an OpenAI-compatible API, so the HTTP shape here is the same one an
+   Anthropic-compatible or OpenAI provider uses — a future provider is a copy of
+   this file with a different base URL / model.
 
    Server-only: the API key never reaches the browser. Calls go through the
    /api/pm-ai route (step 17).
@@ -22,8 +23,8 @@ import {
   type ReviewResult,
 } from "./types";
 
-const BASE_URL = process.env.GROK_BASE_URL ?? "https://api.x.ai/v1";
-const MODEL = process.env.GROK_MODEL ?? "grok-3-mini";
+const BASE_URL = process.env.GROQ_BASE_URL ?? "https://api.groq.com/openai/v1";
+const MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
 
 interface ChatCompletionMessage {
   role: "system" | "user" | "assistant";
@@ -34,8 +35,8 @@ async function complete(
   messages: ChatCompletionMessage[],
   opts: { json?: boolean; maxTokens?: number } = {},
 ): Promise<string> {
-  if (!serverEnv.grokApiKey) {
-    throw new AdvisorUnavailableError("GROK_API_KEY is not set");
+  if (!serverEnv.groqApiKey) {
+    throw new AdvisorUnavailableError("GROQ_API_KEY is not set");
   }
   let res: Response;
   try {
@@ -43,7 +44,7 @@ async function complete(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${serverEnv.grokApiKey}`,
+        authorization: `Bearer ${serverEnv.groqApiKey}`,
       },
       body: JSON.stringify({
         model: MODEL,
@@ -86,7 +87,7 @@ function ctxMsg(ctx: LearnerContext): ChatCompletionMessage {
   };
 }
 
-export const grokAdvisor: Advisor = {
+export const groqAdvisor: Advisor = {
   async review(req: ReviewRequest, ctx: LearnerContext): Promise<ReviewResult> {
     const raw = await complete(
       [

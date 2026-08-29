@@ -31,7 +31,7 @@ end because integration happens continuously.
 |---|---|---|
 | Auth, DB, storage | Supabase | Free tier pauses after 7 days idle, no backups. Go Pro (~$25/mo) before real users. |
 | Transactional email | **Resend** free tier, wired as Supabase **custom SMTP** | Supabase's built-in email throttles at ~3/hour and kills OTP testing on day one. Non-negotiable, do it before building auth. |
-| PM-AI | `Advisor` interface, Grok (xAI) free impl | No SLA, rate-limits. Submission is persisted to Postgres **before** the AI call, so a failure loses nothing. Provider swap = one file. |
+| PM-AI | `Advisor` interface, Groq (open models) free impl | No SLA, rate-limits. Submission is persisted to Postgres **before** the AI call, so a failure loses nothing. Provider swap = one file. |
 | Analytics | PostHog, reverse-proxied through Next.js `rewrites` | Adblockers block the default domain. Session recording only on Constellation + Case Files (per PRD). |
 | Video | YouTube Data API **at import time only**; iframe embed at runtime | 10k quota units/day. Never call the API at runtime; cache everything to `video_catalog`. |
 | AI rate limiting | Upstash Redis free tier | One script shouldn't drain the LLM quota. |
@@ -40,7 +40,7 @@ end because integration happens continuously.
 | Hosting | Vercel hobby, `*.vercel.app` URL (no custom domain this build) | 10s serverless ceiling. Stream the PM-AI response or move to Pro. |
 
 **Monthly cost:** $0 to build and launch. $25–75/mo once real, swing line is the
-AI (Grok free vs. ~$15/mo paid model). That one decision is deferred to launch
+AI (Groq free vs. ~$15/mo paid model). That one decision is deferred to launch
 week — clean, because it is one file behind the `Advisor` interface.
 
 ---
@@ -147,7 +147,7 @@ hardening.
    quick input still pending. **Skins added** — see the Addition box above.
    SettingsWindow (appearance section) is real: theme + skin + wallpaper persist.
 9. **External adapters scaffolded.** DONE (commit pending).
-   - `app/lib/ai/`: `Advisor` interface + `AdvisorUnavailableError`, `grok.ts`
+   - `app/lib/ai/`: `Advisor` interface + `AdvisorUnavailableError`, `groq.ts`
      (OpenAI-compatible REST, no SDK), `context.ts` (`buildContext(sb,userId)`
      pure-ish), `system-prompt.v1.ts` (versioned, PRD §9 mandate + fixed review
      JSON schema), `redteam.ts` (10 jailbreak fixtures), `getAdvisor()` factory
@@ -240,7 +240,7 @@ time, each merged green, unfinished behind a flag.**
 29. PWA offline read-only shell (service worker caches shell + read data; no
     offline writes).
 30. Upgrade Supabase to Pro (no pause, backups). Make the PM-AI provider call
-    (Grok free vs. ~$15/mo paid). One file either way.
+    (Groq free vs. ~$15/mo paid). One file either way.
 31. Smoke test as fresh guest, then fresh account, then returning account with
     data. Confirm guest -> account migration loses nothing. Announce the
     `*.vercel.app` URL.

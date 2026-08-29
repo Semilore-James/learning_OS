@@ -7,7 +7,7 @@
    the textbook, it reviews, pushes back, and asks the question you should be
    asking. Declines are counted; the full log unlocks per account.
 
-   Needs GROK_API_KEY server-side; without it every turn returns a plain
+   Needs GROQ_API_KEY server-side; without it every turn returns a plain
    "not reachable" line.
    ========================================================================== */
 import { useEffect, useMemo, useRef, useState } from "react";
