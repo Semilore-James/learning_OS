@@ -24,7 +24,8 @@ export type Flag =
   | "diagnostic"
   | "commandPalette"
   | "sharePage"
-  | "shop";
+  | "shop"
+  | "pmVision";
 
 const enabled = new Set(
   (process.env.NEXT_PUBLIC_FLAGS ?? "")

@@ -3,7 +3,7 @@
    Groq implements it today; swapping to Anthropic/OpenAI is one new file plus
    an env var, with nothing else in the app changed.
 
-   Operating mandate (PRD section 9) lives in system-prompt.v1.ts and is applied
+   Operating mandate (PRD section 9) lives in system-prompt.v2.ts and is applied
    by every implementation.
    ========================================================================== */
 
@@ -24,9 +24,63 @@ export interface LearnerContext {
     status: string;
     body: string;
     submittedAt: string | null;
+    /** the PM's own last review of this submission, if any */
+    lastReview: ReviewResult | null;
   }>;
   declineCount: number;
   declines: Array<{ kind: string; summary: string; at: string }>;
+  /** the PM's running dense notes on this learner (pm_ai_memory.doc).
+   *  "" for guests or a brand-new learner. Injected as the MEMORY block. */
+  memoryDoc: string;
+}
+
+/** A deterministic summary of a learner's cleaned CSV, computed in the browser
+ *  (lib/casefiles/csvDigest.ts). The raw file never leaves the client. */
+export interface CsvDigest {
+  fileName: string;
+  rowCount: number;
+  /** true when the digest was computed on a capped prefix of a large file */
+  truncated: boolean;
+  duplicateRows: number;
+  columns: Array<{
+    name: string;
+    type: "number" | "date" | "text" | "bool";
+    /** 0-100, rounded */
+    nullPct: number;
+    sample: string[];
+  }>;
+}
+
+/* ---------------------------------------------------------------- memory --- */
+
+/** structured, code-owned facts — never written by a model. All arrays capped. */
+export interface PmFacts {
+  /** the one thread left hanging from last time */
+  openQuestion: string | null;
+  /** gaps the PM has named that the learner has not resolved (cap 6) */
+  unresolved: Array<{
+    gap: string;
+    caseId: string | null;
+    firstSeen: string;
+    timesRaised: number;
+  }>;
+  /** in-app resources already recommended, so the PM does not repeat (cap 12, FIFO) */
+  pointersGiven: Array<{ resource: string; at: string }>;
+  /** daily-greeting quote ids already shown (cap 30, FIFO) */
+  greetingsUsed: string[];
+}
+
+export const EMPTY_FACTS: PmFacts = {
+  openQuestion: null,
+  unresolved: [],
+  pointersGiven: [],
+  greetingsUsed: [],
+};
+
+export interface PmMemory {
+  facts: PmFacts;
+  /** freeform hyperdense markdown, model-owned, token-capped */
+  notesMd: string;
 }
 
 export interface ReviewRequest {
@@ -35,6 +89,8 @@ export interface ReviewRequest {
   /** the scenario + deliverable text the learner was working from */
   caseBrief: string;
   submission: string;
+  /** optional client-computed summary of their cleaned data file */
+  digest?: CsvDigest | null;
 }
 
 /** Fixed schema for a case review (PRD 18.3: "strength, gap, question"). */
@@ -47,6 +103,9 @@ export interface ReviewResult {
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  /** data: URLs for screenshots the learner attached (last message only,
+   *  gated by the pmVision flag). Routed to a vision-capable model. */
+  images?: string[];
 }
 
 export type AdvisorReply =

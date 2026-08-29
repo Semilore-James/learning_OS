@@ -8,7 +8,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { TOPICS, TOPICS_BY_ID } from "@/content/curriculum";
-import type { LearnerContext } from "./types";
+import type { LearnerContext, ReviewResult } from "./types";
 
 type DB = SupabaseClient<Database>;
 
@@ -38,7 +38,7 @@ export async function buildContext(sb: DB, userId: string): Promise<LearnerConte
     sb.from("heatmap_activity").select("day").eq("user_id", userId),
     sb
       .from("case_submissions")
-      .select("case_id,status,body,submitted_at")
+      .select("case_id,status,body,submitted_at,pm_ai_response")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false })
       .limit(5),
@@ -65,6 +65,17 @@ export async function buildContext(sb: DB, userId: string): Promise<LearnerConte
 
   const caseRows = cases.data ?? [];
 
+  const parseReview = (raw: unknown): ReviewResult | null => {
+    if (!raw || typeof raw !== "object") return null;
+    const r = raw as Record<string, unknown>;
+    if (typeof r.gap !== "string" || typeof r.question !== "string") return null;
+    return {
+      strength: typeof r.strength === "string" ? r.strength : "",
+      gap: r.gap,
+      question: r.question,
+    };
+  };
+
   return {
     displayName: profile.data?.display_name ?? null,
     activeNode: activeRow
@@ -86,6 +97,7 @@ export async function buildContext(sb: DB, userId: string): Promise<LearnerConte
       status: c.status,
       body: c.body,
       submittedAt: c.submitted_at,
+      lastReview: parseReview(c.pm_ai_response),
     })),
     declineCount: (declines.data ?? []).length,
     declines: (declines.data ?? []).map((d) => ({
@@ -93,5 +105,6 @@ export async function buildContext(sb: DB, userId: string): Promise<LearnerConte
       summary: d.prompt_summary,
       at: d.created_at,
     })),
+    memoryDoc: "",
   };
 }

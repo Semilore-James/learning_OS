@@ -365,6 +365,27 @@ export type Database = {
         }
         Relationships: []
       }
+      pm_ai_memory: {
+        Row: {
+          facts: Json
+          notes_md: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          facts?: Json
+          notes_md?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          facts?: Json
+          notes_md?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pm_ai_messages: {
         Row: {
           content: string
@@ -386,6 +407,30 @@ export type Database = {
           id?: string
           role?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pm_ai_usage: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          user_id?: string
+          weight?: number
         }
         Relationships: []
       }

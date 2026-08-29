@@ -20,13 +20,25 @@ export function getAdvisor(): Advisor {
 }
 
 export { buildContext } from "./context";
-export { PROMPT_VERSION } from "./system-prompt.v1";
+export {
+  readMemory,
+  injectMemory,
+  recordPointer,
+  noteUnresolved,
+  resolveForCase,
+  refreshNotes,
+} from "./memory";
+export { checkAndRecord, usageSnapshot, type UsageKind } from "./usage";
+export { PROMPT_VERSION } from "./system-prompt.v2";
 export {
   AdvisorUnavailableError,
   type Advisor,
   type AdvisorReply,
   type ChatMessage,
+  type CsvDigest,
   type LearnerContext,
+  type PmFacts,
+  type PmMemory,
   type ReviewRequest,
   type ReviewResult,
 } from "./types";
