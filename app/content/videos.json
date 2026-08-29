@@ -8,5 +8,10 @@
   { "id": "pQSMbRA3O6g", "title": "Data Modelling for Power BI", "channel": "Data with Baraa", "durationSeconds": null, "difficulty": "intermediate", "skillTags": ["power-bi"] },
   { "id": "K3pXnbniUcM", "title": "Tableau Full Course", "channel": "Data with Baraa", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["visualization"] },
   { "id": "nAnCu6s1Iyk", "title": "Databricks Full Course", "channel": "Data with Baraa", "durationSeconds": null, "difficulty": "intermediate", "skillTags": ["sql", "python"] },
-  { "id": "J2rQTJby8XM", "title": "Data Literacy Full Course", "channel": "Data with Baraa", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["statistics"] }
+  { "id": "J2rQTJby8XM", "title": "Data Literacy Full Course", "channel": "Data with Baraa", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["statistics"] },
+  { "id": "wUSDVGivd-8", "title": "Python for Data Analytics - Full Course for Beginners", "channel": "Luke Barousse", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["python"] },
+  { "id": "7mz73uXD9DA", "title": "SQL for Data Analytics - Learn SQL in 4 Hours", "channel": "Luke Barousse", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["sql"] },
+  { "id": "rGx1QNdYzvs", "title": "FREE Data Analyst Bootcamp", "channel": "Alex The Analyst", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["sql", "excel", "visualization"] },
+  { "id": "r-uOLxNrNk8", "title": "Data Analysis with Python - Full Course for Beginners (Numpy, Pandas, Matplotlib, Seaborn)", "channel": "freeCodeCamp.org", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["python", "statistics"] },
+  { "id": "GPVsHOlRBBI", "title": "Data Analysis with Python Course - Numpy, Pandas, Data Visualization", "channel": "freeCodeCamp.org", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["python", "visualization"] }
 ]
