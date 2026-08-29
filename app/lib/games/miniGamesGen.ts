@@ -5,12 +5,12 @@
    ========================================================================== */
 import {
   DETECTIVE_ROUNDS,
-  PIVOT_ROUNDS,
   CRITIQUE_ROUNDS,
   type DetectiveRound,
   type PivotRound,
   type CritiqueRound,
 } from "./miniGames";
+import { runPivot, type Agg, type PivotConfig } from "./pivotEngine";
 
 function rng(seed: number) {
   let s = seed >>> 0;
@@ -23,7 +23,6 @@ const pick = <T>(r: () => number, a: readonly T[]) => a[Math.floor(r() * a.lengt
 const int = (r: () => number, lo: number, hi: number) => lo + Math.floor(r() * (hi - lo + 1));
 
 export const DETECTIVE_AUTHORED = DETECTIVE_ROUNDS.length;
-export const PIVOT_AUTHORED = PIVOT_ROUNDS.length;
 export const CRITIQUE_AUTHORED = CRITIQUE_ROUNDS.length;
 
 /* ---------------------------------------------------------- Data Detective --
@@ -142,61 +141,96 @@ export function detectiveRound(n: number): DetectiveRound {
   };
 }
 
-/* ------------------------------------------------------------- Pivot Puzzle -- */
-const DIMS = [
+/* ------------------------------------------------------------- Pivot Puzzle --
+   Generate a raw deals table and a target pivot config; the component gives the
+   learner the tray + drop zones and pivotEngine checks their build. */
+const PV_DIMS: { col: string; vals: string[] }[] = [
   { col: "region", vals: ["North", "South", "East", "West"] },
-  { col: "team", vals: ["Alpha", "Bravo", "Charlie"] },
-  { col: "channel", vals: ["Web", "Store", "Partner"] },
+  { col: "quarter", vals: ["Q1", "Q2", "Q3", "Q4"] },
+  { col: "channel", vals: ["Web", "Field", "Partner"] },
   { col: "stage", vals: ["Open", "Won", "Lost"] },
+  { col: "segment", vals: ["SMB", "Mid", "Enterprise"] },
 ];
-const AGGS = ["sum", "count", "avg", "max"] as const;
+const PV_MEASURES = ["revenue", "units", "discount"];
+const PV_PERSONA = ["Finance", "The ops lead", "Your manager", "The RevOps team", "The board deck"];
+
+function verbFor(agg: Agg, measure: string | null): string {
+  if (agg === "count") return "the number of deals";
+  if (agg === "sum") return `total ${measure}`;
+  if (agg === "avg") return `average ${measure}`;
+  return `the ${agg} ${measure}`;
+}
 
 export function pivotRound(n: number): PivotRound {
-  if (n <= PIVOT_AUTHORED) return PIVOT_ROUNDS[n - 1];
-  const r = rng(n * 2654435761);
-  const dim = pick(r, DIMS);
-  const agg = pick(r, AGGS);
-  const measure = pick(r, ["revenue", "value", "score", "amount"]);
-  const labelCol = pick(r, ["rep", "deal", "item", "order"]);
-  const rowN = int(r, 5, 8);
-  const cols = [dim.col, labelCol, measure];
-  const rows: (string | number)[][] = Array.from({ length: rowN }, (_, i) => [
-    pick(r, dim.vals),
-    `${labelCol[0]}${i + 1}`,
-    int(r, 10, 200),
+  const r = rng(n * 2654435761 + 3);
+
+  // pick 2-3 dimensions + 1 measure for the raw table
+  const dims = shuffle(r, [...PV_DIMS]).slice(0, n >= 14 ? 3 : n >= 6 ? 3 : 2);
+  const measure = pick(r, PV_MEASURES);
+  const columns = [...dims.map((d) => d.col), measure];
+
+  const rowN = int(r, 24, 44);
+  const rows: (string | number)[][] = Array.from({ length: rowN }, () => [
+    ...dims.map((d) => pick(r, d.vals)),
+    measure === "discount" ? int(r, 0, 40) : int(r, 20, 900),
   ]);
-  // compute expected
-  const buckets = new Map<string, number[]>();
-  for (const row of rows) {
-    const k = String(row[0]);
-    if (!buckets.has(k)) buckets.set(k, []);
-    buckets.get(k)!.push(agg === "count" ? 1 : (row[2] as number));
-  }
-  const expect: [string, number][] = [];
-  for (const [k, v] of buckets) {
-    let out: number;
-    if (agg === "count") out = v.length;
-    else if (agg === "sum") out = v.reduce((a, b) => a + b, 0);
-    else if (agg === "avg") out = v.reduce((a, b) => a + b, 0) / v.length;
-    else out = Math.max(...v);
-    expect.push([k, Math.round(out * 100) / 100]);
-  }
-  expect.sort((a, b) => a[0].localeCompare(b[0]));
-  const scene = pick(r, [
-    "The ops lead wants a summary for the weekly review.",
-    "Finance asked for this cut before the board deck.",
-    "You're building a dashboard tile and need the right rollup.",
-    "A stakeholder emailed asking for exactly this number.",
-  ]);
-  const verb = agg === "count" ? "the number of records" : `the ${agg} of ${measure}`;
-  return {
-    prompt: `${scene} Rebuild ${verb} per ${dim.col} from the raw rows.`,
-    columns: cols,
-    rows,
-    groupBy: dim.col,
-    valueField: agg === "count" ? labelCol : measure,
+  const raw = rows.map((row) =>
+    Object.fromEntries(columns.map((c, i) => [c, row[i]])),
+  ) as Record<string, string | number>[];
+
+  // build the target config, scaling complexity with n
+  const agg: Agg = pick(r, n >= 6 ? (["sum", "count", "avg", "max"] as Agg[]) : (["sum", "count"] as Agg[]));
+  const rowField = dims[0].col;
+  const cfg: PivotConfig = {
+    rows: [rowField],
+    cols: [],
+    value: agg === "count" ? null : measure,
     agg,
-    expect,
+    filters: [],
+  };
+
+  if (n >= 6 && n < 14) {
+    // one extra lever: a column split OR a filter
+    if (r() < 0.5 && dims.length > 1) cfg.cols = [dims[1].col];
+    else if (dims.length > 1) {
+      const fd = dims[1];
+      cfg.filters = [{ field: fd.col, eq: pick(r, fd.vals) }];
+    }
+  } else if (n >= 14) {
+    // two levers
+    if (r() < 0.5 && dims.length >= 3) {
+      cfg.rows = [dims[0].col, dims[1].col];
+      const fd = dims[2];
+      cfg.filters = [{ field: fd.col, eq: pick(r, fd.vals) }];
+    } else if (dims.length >= 3) {
+      cfg.cols = [dims[1].col];
+      const fd = dims[2];
+      cfg.filters = [{ field: fd.col, eq: pick(r, fd.vals) }];
+    }
+  }
+
+  // prose ask
+  const persona = pick(r, PV_PERSONA);
+  const per = `per ${cfg.rows.join(" then ")}`;
+  const split = cfg.cols.length ? `, split by ${cfg.cols[0]}` : "";
+  const filt = cfg.filters.length ? `, ${cfg.filters[0].field} = ${cfg.filters[0].eq} only` : "";
+  const prompt = `${persona} wants ${verbFor(agg, cfg.value)} ${per}${split}${filt}.`;
+
+  const filterValues: Record<string, string[]> = {};
+  for (const d of dims) filterValues[d.col] = d.vals;
+
+  // guarantee the target actually produces something (rare empty from a filter)
+  const check = runPivot(raw, cfg);
+  if (check.rowKeys.length === 0) cfg.filters = [];
+
+  return {
+    prompt,
+    columns,
+    rows,
+    dims: dims.map((d) => d.col),
+    measures: [measure],
+    filterValues,
+    target: cfg,
   };
 }
 

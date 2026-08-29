@@ -26,9 +26,9 @@ const GAMES: {
   levels: number | null;
 }[] = [
   { id: "sql_dojo", title: "SQL Dojo", blurb: "Write real queries against a live SQLite database.", icon: Database, levels: null },
-  { id: "data_detective", title: "Data Detective", blurb: "Find the broken row before it reaches the dashboard.", icon: Search, levels: null },
-  { id: "pivot_puzzle", title: "Pivot Puzzle", blurb: "Rebuild the summary table from the raw rows.", icon: Table2, levels: null },
-  { id: "chart_critiquer", title: "Chart Critiquer", blurb: "Spot what makes a chart lie.", icon: BarChart3, levels: null },
+  { id: "data_detective", title: "Data Detective", blurb: "Flag every row that breaks a rule. Three wrong flags and it's over.", icon: Search, levels: null },
+  { id: "pivot_puzzle", title: "Pivot Puzzle", blurb: "Configure a pivot to match the target the stakeholder asked for.", icon: Table2, levels: null },
+  { id: "chart_critiquer", title: "Chart Critiquer", blurb: "Read the chart, then judge the claim someone made from it.", icon: BarChart3, levels: null },
 ];
 
 export function GamesWindow() {

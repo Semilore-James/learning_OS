@@ -92,94 +92,26 @@ export const DETECTIVE_ROUNDS: DetectiveRound[] = [
   },
 ];
 
-/* ---- Pivot Puzzle : choose row field / value field / aggregation ---------- */
+/* ---- Pivot Puzzle : configure a pivot to match a target output ------------
+   Rebuilt (Council): a drag/click-to-configure pivot builder. The learner is
+   handed a target output table phrased in business language and a raw table,
+   and drags fields into Rows / Columns / Values / Filters until the result
+   matches. The whole thing is generated (lib/games/miniGamesGen) and checked
+   deterministically by lib/games/pivotEngine. No authored rounds. */
 export interface PivotRound {
+  /** business-language ask ("Finance wants revenue per region, won deals only") */
   prompt: string;
+  /** raw table */
   columns: string[];
   rows: (string | number)[][];
-  /** correct answers */
-  groupBy: string;
-  valueField: string;
-  agg: "sum" | "count" | "avg" | "max";
-  /** expected pivot output, sorted by group label */
-  expect: [string, number][];
+  /** which columns are dimensions vs measures, for the field tray */
+  dims: string[];
+  measures: string[];
+  /** distinct values per dimension, for the filter dropdowns */
+  filterValues: Record<string, string[]>;
+  /** the config that produces the target (used to check + to compute the target) */
+  target: import("./pivotEngine").PivotConfig;
 }
-
-export const PIVOT_ROUNDS: PivotRound[] = [
-  {
-    prompt: "Total revenue per region.",
-    columns: ["region", "rep", "revenue"],
-    rows: [
-      ["North", "Sam", 100],
-      ["North", "Kai", 150],
-      ["South", "Lee", 200],
-      ["South", "Ivy", 50],
-      ["West", "Ron", 90],
-    ],
-    groupBy: "region",
-    valueField: "revenue",
-    agg: "sum",
-    expect: [
-      ["North", 250],
-      ["South", 250],
-      ["West", 90],
-    ],
-  },
-  {
-    prompt: "Number of deals per stage.",
-    columns: ["stage", "deal", "amount"],
-    rows: [
-      ["Won", "D1", 10],
-      ["Won", "D2", 20],
-      ["Lost", "D3", 5],
-      ["Open", "D4", 8],
-      ["Open", "D5", 12],
-      ["Open", "D6", 3],
-    ],
-    groupBy: "stage",
-    valueField: "deal",
-    agg: "count",
-    expect: [
-      ["Lost", 1],
-      ["Open", 3],
-      ["Won", 2],
-    ],
-  },
-  {
-    prompt: "Average score per team.",
-    columns: ["team", "player", "score"],
-    rows: [
-      ["A", "p1", 10],
-      ["A", "p2", 20],
-      ["B", "p3", 30],
-      ["B", "p4", 50],
-    ],
-    groupBy: "team",
-    valueField: "score",
-    agg: "avg",
-    expect: [
-      ["A", 15],
-      ["B", 40],
-    ],
-  },
-  {
-    prompt: "Highest single order per channel.",
-    columns: ["channel", "order", "value"],
-    rows: [
-      ["Web", "o1", 40],
-      ["Web", "o2", 120],
-      ["Store", "o3", 80],
-      ["Store", "o4", 60],
-    ],
-    groupBy: "channel",
-    valueField: "value",
-    agg: "max",
-    expect: [
-      ["Store", 80],
-      ["Web", 120],
-    ],
-  },
-];
 
 /* ---- Chart Critiquer : read the chart, then judge the claim someone made ---
    Each round shows a chart plus a stakeholder's conclusion. Step 1 is the hard
