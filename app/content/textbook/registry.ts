@@ -109,6 +109,28 @@ export const BOOKS: Book[] = [
       { slug: "excel/13-vba-automation", title: "VBA: variables, loops, and a small automation", nodeId: "vba-automation" },
     ],
   },
+  {
+    id: "python-for-analysts",
+    title: "Python for Analysts",
+    subtitle: "When the spreadsheet runs out of room.",
+    chapters: [
+      { slug: "python/01-why-python", title: "Why Python for data", nodeId: "why-python" },
+      { slug: "python/02-setup", title: "Setting up: Jupyter and VS Code", nodeId: "py-setup" },
+      { slug: "python/03-variables-and-types", title: "Variables and data types", nodeId: "py-types" },
+      { slug: "python/04-collections", title: "Lists, tuples, dictionaries", nodeId: "py-collections" },
+      { slug: "python/05-control-flow", title: "Control flow: if, for, while", nodeId: "py-control-flow" },
+      { slug: "python/06-functions", title: "Functions and scope", nodeId: "py-functions" },
+      { slug: "python/07-libraries-and-numpy", title: "Importing libraries and NumPy basics", nodeId: "py-libraries" },
+      { slug: "python/08-pandas-loading", title: "Pandas: loading CSVs and Excel files", nodeId: "pd-load" },
+      { slug: "python/09-pandas-exploring", title: "Pandas: exploring data", nodeId: "pd-explore" },
+      { slug: "python/10-pandas-selecting-filtering", title: "Pandas: selecting and filtering", nodeId: "pd-filter", tryThis: { label: "Case 05: Fintech Churn", target: "casefiles" } },
+      { slug: "python/11-pandas-groupby", title: "Pandas: groupby and aggregation", nodeId: "pd-groupby" },
+      { slug: "python/12-pandas-merging", title: "Pandas: merging and joining", nodeId: "pd-merge" },
+      { slug: "python/13-pandas-cleaning", title: "Pandas: cleaning data", nodeId: "pd-clean" },
+      { slug: "python/14-plotting", title: "Plotting: Matplotlib, Seaborn, Plotly", nodeId: "py-plotting", tryThis: { label: "Chart Critiquer", target: "games" } },
+      { slug: "python/15-project-structure", title: "Writing output and structuring an end-to-end project", nodeId: "py-project" },
+    ],
+  },
 ];
 
 export const BOOKS_BY_ID: Record<string, Book> = Object.fromEntries(BOOKS.map((b) => [b.id, b]));

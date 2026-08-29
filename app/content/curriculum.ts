@@ -156,6 +156,27 @@ const EXCEL_SUBNODES: SubNode[] = [
 ];
 
 /* ----------------------------------------------------------------------------
+   PYTHON FOR ANALYSTS — hand-wired. Book: content/textbook/python/*.md
+   -------------------------------------------------------------------------- */
+const PYTHON_SUBNODES: SubNode[] = [
+  { id: "why-python", label: "Why Python for data", prerequisites: [], chapters: ["01-why-python"], estHours: 0.75, pos: { x: 80, y: 300, r: 12 } },
+  { id: "py-setup", label: "Setting up: Jupyter and VS Code", prerequisites: ["why-python"], chapters: ["02-setup"], estHours: 1, pos: { x: 150, y: 250, r: 11 } },
+  { id: "py-types", label: "Variables and data types", prerequisites: ["py-setup"], chapters: ["03-variables-and-types"], estHours: 1.5, pos: { x: 220, y: 300, r: 12 } },
+  { id: "py-collections", label: "Lists, tuples, dictionaries", prerequisites: ["py-types"], chapters: ["04-collections"], estHours: 2, pos: { x: 290, y: 250, r: 12 } },
+  { id: "py-control-flow", label: "Control flow: if, for, while", prerequisites: ["py-collections"], chapters: ["05-control-flow"], estHours: 2, pos: { x: 240, y: 380, r: 12 } },
+  { id: "py-functions", label: "Functions and scope", prerequisites: ["py-control-flow"], chapters: ["06-functions"], estHours: 2, pos: { x: 340, y: 340, r: 12 } },
+  { id: "py-libraries", label: "Importing libraries and NumPy basics", prerequisites: ["py-functions"], chapters: ["07-libraries-and-numpy"], estHours: 2, pos: { x: 400, y: 290, r: 12 } },
+  { id: "pd-load", label: "Pandas: loading CSVs and Excel files", prerequisites: ["py-libraries"], chapters: ["08-pandas-loading"], estHours: 1.5, pos: { x: 470, y: 320, r: 13 } },
+  { id: "pd-explore", label: "Pandas: exploring data (head, info, describe)", prerequisites: ["pd-load"], chapters: ["09-pandas-exploring"], estHours: 1.5, pos: { x: 470, y: 240, r: 12 } },
+  { id: "pd-filter", label: "Pandas: selecting and filtering", prerequisites: ["pd-explore"], chapters: ["10-pandas-selecting-filtering"], estHours: 2.5, pos: { x: 540, y: 290, r: 13 } },
+  { id: "pd-groupby", label: "Pandas: groupby and aggregation", prerequisites: ["pd-filter"], chapters: ["11-pandas-groupby"], estHours: 2.5, pos: { x: 610, y: 260, r: 13 } },
+  { id: "pd-merge", label: "Pandas: merging and joining", prerequisites: ["pd-filter"], chapters: ["12-pandas-merging"], estHours: 2, pos: { x: 600, y: 350, r: 12 } },
+  { id: "pd-clean", label: "Pandas: cleaning data", prerequisites: ["pd-groupby", "pd-merge"], chapters: ["13-pandas-cleaning"], estHours: 3, pos: { x: 670, y: 320, r: 13 } },
+  { id: "py-plotting", label: "Plotting: Matplotlib, Seaborn, Plotly", prerequisites: ["pd-groupby"], chapters: ["14-plotting"], estHours: 3, pos: { x: 690, y: 230, r: 12 } },
+  { id: "py-project", label: "Writing output and structuring an end-to-end project", prerequisites: ["pd-clean", "py-plotting"], chapters: ["15-project-structure"], estHours: 2, pos: { x: 750, y: 300, r: 12 } },
+];
+
+/* ----------------------------------------------------------------------------
    LEVEL 1 — topic nodes
    Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
    Clusters: FOUNDATIONS (bottom-left) / ANALYSIS (center) / OUTPUT (top-right)
@@ -189,29 +210,7 @@ export const TOPICS: TopicNode[] = [
     prerequisites: ["sql"],
     pos: { x: 190, y: 310, r: 18 },
     book: "python-for-analysts",
-    subNodes: [],
-    plannedSubNodes: [
-      "Why Python for data",
-      "Setting up environment (Jupyter, VS Code)",
-      "Variables and data types",
-      "Lists, tuples, dictionaries",
-      "Control flow (if, for, while)",
-      "Functions and scope",
-      "Importing libraries",
-      "NumPy basics",
-      "Pandas: loading data",
-      "Pandas: exploring data (head, info, describe)",
-      "Pandas: selecting and filtering",
-      "Pandas: groupby and aggregation",
-      "Pandas: merging and joining",
-      "Pandas: cleaning data",
-      "Matplotlib basics",
-      "Seaborn for statistical charts",
-      "Plotly for interactive charts",
-      "Reading CSVs and Excel files",
-      "Writing cleaned data to file",
-      "End-to-end mini project structure",
-    ],
+    subNodes: PYTHON_SUBNODES,
   },
   {
     id: "statistics",
