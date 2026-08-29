@@ -18,7 +18,7 @@ export function ProfileCard() {
   const level = levelFromXp(xp);
   const intoLevel = xp % XP_PER_LEVEL;
   const streak = select.streak(state);
-  const coins = select.gamesScore(state);
+  const coins = select.coinBalance(state);
 
   const casesDone = Object.values(state.cases).filter((c) => c.status.startsWith("complete")).length;
   const chaptersRead = Object.keys(state.chapterReads ?? {}).length;

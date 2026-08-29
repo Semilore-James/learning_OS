@@ -114,6 +114,12 @@ export interface AppState {
 
   toolInstalls: string[];
 
+  /** cosmetic currency (docs/coin-economy.md). balance = earned - spent. */
+  coins: { earned: number; spent: number; lastStreakDay: string | null };
+
+  /** shop item ids the learner owns */
+  unlocks: string[];
+
   /** count only; the full log is loaded by the PM-AI / Decline Log window */
   declineCount: number;
 }
@@ -144,6 +150,8 @@ export const EMPTY_STATE: AppState = {
   games: {},
   review: [],
   toolInstalls: [],
+  coins: { earned: 0, spent: 0, lastStreakDay: null },
+  unlocks: [],
   declineCount: 0,
 };
 

@@ -23,6 +23,19 @@ export const XP = {
 
 export type XpAction = keyof typeof XP;
 
+/** Coin awards (docs/coin-economy.md). Cosmetic currency, spent in the Shop.
+ *  Game-clear coins are computed in the reducer (10 + level*2). */
+export const COINS = {
+  chapter_read: 6,
+  sub_node_completed: 15,
+  topic_node_completed: 40,
+  case_accepted: 100,
+  case_overridden: 50,
+  /** streak day = base + min(consecutive prior days, cap), once per calendar day */
+  streak_day_base: 10,
+  streak_day_cap: 20,
+} as const;
+
 /** heatmap contribution weight (1–4) per activity source (PRD 12.1) */
 export const HEATMAP_WEIGHT = {
   daily_log: 1,

@@ -2,7 +2,7 @@
    Pure reducer. No I/O. The provider runs this optimistically, then persist.ts
    mirrors the same action to the backing store.
    ========================================================================== */
-import { XP, HEATMAP_WEIGHT } from "@/content/xp";
+import { XP, COINS, HEATMAP_WEIGHT } from "@/content/xp";
 import type { Action, AppState, CaseState, ReviewItem } from "./types";
 import { EMPTY_STATE } from "./types";
 import { schedule } from "./srs";
@@ -15,16 +15,54 @@ function bump(state: AppState, xp: number): AppState {
   return { ...state, xpTotal: state.xpTotal + xp };
 }
 
+/** add cosmetic coins (never negative; spending is a separate path) */
+function coin(state: AppState, amount: number): AppState {
+  const add = Math.max(0, Math.round(amount));
+  if (add === 0) return state;
+  return { ...state, coins: { ...state.coins, earned: state.coins.earned + add } };
+}
+
+/** consecutive days with activity ending yesterday, for the streak-day bonus */
+function priorStreak(heatmap: Record<string, number>, day: string): number {
+  let n = 0;
+  let d = new Date(day + "T00:00:00Z").getTime() - 86_400_000;
+  while ((heatmap[new Date(d).toISOString().slice(0, 10)] ?? 0) > 0) {
+    n++;
+    d -= 86_400_000;
+  }
+  return n;
+}
+
 function heat(state: AppState, source: keyof typeof HEATMAP_WEIGHT): AppState {
   const day = todayUTC();
   const w = HEATMAP_WEIGHT[source];
-  return { ...state, heatmap: { ...state.heatmap, [day]: (state.heatmap[day] ?? 0) + w } };
+  const firstToday = (state.heatmap[day] ?? 0) === 0 && state.coins.lastStreakDay !== day;
+  let next: AppState = {
+    ...state,
+    heatmap: { ...state.heatmap, [day]: (state.heatmap[day] ?? 0) + w },
+  };
+  if (firstToday) {
+    const award = COINS.streak_day_base + Math.min(priorStreak(next.heatmap, day), COINS.streak_day_cap);
+    next = {
+      ...next,
+      coins: { ...next.coins, earned: next.coins.earned + award, lastStreakDay: day },
+    };
+  }
+  return next;
 }
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case "hydrate":
-      return { ...EMPTY_STATE, ...action.state, mode: action.mode, ready: true };
+    case "hydrate": {
+      const merged: AppState = { ...EMPTY_STATE, ...action.state, mode: action.mode, ready: true };
+      // pre-coins state: seed the wallet from the old per-game score total
+      if (!action.state.coins) {
+        const legacy = Object.values(merged.games).reduce((t, g) => t + (g.score ?? 0), 0);
+        merged.coins = { earned: legacy, spent: 0, lastStreakDay: null };
+      }
+      if (!action.state.unlocks) merged.unlocks = [];
+      return merged;
+    }
 
     case "setTheme":
       return { ...state, profile: { ...state.profile, theme: action.theme } };
@@ -86,6 +124,7 @@ export function reducer(state: AppState, action: Action): AppState {
         },
       };
       next = bump(next, action.level === "topic" ? XP.topic_node_completed : XP.sub_node_completed);
+      next = coin(next, action.level === "topic" ? COINS.topic_node_completed : COINS.sub_node_completed);
       next = heat(next, "node_complete");
       if (action.alsoCompleteTopic) {
         next = {
@@ -102,6 +141,7 @@ export function reducer(state: AppState, action: Action): AppState {
           },
         };
         next = bump(next, XP.topic_node_completed);
+        next = coin(next, COINS.topic_node_completed);
         next = heat(next, "node_complete");
       }
       return next;
@@ -133,6 +173,7 @@ export function reducer(state: AppState, action: Action): AppState {
         chapterReads: { ...state.chapterReads, [action.slug]: new Date().toISOString() },
       };
       next = bump(next, XP.chapter_read);
+      next = coin(next, COINS.chapter_read);
       next = heat(next, "review"); // chapter read = weight 1, same as review
       return next;
     }
@@ -232,6 +273,11 @@ export function reducer(state: AppState, action: Action): AppState {
           },
         },
       };
+      // one coin award per case, whichever way it completes (not repeatable)
+      const alreadyDone = prev.status === "complete" || prev.status === "complete_override";
+      if (!alreadyDone) {
+        next = coin(next, action.override ? COINS.case_overridden : COINS.case_accepted);
+      }
       if (action.reviewAccepted && !action.override) {
         next = bump(next, XP.pm_ai_review_accepted);
       }
@@ -257,6 +303,7 @@ export function reducer(state: AppState, action: Action): AppState {
           },
         },
       };
+      next = coin(next, points); // same amount as the per-game score, into the wallet
       if (newLevel) {
         next = bump(next, XP.game_level);
         next = heat(next, "game");

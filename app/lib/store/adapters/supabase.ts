@@ -56,6 +56,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         review,
         tools,
         declines,
+        coinEvents,
       ] = await Promise.all([
         mine(sb.from("profiles").select("*").eq("id", userId).maybeSingle()),
         mine(sb.from("node_progress").select("*").eq("user_id", userId)),
@@ -78,6 +79,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         mine(sb.from("review_items").select("*").eq("user_id", userId)),
         mine(sb.from("tool_installs").select("tool_id").eq("user_id", userId)),
         mine(sb.from("pm_ai_declines").select("id").eq("user_id", userId)),
+        mine(sb.from("coin_events").select("amount").eq("user_id", userId)),
       ]);
 
       const heatmap: Record<string, number> = {};
@@ -151,6 +153,22 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
           ]),
         ),
         games,
+        coins: (() => {
+          const rows = coinEvents ?? [];
+          if (rows.length === 0) {
+            // pre-coins account: seed the wallet from the reconstructed game score
+            const legacy = Object.values(games).reduce((t, g) => t + g.score, 0);
+            return { earned: legacy, spent: 0, lastStreakDay: null };
+          }
+          let earned = 0;
+          let spent = 0;
+          for (const e of rows) {
+            if (e.amount >= 0) earned += e.amount;
+            else spent += -e.amount;
+          }
+          return { earned, spent, lastStreakDay: null };
+        })(),
+        unlocks: [],
         review: (review ?? []).map((r) => ({
           id: r.id,
           nodeId: r.node_id,
@@ -166,7 +184,22 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
       };
     },
 
-    async commit(action, next) {
+    async commit(action, next, prev) {
+      // mirror any coin balance change to the append-only ledger, whatever the
+      // action was (docs/coin-economy.md)
+      const earnedDelta = next.coins.earned - prev.coins.earned;
+      const spentDelta = next.coins.spent - prev.coins.spent;
+      if (earnedDelta > 0) {
+        await mine(
+          sb.from("coin_events").insert({ user_id: userId, reason: action.type, amount: earnedDelta }),
+        );
+      }
+      if (spentDelta > 0) {
+        await mine(
+          sb.from("coin_events").insert({ user_id: userId, reason: `spend:${action.type}`, amount: -spentDelta }),
+        );
+      }
+
       switch (action.type) {
         case "setTheme":
         case "setSkin":
@@ -471,6 +504,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
             "case_submissions",
             "game_scores",
             "game_attempts",
+            "coin_events",
             "review_items",
             "tool_installs",
             "pm_ai_declines",

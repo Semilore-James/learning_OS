@@ -52,6 +52,14 @@ export async function migrateGuestToAccount(sb: DB, userId: string): Promise<boo
     ins.push(sb.from("xp_events").insert({ user_id: userId, action: "guest_migration", amount: s.xpTotal }));
   }
 
+  // coin balance -> one synthetic ledger row so the wallet carries over
+  const guestCoins =
+    (s.coins?.earned ?? 0) - (s.coins?.spent ?? 0) ||
+    Object.values(s.games ?? {}).reduce((t, g) => t + (g.score ?? 0), 0);
+  if (guestCoins > 0) {
+    ins.push(sb.from("coin_events").insert({ user_id: userId, reason: "guest_migration", amount: guestCoins }));
+  }
+
   if (s.heatmap && Object.keys(s.heatmap).length) {
     ins.push(
       sb.from("heatmap_activity").insert(

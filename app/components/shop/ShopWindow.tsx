@@ -1,22 +1,38 @@
 "use client";
 
 /* ============================================================================
-   Shop (coming soon). Where XP will buy cosmetic unlocks — extra wallpapers,
-   design skins, avatar frames, board templates. Nothing purchasable yet; this
-   window shows the plan and the learner's current XP balance.
+   Shop (coming soon). Cosmetic unlocks bought with coins. Coins are earned from
+   chapters read, nodes and cases completed, game clears, and streak days (see
+   docs/coin-economy.md). Nothing is purchasable yet; this shows the plan and
+   the learner's balance.
    ========================================================================== */
-import { Lock, Palette, Sparkles, Wallpaper as WallpaperIcon } from "lucide-react";
+import {
+  Frame,
+  Image as IconImage,
+  Lock,
+  MousePointer2,
+  Music,
+  Palette,
+  Power,
+  Shapes,
+  SquareStack,
+} from "lucide-react";
 import { useStore, select } from "@/lib/store";
 
 const SHELVES = [
-  { icon: WallpaperIcon, title: "Wallpapers", note: "Premium procedural scenes and, later, hand-made art." },
-  { icon: Palette, title: "Design skins", note: "New chrome languages beyond neobrutalism / swiss / glass." },
-  { icon: Sparkles, title: "Avatar frames & badges", note: "Show what you've cleared on your share page." },
+  { icon: IconImage, title: "Wallpapers", note: "Procedural scenes and, later, hand-made art." },
+  { icon: Palette, title: "Desktop skins", note: "Chrome languages beyond neobrutalism / swiss / glass." },
+  { icon: SquareStack, title: "Window themes", note: "Titlebar, border and shadow treatments." },
+  { icon: Power, title: "Boot sequences", note: "The animation you see on load." },
+  { icon: MousePointer2, title: "Cursor trails", note: "Particle and ink effects on the pointer." },
+  { icon: Shapes, title: "Icon sets", note: "Alternate app-icon glyph styles." },
+  { icon: Music, title: "Sound packs", note: "Click, complete and level-up audio." },
+  { icon: Frame, title: "Avatar frames & badges", note: "Shown on your profile and share page." },
 ];
 
 export function ShopWindow() {
   const { state } = useStore();
-  const coins = select.gamesScore(state);
+  const coins = select.coinBalance(state);
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-6">
       <div className="flex items-center justify-between">
@@ -33,7 +49,7 @@ export function ShopWindow() {
         <Lock className="size-3.5" /> Coming soon — the shelves are being stocked.
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {SHELVES.map((s) => (
           <div key={s.title} className="chrome-panel flex flex-col gap-2 p-4 opacity-70">
             <s.icon className="size-6 text-primary" />
@@ -45,8 +61,9 @@ export function ShopWindow() {
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Everything that affects learning stays free forever. The shop is cosmetic only. Coins come from
-        Games — XP is your learning progress and cannot be spent.
+        Everything that affects learning stays free forever. The shop is cosmetic only. Coins come
+        from reading chapters, completing nodes and cases, clearing game levels, and keeping a
+        streak. XP is your learning progress and cannot be spent.
       </p>
     </div>
   );

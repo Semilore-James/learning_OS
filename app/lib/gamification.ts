@@ -31,7 +31,7 @@ export function progressSummary(state: AppState): ProgressSummary {
     level: levelFromXp(xp),
     xp,
     intoLevel: xp % XP_PER_LEVEL,
-    coins: select.gamesScore(state),
+    coins: select.coinBalance(state),
     streak: s.current,
     longestStreak: s.longest,
     nodesDone: select.completedNodeIds(state).size,

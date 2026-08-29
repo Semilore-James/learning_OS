@@ -128,6 +128,30 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_events: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_log: {
         Row: {
           body: string

@@ -48,9 +48,14 @@ export function dueReviewCount(state: AppState): number {
   return state.review.filter((r) => isDue(r, t)).length;
 }
 
-/** total game points across all games */
+/** total game points across all games (a games-window stat, not the wallet) */
 export function gamesScore(state: AppState): number {
   return Object.values(state.games).reduce((t, g) => t + (g.score ?? 0), 0);
+}
+
+/** spendable coin balance (docs/coin-economy.md) */
+export function coinBalance(state: AppState): number {
+  return Math.max(0, state.coins.earned - state.coins.spent);
 }
 
 /** accuracy 0-1 for one game, or null if never attempted */
