@@ -279,17 +279,25 @@ type Family =
   | "cherryWindow" | "noDenominator" | "simpsons" | "smoothedVariance"
   | "survivorship" | "shortWindow";
 
-function familiesFor(n: number): Family[] {
-  const base: Family[] = ["honest", "truncated", "dualAxis", "wrongType", "tooManySlices", "cherryWindow"];
-  if (n >= 13) base.push("noDenominator", "simpsons", "smoothedVariance");
-  if (n >= 20) base.push("survivorship", "shortWindow");
-  return base;
+const VISUAL_FAMILIES: Family[] = ["truncated", "dualAxis", "wrongType", "tooManySlices", "cherryWindow"];
+const JUDGMENT_FAMILIES: Family[] = ["noDenominator", "simpsons", "smoothedVariance", "survivorship", "shortWindow"];
+
+/** enforce the mix (Council): ~22% honest control, ~40% visual flaw where the
+ *  chart itself is the tell, ~38% judgment flaw where the claim outruns the
+ *  data. Judgment flaws unlock at level 13, the nastier ones at 20. */
+function pickFamily(r: () => number, n: number): Family {
+  const roll = r();
+  if (roll < 0.22) return "honest";
+  const judgmentUnlocked = n >= 13;
+  if (roll < 0.62 || !judgmentUnlocked) return pick(r, VISUAL_FAMILIES);
+  const pool = n >= 20 ? JUDGMENT_FAMILIES : JUDGMENT_FAMILIES.slice(0, 3);
+  return pick(r, pool);
 }
 
 export function critiqueRound(n: number): CritiqueRound {
   if (n <= CRITIQUE_AUTHORED) return CRITIQUE_ROUNDS[n - 1];
   const r = rng(n * 40503 + 7);
-  const fam = pick(r, familiesFor(n));
+  const fam = pickFamily(r, n);
   const subject = pick(r, SUBJECTS);
   const periods = pick(r, PERIODS);
   const near = n >= 20; // slip in a near-miss distractor at higher levels
@@ -455,10 +463,8 @@ export function critiqueRound(n: number): CritiqueRound {
     };
   }
 
-  // early rounds stay short: drop the follow-up until level 13 unless the flaw
-  // is one where "what would you actually do" is the real lesson
-  const keepFollowup = n >= 13 || fam === "truncated" || fam === "dualAxis";
-  if (!keepFollowup) round = { ...round, followup: undefined };
-
+  // the follow-up ("which fix changes the answer") is always shown now — the
+  // component makes it weightless before level 7 so it becomes a habit first.
+  // "honest" rounds have no fix to make, so they keep no follow-up.
   return round;
 }

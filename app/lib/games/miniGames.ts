@@ -214,7 +214,7 @@ export interface CritiqueRound {
   followup?: CritiqueStep;
 }
 
-const P = {
+export const P = {
   truncated: "Truncated y-axis: the baseline is not zero, so a small change looks huge",
   dualAxis: "Two independent y-axes scaled to overlap, manufacturing a correlation",
   wrongType: "A continuous line over discrete categories implies progression that isn't there",
@@ -227,6 +227,18 @@ const P = {
   shortWindow: "Too few points to claim a trend or a cause",
   honest: "Nothing wrong: zero baseline, full range shown, the claim matches the data",
 } as const;
+
+/** the flaw-families reference, grouped, for the in-game panel */
+export const FLAW_REFERENCE: { group: string; items: string[] }[] = [
+  {
+    group: "The chart itself is the tell",
+    items: [P.truncated, P.dualAxis, P.wrongType, P.tooManySlices, P.cherryWindow],
+  },
+  {
+    group: "The claim outruns the data",
+    items: [P.noDenominator, P.simpsons, P.smoothedVariance, P.survivorship, P.shortWindow],
+  },
+];
 
 export const CRITIQUE_ROUNDS: CritiqueRound[] = [
   {

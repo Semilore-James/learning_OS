@@ -3,14 +3,17 @@
 /* ============================================================================
    Chart Critiquer — read the chart, then judge the claim someone made from it.
    Step 1 (the hard one): does the claim hold, is the chart misleading, or can
-   you not tell from this alone? Step 2: name the specific issue. Step 3 (harder
-   rounds): what you'd actually do about it. A wrong Step 1 ends the round.
+   you not tell from this alone? Step 2: name the specific issue. Step 3: which
+   fix actually changes the answer (weightless before level 7 so it becomes a
+   habit first). A wrong Step 1 ends the round. Runs in 5-round sets.
    ========================================================================== */
 import { useMemo, useState } from "react";
-import { useStore } from "@/lib/store";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { critiqueRound } from "@/lib/games/miniGamesGen";
-import type { Verdict } from "@/lib/games/miniGames";
+import { FLAW_REFERENCE, type CritiqueRound, type Verdict } from "@/lib/games/miniGames";
+import { recordVerdict, calibrationHint } from "@/lib/games/critiquerCalib";
+import { GameSet } from "./GameSet";
 import { FlawedChart } from "./FlawedChart";
 
 const VERDICTS: { key: Verdict; label: string }[] = [
@@ -19,42 +22,42 @@ const VERDICTS: { key: Verdict; label: string }[] = [
   { key: "cant-tell", label: "Can't tell from this chart" },
 ];
 
+export function ChartCritiquer() {
+  return (
+    <GameSet
+      game="chart_critiquer"
+      roundLabel={(n) => critiqueRound(n).title}
+      renderRound={(n, resolve) => <Round key={n} n={n} resolve={resolve} />}
+    />
+  );
+}
+
 type Phase = "verdict" | "problem" | "followup" | "done";
 
-export function ChartCritiquer() {
-  const { state, dispatch } = useStore();
-  const best = state.games.chart_critiquer?.level ?? 0;
-  const [n, setN] = useState(Math.max(1, best + 1));
-  const round = useMemo(() => critiqueRound(n), [n]);
+function Round({ n, resolve }: { n: number; resolve: (passed: boolean) => void }) {
+  const round: CritiqueRound = useMemo(() => critiqueRound(n), [n]);
+  const hint = useMemo(() => calibrationHint(), []);
+  const scoreStep3 = n >= 7;
 
   const [phase, setPhase] = useState<Phase>("verdict");
   const [vPick, setVPick] = useState<Verdict | null>(null);
   const [pPick, setPPick] = useState<number | null>(null);
   const [fPick, setFPick] = useState<number | null>(null);
-  const [recorded, setRecorded] = useState(false);
+  const [ref, setRef] = useState(false);
 
   const vRight = vPick === round.verdict;
   const pRight = pPick === round.problem.answer;
   const fRight = round.followup ? fPick === round.followup.answer : true;
-  const passed = vRight && pRight;
-
-  const finish = () => {
-    if (recorded) return;
-    setRecorded(true);
-    dispatch({ type: "recordGameAttempt", game: "chart_critiquer", level: n, passed });
-    if (passed) dispatch({ type: "recordGameScore", game: "chart_critiquer", level: n, score: n });
-  };
 
   const chooseVerdict = (v: Verdict) => {
     if (phase !== "verdict") return;
     setVPick(v);
-    if (v === round.verdict) {
-      setPhase("problem");
-    } else {
+    recordVerdict(round.verdict, v);
+    if (v === round.verdict) setPhase("problem");
+    else {
+      // a wrong read ends the round
+      resolve(false);
       setPhase("done");
-      // record immediately: a wrong read ends it
-      setRecorded(true);
-      dispatch({ type: "recordGameAttempt", game: "chart_critiquer", level: n, passed: false });
     }
   };
 
@@ -63,33 +66,18 @@ export function ChartCritiquer() {
     setPPick(i);
     if (i === round.problem.answer && round.followup) setPhase("followup");
     else {
+      const passed = i === round.problem.answer;
+      resolve(passed);
       setPhase("done");
-      if (i === round.problem.answer) {
-        // verdict + problem right, no follow-up on this round = pass
-        setRecorded(true);
-        dispatch({ type: "recordGameAttempt", game: "chart_critiquer", level: n, passed: true });
-        dispatch({ type: "recordGameScore", game: "chart_critiquer", level: n, score: n });
-      } else {
-        setRecorded(true);
-        dispatch({ type: "recordGameAttempt", game: "chart_critiquer", level: n, passed: false });
-      }
     }
   };
 
   const chooseFollowup = (i: number) => {
     if (phase !== "followup") return;
     setFPick(i);
+    const fOk = !round.followup || i === round.followup.answer;
+    resolve(vRight && pRight && (!scoreStep3 || fOk));
     setPhase("done");
-    finish();
-  };
-
-  const next = () => {
-    setPhase("verdict");
-    setVPick(null);
-    setPPick(null);
-    setFPick(null);
-    setRecorded(false);
-    setN((x) => x + 1);
   };
 
   const optionRow = (
@@ -120,18 +108,43 @@ export function ChartCritiquer() {
     </div>
   );
 
-  const stepPast = (p: Phase) =>
-    ["verdict", "problem", "followup", "done"].indexOf(phase) > ["verdict", "problem", "followup", "done"].indexOf(p);
+  const order = ["verdict", "problem", "followup", "done"];
+  const past = (p: Phase) => order.indexOf(phase) > order.indexOf(p);
+  const done = phase === "done";
+  const passed = vRight && pRight && (!scoreStep3 || !round.followup || fRight);
 
   return (
-    <div className="flex h-full flex-col gap-3 overflow-auto p-4">
+    <div className="flex flex-col gap-3 p-4">
       <div className="flex items-baseline justify-between">
-        <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Round {n}</span>
-        {round.followup && (
-          <span className="font-mono text-[9px] text-muted-foreground">3 steps</span>
-        )}
+        <h3 className="font-display text-sm font-bold text-foreground">{round.title}</h3>
+        <button
+          type="button"
+          onClick={() => setRef((v) => !v)}
+          className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+        >
+          Flaw families
+          <ChevronDown className={cn("size-3 transition-transform", ref && "rotate-180")} />
+        </button>
       </div>
-      <h3 className="font-display text-sm font-bold text-foreground">{round.title}</h3>
+
+      {ref && (
+        <div className="chrome-flat flex flex-col gap-2 bg-surface-raised p-3 text-[10px] leading-snug">
+          {FLAW_REFERENCE.map((g) => (
+            <div key={g.group}>
+              <span className="font-mono uppercase tracking-wide text-brand-amber">{g.group}</span>
+              <ul className="mt-0.5 flex flex-col gap-0.5 text-muted-foreground">
+                {g.items.map((it) => (
+                  <li key={it}>• {it}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {hint && phase === "verdict" && (
+        <p className="text-[10px] italic text-brand-amber">{hint}</p>
+      )}
 
       <div className="chrome-flat h-44 bg-surface-raised p-2">
         <FlawedChart round={round} />
@@ -175,16 +188,14 @@ export function ChartCritiquer() {
       )}
 
       {/* step 2 */}
-      {(phase === "problem" || stepPast("problem")) && vRight && (
+      {(phase === "problem" || past("problem")) && vRight && (
         <>
           <p className="text-[11px] font-semibold text-foreground">
             {round.verdict === "safe" ? "Confirm it: what makes this one trustworthy?" : "What is going on?"}
           </p>
           {optionRow(round.problem.options, round.problem.answer, pPick, chooseProblem, phase !== "problem")}
           {phase !== "problem" && (
-            <p className={cn("text-[11px]", pRight ? "text-brand-green" : "text-[#e5484d]")}>
-              <span className="text-muted-foreground">{round.problem.explain}</span>
-            </p>
+            <p className="text-[11px] text-muted-foreground">{round.problem.explain}</p>
           )}
         </>
       )}
@@ -192,27 +203,18 @@ export function ChartCritiquer() {
       {/* step 3 */}
       {round.followup && (phase === "followup" || phase === "done") && vRight && pRight && (
         <>
-          <p className="text-[11px] font-semibold text-foreground">What actually helps?</p>
+          <p className="text-[11px] font-semibold text-foreground">
+            What actually helps?{!scoreStep3 && <span className="ml-1 font-normal text-muted-foreground">(practice, not scored yet)</span>}
+          </p>
           {optionRow(round.followup.options, round.followup.answer, fPick, chooseFollowup, phase !== "followup")}
-          {phase === "done" && (
-            <p className="text-[11px] text-muted-foreground">{round.followup.explain}</p>
-          )}
+          {done && <p className="text-[11px] text-muted-foreground">{round.followup.explain}</p>}
         </>
       )}
 
-      {phase === "done" && (
-        <div className="chrome-flat mt-1 bg-surface-raised p-3 text-xs">
-          <p className={cn("font-bold", passed ? "text-brand-green" : "text-[#e5484d]")}>
-            {passed ? (fRight ? "Clean pass." : "Passed. The last step was the ideal move.") : "Not this time."}
-          </p>
-          <button
-            type="button"
-            onClick={next}
-            className="chrome-flat mt-2 bg-surface px-3 py-1.5 text-[11px] font-semibold text-foreground hover:text-primary"
-          >
-            Next round →
-          </button>
-        </div>
+      {done && (
+        <p className={cn("text-[12px] font-bold", passed ? "text-brand-green" : "text-[#e5484d]")}>
+          {passed ? "Passed." : "Not this time."}
+        </p>
       )}
     </div>
   );
