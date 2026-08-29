@@ -73,7 +73,11 @@ export function resizeEl(el: El, b0: Box, b1: Box): El {
     return { ...el, x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
   }
   if (el.type === "text") {
-    return { ...el, x: b1.x, y: b1.y + b1.h - 4, fontSize: Math.max(8, Math.round((el.fontSize ?? 15) * sy)) };
+    // scale the font uniformly by the average of the two axes, keep the box's
+    // top-left pinned (baseline of line 1 sits one font-size below the top)
+    const scale = Math.max(0.25, (sx + sy) / 2);
+    const fontSize = Math.max(8, Math.round((el.fontSize ?? 15) * scale));
+    return { ...el, x: b1.x, y: b1.y + fontSize, fontSize };
   }
   // rect / ellipse / sticky
   return { ...el, x: b1.x, y: b1.y, w: b1.w, h: b1.h };

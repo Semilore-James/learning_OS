@@ -11,10 +11,12 @@
    - text / sticky are typed into a docked bar at the bottom of the canvas, not
      an in-place overlay (window.prompt is a no-op in embedded browsers, and a
      tiny floating box is easy to lose)
-   Autosaves to localStorage; 2 minutes of use -> logCanvasSession (+15 XP).
+   The window opens on a gallery of saved boards (CanvasGallery); each board
+   autosaves to localStorage. 2 minutes of use -> logCanvasSession (+15 XP).
    ========================================================================== */
 import { useEffect, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ArrowUpRight,
   Check,
   Circle as CircleIcon,
@@ -31,12 +33,13 @@ import {
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { saveBoard, type Board } from "@/lib/canvas/boards";
 import { ShapeEl, hitTest, bbox, resizeEl, type El, type Box } from "./shapes";
+import { CanvasGallery } from "./CanvasGallery";
 
 type Tool = "select" | "pan" | "pen" | "rect" | "ellipse" | "arrow" | "text" | "sticky" | "eraser";
 type Handle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
-const KEY = "da-os-canvas";
 const DRAG_START_PX = 4; // pointer travel before a move/resize engages
 const COLORS = ["var(--primary)", "var(--accent-2)", "var(--accent-1)", "var(--accent-3)", "var(--text)"];
 const TOOLS: { id: Tool; icon: typeof Pencil; label: string }[] = [
@@ -60,15 +63,6 @@ const HANDLES: { id: Handle; fx: number; fy: number; cursor: string }[] = [
   { id: "sw", fx: 0, fy: 1, cursor: "nesw-resize" },
   { id: "w", fx: 0, fy: 0.5, cursor: "ew-resize" },
 ];
-
-function loadEls(): El[] {
-  try {
-    const raw = typeof window !== "undefined" ? localStorage.getItem(KEY) : null;
-    return raw ? (JSON.parse(raw) as El[]) : [];
-  } catch {
-    return [];
-  }
-}
 
 function nextBox(b0: Box, handle: Handle, dx: number, dy: number): Box {
   let { x, y, w, h } = b0;
@@ -103,14 +97,14 @@ interface Drag {
   engaged: boolean;
 }
 
-export function CanvasWindow() {
+function CanvasBoard({ board, onBack }: { board: Board; onBack: () => void }) {
   const { dispatch } = useStore();
   const svgRef = useRef<SVGSVGElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
 
   const [tool, setTool] = useState<Tool>("pen");
   const [color, setColor] = useState(COLORS[0]);
-  const [els, setEls] = useState<El[]>(loadEls);
+  const [els, setEls] = useState<El[]>(board.els);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
   const [draft, setDraft] = useState<El | null>(null);
   const [editing, setEditing] = useState<{ id: string; value: string; kind: "text" | "sticky" } | null>(null);
@@ -146,17 +140,14 @@ export function CanvasWindow() {
     }
   };
 
-  // autosave
+  // autosave this board
   useEffect(() => {
-    const id = setInterval(() => {
-      try {
-        localStorage.setItem(KEY, JSON.stringify(els));
-      } catch {
-        /* quota / private mode */
-      }
-    }, 4000);
-    return () => clearInterval(id);
-  }, [els]);
+    const id = setInterval(() => saveBoard(board.id, els), 3000);
+    return () => {
+      clearInterval(id);
+      saveBoard(board.id, els);
+    };
+  }, [els, board.id]);
 
   // 2 minutes of use -> XP (once per window open)
   useEffect(() => {
@@ -392,7 +383,22 @@ export function CanvasWindow() {
   const hs = 9 / view.k; // handle half-size in canvas units, ~18px on screen
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-2 border-b border-border bg-surface px-2 py-1.5">
+        <button
+          type="button"
+          onClick={() => {
+            commitText();
+            saveBoard(board.id, els);
+            onBack();
+          }}
+          className="chrome-flat flex items-center gap-1 bg-surface-raised px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-3" /> Boards
+        </button>
+        <span className="truncate text-[12px] font-semibold text-foreground">{board.name}</span>
+      </div>
+      <div className="flex min-h-0 flex-1">
       <div className="flex w-12 flex-col items-center gap-1 border-r border-border bg-surface py-2">
         {TOOLS.map((t) => (
           <button
@@ -553,6 +559,16 @@ export function CanvasWindow() {
           </div>
         )}
       </div>
+      </div>
     </div>
   );
+}
+
+/** the Canvas window: a gallery of saved boards, or one open board */
+export function CanvasWindow() {
+  const [openBoard, setOpenBoard] = useState<Board | null>(null);
+  if (openBoard) {
+    return <CanvasBoard key={openBoard.id} board={openBoard} onBack={() => setOpenBoard(null)} />;
+  }
+  return <CanvasGallery onOpen={setOpenBoard} />;
 }

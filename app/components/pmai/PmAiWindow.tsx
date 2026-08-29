@@ -18,6 +18,7 @@ import { subNodesFor } from "@/lib/curriculumLayout";
 import { CASES } from "@/content/cases/registry";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
+import { sleep, beforeTyping, TYPING_MIN_MS } from "@/lib/pace";
 import { Button } from "@/components/ui/button";
 
 /** rough bucket for analytics — not shown to the learner */
@@ -77,7 +78,8 @@ export function PmAiWindow() {
   const { state } = useStore();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [sending, setSending] = useState(false); // guards the composer
+  const [typing, setTyping] = useState(false); // shows the PM's typing dots
   const [showDeclines, setShowDeclines] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -101,35 +103,38 @@ export function PmAiWindow() {
 
   useEffect(() => {
     requestAnimationFrame(() => scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight));
-  }, [messages, busy]);
+  }, [messages, typing]);
 
   const send = async (text: string) => {
     const t = text.trim();
-    if (!t || busy) return;
+    if (!t || sending) return;
     track("pm_ai_prompt", { prompt_category: classifyPrompt(t) });
     const next: Msg[] = [...messages, { role: "user", content: t }];
     setMessages(next);
     setInput("");
-    setBusy(true);
-    try {
-      const res = await fetch("/api/pm-ai/chat", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })), context: ctx }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setMessages([...next, { role: "assistant", content: data.error ?? "Something went wrong." }]);
-      } else if (data.kind === "decline") {
-        setMessages([...next, { role: "assistant", content: data.reason, declined: true }]);
-      } else {
-        setMessages([...next, { role: "assistant", content: data.content }]);
-      }
-    } catch {
-      setMessages([...next, { role: "assistant", content: "Couldn't reach the channel." }]);
-    } finally {
-      setBusy(false);
-    }
+    setSending(true);
+    setTyping(false);
+
+    const replyP: Promise<Msg> = fetch("/api/pm-ai/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })), context: ctx }),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}) as Record<string, string>);
+        if (!res.ok) return { role: "assistant", content: data.error ?? "Something went wrong." } as Msg;
+        if (data.kind === "decline") return { role: "assistant", content: data.reason, declined: true } as Msg;
+        return { role: "assistant", content: data.content ?? "…" } as Msg;
+      })
+      .catch(() => ({ role: "assistant", content: "Couldn't reach the channel." }) as Msg);
+
+    // a beat before the PM starts typing, then hold the dots for a moment
+    await sleep(beforeTyping());
+    setTyping(true);
+    const [reply] = await Promise.all([replyP, sleep(TYPING_MIN_MS)]);
+    setMessages((m) => [...m, reply]);
+    setTyping(false);
+    setSending(false);
   };
 
   return (
@@ -188,7 +193,7 @@ export function PmAiWindow() {
             {m.content}
           </Row>
         ))}
-        {busy && (
+        {typing && (
           <Row who="PM" tone="text-muted-foreground">
             <Dots />
           </Row>
@@ -225,7 +230,7 @@ export function PmAiWindow() {
           className="max-h-28 flex-1 resize-none border border-border bg-surface px-2.5 py-2 text-[13px] text-foreground outline-none"
           style={{ borderRadius: "var(--radius-control)" }}
         />
-        <Button size="icon-sm" onClick={() => send(input)} disabled={busy || !input.trim()} aria-label="Send">
+        <Button size="icon-sm" onClick={() => send(input)} disabled={sending || !input.trim()} aria-label="Send">
           <Send className="size-3.5" />
         </Button>
       </div>
