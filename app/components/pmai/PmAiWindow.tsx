@@ -18,7 +18,8 @@ import { subNodesFor } from "@/lib/curriculumLayout";
 import { CASES } from "@/content/cases/registry";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
-import { sleep, beforeTyping, TYPING_MIN_MS } from "@/lib/pace";
+import { sleep, beforeTyping, TYPING_MIN_MS, nowMs } from "@/lib/pace";
+import { pmClientKey } from "@/lib/pmai/clientKey";
 import { Button } from "@/components/ui/button";
 
 /** rough bucket for analytics — not shown to the learner */
@@ -81,7 +82,18 @@ export function PmAiWindow() {
   const [sending, setSending] = useState(false); // guards the composer
   const [typing, setTyping] = useState(false); // shows the PM's typing dots
   const [showDeclines, setShowDeclines] = useState(false);
+  const [attention, setAttention] = useState<number | null>(null); // calls left this hour
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [now, setNow] = useState(nowMs);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const cooling = cooldownUntil != null && now < cooldownUntil;
+
+  useEffect(() => {
+    if (!cooling) return;
+    const id = setInterval(() => setNow(nowMs()), 1000);
+    return () => clearInterval(id);
+  }, [cooling]);
 
   const ctx = useMemo(() => {
     const active = select.activeNodeId(state);
@@ -107,7 +119,7 @@ export function PmAiWindow() {
 
   const send = async (text: string) => {
     const t = text.trim();
-    if (!t || sending) return;
+    if (!t || sending || cooling) return;
     track("pm_ai_prompt", { prompt_category: classifyPrompt(t) });
     const next: Msg[] = [...messages, { role: "user", content: t }];
     setMessages(next);
@@ -115,24 +127,43 @@ export function PmAiWindow() {
     setSending(true);
     setTyping(false);
 
-    const replyP: Promise<Msg> = fetch("/api/pm-ai/chat", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })), context: ctx }),
-    })
+    const replyP: Promise<{ msg: Msg; remainingHour?: number | null; resetInSec?: number }> = fetch(
+      "/api/pm-ai/chat",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          messages: next.map(({ role, content }) => ({ role, content })),
+          context: ctx,
+          clientKey: pmClientKey(),
+        }),
+      },
+    )
       .then(async (res) => {
-        const data = await res.json().catch(() => ({}) as Record<string, string>);
-        if (!res.ok) return { role: "assistant", content: data.error ?? "Something went wrong." } as Msg;
-        if (data.kind === "decline") return { role: "assistant", content: data.reason, declined: true } as Msg;
-        return { role: "assistant", content: data.content ?? "…" } as Msg;
+        const data = await res.json().catch(() => ({}) as Record<string, unknown>);
+        if (res.status === 429) {
+          return {
+            msg: { role: "assistant", content: String(data.error ?? "That is my time for this hour."), declined: true } as Msg,
+            remainingHour: 0,
+            resetInSec: typeof data.resetInSec === "number" ? data.resetInSec : 3600,
+          };
+        }
+        if (!res.ok)
+          return { msg: { role: "assistant", content: String(data.error ?? "Something went wrong.") } as Msg };
+        const remainingHour = typeof data.remainingHour === "number" ? data.remainingHour : null;
+        if (data.kind === "decline")
+          return { msg: { role: "assistant", content: String(data.reason), declined: true } as Msg, remainingHour };
+        return { msg: { role: "assistant", content: String(data.content ?? "…") } as Msg, remainingHour };
       })
-      .catch(() => ({ role: "assistant", content: "Couldn't reach the channel." }) as Msg);
+      .catch(() => ({ msg: { role: "assistant", content: "Couldn't reach the channel." } as Msg }));
 
     // a beat before the PM starts typing, then hold the dots for a moment
     await sleep(beforeTyping());
     setTyping(true);
-    const [reply] = await Promise.all([replyP, sleep(TYPING_MIN_MS)]);
-    setMessages((m) => [...m, reply]);
+    const [out] = await Promise.all([replyP, sleep(TYPING_MIN_MS)]);
+    setMessages((m) => [...m, out.msg]);
+    if (out.remainingHour != null) setAttention(out.remainingHour);
+    if (out.resetInSec != null) setCooldownUntil(nowMs() + out.resetInSec * 1000);
     setTyping(false);
     setSending(false);
   };
@@ -226,14 +257,56 @@ export function PmAiWindow() {
               send(input);
             }
           }}
-          placeholder="Message #comms"
-          className="max-h-28 flex-1 resize-none border border-border bg-surface px-2.5 py-2 text-[13px] text-foreground outline-none"
+          disabled={cooling}
+          placeholder={cooling ? "The PM is out for a bit." : "Message #comms"}
+          className="max-h-28 flex-1 resize-none border border-border bg-surface px-2.5 py-2 text-[13px] text-foreground outline-none disabled:opacity-60"
           style={{ borderRadius: "var(--radius-control)" }}
         />
-        <Button size="icon-sm" onClick={() => send(input)} disabled={sending || !input.trim()} aria-label="Send">
+        <Button
+          size="icon-sm"
+          onClick={() => send(input)}
+          disabled={sending || cooling || !input.trim()}
+          aria-label="Send"
+        >
           <Send className="size-3.5" />
         </Button>
       </div>
+
+      <div className="flex justify-end px-3 pb-1.5">
+        <AttentionBar cooling={cooling} msLeft={cooldownUntil ? cooldownUntil - now : 0} left={attention} />
+      </div>
     </div>
+  );
+}
+
+/** the "PM's attention" meter, bottom-right of the composer. Frames the rate
+ *  limit as the PM's time, not a quota — scarce on purpose. */
+function AttentionBar({
+  cooling,
+  msLeft,
+  left,
+}: {
+  cooling: boolean;
+  msLeft: number;
+  left: number | null;
+}) {
+  if (cooling) {
+    const s = Math.max(0, Math.ceil(msLeft / 1000));
+    const mm = Math.floor(s / 60);
+    const ss = String(s % 60).padStart(2, "0");
+    return (
+      <span className="font-mono text-[9px] text-brand-amber">PM free again in {mm}:{ss}</span>
+    );
+  }
+  if (left == null) return null;
+  return (
+    <span
+      className={cn(
+        "font-mono text-[9px]",
+        left <= 2 ? "text-brand-amber" : "text-muted-foreground",
+      )}
+    >
+      PM&apos;s attention: {left} left this hour
+    </span>
   );
 }

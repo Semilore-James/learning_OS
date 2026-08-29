@@ -6,11 +6,14 @@
    submission state machine: open -> in progress -> submitted -> complete, with
    an accept / revise / override branch after PM-AI review.
    ========================================================================== */
-import { useEffect, useMemo, useState } from "react";
-import { Download } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Download, FileSpreadsheet, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CASES, CASES_BY_ID, DIFFICULTY_ACCENT, type Difficulty } from "@/content/cases/registry";
+import { digestCsvFile } from "@/lib/casefiles/csvDigest";
+import { pmClientKey } from "@/lib/pmai/clientKey";
+import type { CsvDigest } from "@/lib/ai/types";
 import { useStore, select } from "@/lib/store";
 import { useWindowActions } from "@/lib/windowContext";
 import { TOPICS } from "@/content/curriculum";
@@ -57,6 +60,26 @@ export function CaseFilesWindow() {
   const [draft, setDraft] = useState("");
   const [review, setReview] = useState<ReviewState>({ phase: "idle" });
   const [confirmOverride, setConfirmOverride] = useState(false);
+  const [digest, setDigest] = useState<CsvDigest | null>(null);
+  const [digestNote, setDigestNote] = useState<string | null>(null);
+  const [digesting, setDigesting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const clearDigest = () => {
+    setDigest(null);
+    setDigestNote(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const attachCsv = async (file: File | undefined) => {
+    if (!file) return;
+    setDigesting(true);
+    setDigestNote(null);
+    const { digest: d, summary } = await digestCsvFile(file);
+    setDigest(d);
+    setDigestNote(summary);
+    setDigesting(false);
+  };
 
   const def = CASES_BY_ID[selectedId];
   const sub = state.cases[selectedId];
@@ -80,6 +103,7 @@ export function CaseFilesWindow() {
     dispatch({ type: "startCase", caseId: selectedId });
     setDraft("");
     setReview({ phase: "idle" });
+    clearDigest();
   };
 
   const submit = async () => {
@@ -95,7 +119,9 @@ export function CaseFilesWindow() {
           caseTitle: def.title,
           caseBrief: brief?.md?.slice(0, 2500) ?? "",
           submission: draft,
+          digest,
           context: ctx,
+          clientKey: pmClientKey(),
         }),
       });
       const data = await res.json();
@@ -280,6 +306,34 @@ export function CaseFilesWindow() {
                 className="min-h-40 w-full resize-y border border-border bg-background p-3 font-body text-sm leading-relaxed"
                 style={{ borderRadius: "var(--radius-control)" }}
               />
+
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                className="hidden"
+                onChange={(e) => attachCsv(e.target.files?.[0])}
+              />
+              {digestNote ? (
+                <div className="chrome-flat flex items-center gap-2 bg-surface-raised px-3 py-2 text-[11px]">
+                  <FileSpreadsheet className="size-3.5 shrink-0 text-brand-green" />
+                  <span className="flex-1 text-muted-foreground">{digestNote}</span>
+                  <button type="button" onClick={clearDigest} className="text-muted-foreground hover:text-foreground">
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={digesting}
+                  className="chrome-flat flex w-fit items-center gap-1.5 bg-surface-raised px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-60"
+                >
+                  <FileSpreadsheet className="size-3.5" />
+                  {digesting ? "Reading your file…" : "Attach your cleaned CSV (read in your browser, not uploaded)"}
+                </button>
+              )}
+
               <div className="flex items-center gap-2">
                 <ParticleButton onClick={submit}>Send to your PM for review</ParticleButton>
                 {sub?.startedAt && (

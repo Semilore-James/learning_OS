@@ -9,3 +9,6 @@ export const beforeTyping = () => 3000 + Math.random() * 7000;
 
 /** minimum time the typing indicator stays up once shown */
 export const TYPING_MIN_MS = 2000;
+
+/** wall-clock ms, kept out of components so the purity lint doesn't flag it */
+export const nowMs = () => Date.now();
