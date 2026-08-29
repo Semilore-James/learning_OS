@@ -1,0 +1,120 @@
+Related Roadmaps                                                                       Find the detailed version of this roadmap
+                                                                                       along with other similar roadmaps
+    UX Design Roadmap
+    Data Analyst                                                                                           roadmap.sh
+    Design System
+                                                                                                   Product Development Lifecycle
+ What is Product Management?         Product Manager                                                            Development
+Product vs Project Management                                                                                   Introduction
+                                                Introduction                                                        Growth
+    Roles and Responsibilities                                                                                     Maturity
+                Key Skills                                                                                         Decline
+
+        Mind Mapping                 Idea Generation
+         Brainwriting
+          SCAMPER
+
+Brainstorming Techniques
+
+Iterative Process                                  Product Identification
+
+Discovery  Selection                                Blue Ocean Strategy                Market and User Research
+                                     TRIZ (Theory of Inventive Problem Solving)
+Validation                                                                                        Market Analysis
+                                                      Problem Framing
+Execution                                                   Identifying Market Needs                Product Strategy
+                                                               Competitive Analysis
+         User Personas                                      Emerging Market Trends                        Vision & Mission
+        User Interviews
+Surveys and Questionnaires                                         User Research                           Defining Goals
+   Ethnographic Research                                                                                      Goal Types
+Defining & Communicating                                              Positioning                                Target
+USP (Unique Selling Point)                                                                                     Baseline
+    Market Segmentation                                                Statement                                 Trend
+         Case Studies                                                 Proposition                             Timeframe
+                                                                      Capabilities
+          Feature Creep                                          Solved Constraints               Creating a Roadmap
+         Finding Balance                                         Future Constraints                Prioritising Features
+        Value vs Features                                       Reference Materials            Continuous Roadmapping
+                                                                        Narrative             Outcome-Based Roadmaps
+        Strategic Thinking                                       Value Proposition          Communicating the Roadmap
+                                                                                                    Product Roadmap
+      Competitive Strategy                                 Defining Value Proposition
+      Five Forces Analysis                                  Value Proposition Canvas
+   Competetive Advantage
+       Strategic Partners                         Product Planning
+
+         Identify Partners                          Product Requirements
+    Managing Partnerships
+                                                      Prioritization Techniques
+                 Writing PRDs                            Grooming Sessions
+                  User Stories                           User Story Mapping
+                   Job Stories
+
+     Product Design
+
+           UX / UI Design                Backlog Management                                     Release Strategies
+           Service Design               Principles of UX Design                                   Feature Toggles
+         Interaction Design          Wireframing and Prototyping                                  Phased Rollouts
+                                                                                                  Dark Launches
+             User Testing                    Design Thinking
+                                             Usability Testing                                Go-to-Market Strategy
+Development and Launch                                                                           Launch Planning
+                                                A/B Testing
+          DAU (Daily Active Users)       Remote User Testing                                   Marketing Strategies
+        MAU (Monthly Active Users)                                                                Growth Hacking
+                                               Scrum Basics
+               Conversion Rate                Kanban Basics                            Working with Engineering Teams
+                Retention Rate             Agile Methodology                                      Sprint Planning
+                                                                                                   Daily Standups
+                   Churn Rate                     Product Metrics                                 Retrospectives
+             LTV (Lifetime Value)
+    CAC (Customer Acquisition Cost)                  Key Product Metrics                Minimum Viable Product (MVP)
+
+               North Star Metric              Data-Driven Decision Making                                  A/B Testing
+                                                                                                        Cohort Analysis
+                  Interpersonal                        Feedback Loops                                 Predictive Analytics
+         Communication Techniques
+                                     Stakeholder Management                                     Business
+            Difficult Conversations                                                       Alignment & Buy-In
+                 Active Listening           Communication Skills
+                                                                                            Showing Impact
+               Conflict Resolution
+
+Product Board                        Product Management Tools                                      Managing Stakeholders
+       Aha
+                                              Roadmapping Tools                                    Identifying Stakeholders
+     Notion                               Project Management Tools                                   Stakeholder Mapping
+       Jira
+                                                  Analytics Tools                                 Stakeholder Engagement
+     Linear                                  Communication Tools                                    Remote Stakeholders
+     Trello
+                                                                                       Amplitude
+     Slack                                                                                Heap
+    Teams                                                                                Looker
+    Discord
+                                                                                                    Risk Management
+
+                                     Risk Identification Techniques                       Identifying Risks
+                                                Risk Register
+
+           Mitigation Strategies
+           Contingency Planning
+
+           Risk Mitigation                                        Risk Assessment         Growth Strategies
+                                                          Qualitative Risk Assessment     Internationalization
+Monitoring and Controlling Risks                         Quantitative Risk Assessment      Platform Thinking
+       Risk Monitoring Tools
+              Risk Audits                               Advanced Topics                    Scaling Products
+
+Predictive Analytics                 Advanced Analysis              Portfolio Management
+ML in Product Mgmt.
+AI in Product Mgmt.
+
+                                                        Leadership and Influence          Building and Leading Teams
+                                                                                          Influencing without Authority
+
+                                                                                              Emotional Intelligence
+
+                                                        Keep Learning
+

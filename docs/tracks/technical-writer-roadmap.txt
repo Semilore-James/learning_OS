@@ -1,0 +1,53 @@
+Shout-out to Hackmamba who                            Technical Writer            Find the detailed version of this roadmap
+helped make this roadmap                                                          along with other similar roadmaps
+
+            Visit their Website                                                                       roadmap.sh
+
+         Technology Expertise                             Introduction                      Who is a Technical Writer?
+         Language Proficiency                                                               What is Technical Writing?
+Written Communication Proficiency                       Research Tools            Role of Technical Writers inOrganizations
+                                                      Blogging Platforms                    Forms of Technical Writing
+             Required Skills                                                              Growth as a Technical Writer
+                                                              Tooling
+          Story Telling                                                             Publishing Tools      SEO Tools
+         Subtle Selling                                                           Plagiarism Checker     Editing Tools
+      Content Structure                                                           Git / Version Control
+         Call to Actions                                                                                  Markdown
+          References
+     Crafting Great Titles                            Best Practices                                 Content Research
+Content Objectives & Intent
+         User Persona                                        Product Content                               Topic Score
+     Writing Style Guides                               General Product Prose                           Keyword Volume
+                                                                                                   Communities & Forums
+       ICP & Buyer Persona                                    How-to Guides                              Search Trends
+Buyer Journey & Content Funnel                                                                  Support Request Evaluation
+                                                      Types of Technical Content
+    Technical Content Marketing
+                                 Short-tail Keywords     Help Content              Developer Docs         API Reference
+                                 Long-Tail Keywords    Troubleshooting                 User Goals    Docs Generation Tools
+                                                      Developer Support
+                                                       Platform Support           Developer Journey       API Definitions
+                                                                                    Docs Structure
+
+Backlinking               SEO Keywords                                                          Comparative Posts      Tutorials
+
+             Content SEO                Top-funnel Content                  Mid-funnel Content       Bottom-funnel Content
+
+  Link Shorteners / Tracking                 Pillar Content                 Generic Gated Content
+Platform Tracking and Metrics           Awareness Blog Posts                White-papers eBook
+
+      Conversion Tracking                 Research Reports                                    Release Notes / Product Announcements
+  Content Aging & Timelines
+                                                                                                Customer Case-Studies
+         Content Analysis
+                                                      Content Optimization          Technical Website Copy
+                                                                                  Frequently Asked Questions
+
+                                                                                  Canonical Link         OpenGraph Data
+
+                                                      Content Distribution        Content Distribution Channels
+
+                                                                                  Content Distribution Amplification Strategies
+
+                                                      Keep Learning
+

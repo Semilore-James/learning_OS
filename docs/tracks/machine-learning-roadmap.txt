@@ -1,0 +1,106 @@
+             Pre-requisites                Machine Learning                                Find the interactive version of this
+          Python Roadmap                                                                    roadmap and more roadmaps at
+                                                        Introduction
+Related Roadmaps                                                                                          roadmap.sh
+    AI Engineer Roadmap                    Mathematical Foundations
+    MLOps Roadmap                                                                                What is an ML Engineer?
+    AI and Data Scientist Roadmap                 Linear Algebra                               ML Engineer vs AI Engineer
+
+Derivatives, Partial Derivatives              Basics of Probability                              Skills and Responsibilities
+    Chain rule of derivation                     Bayes Theorem
+                                                                                                Matrix & Matrix Operations
+ Gradient, Jacobian, Hessian               Random Variances, PDFs                                Scalars, Vectors, Tensors
+                                              Types of Distribution                           Singular Value Decomposition
+              Calculus                                                                       Determinants, inverse of Matrix
+                                                     Probability                               Eigenvalues, Diagonalization
+Discrete Mathematics
+                                                                                                                Python
+          Statistics
+                                                                                            Programming Fundamentals
+   Basic concepts                          Object Oriented Programming
+Descriptive Statistics                                                                                      Basic Syntax
+                                           Numpy                       Matplotlib
+  Graphs & Charts                          Pandas                      Seaborn                     Variables and Data Types
+Inferential Statistics                                                                                    Data Structures
+                                                                                                                 Loops
+Databases (SQL, No-SQL)                                                                                     Conditionals
+                                                                                                             Exceptions
+                                                  Essential libraries
+                                                                                                  Functions, Builtin Functions
+Internet              APIs
+                                                                                                Preprocessing Techniques
+Mobile Apps           IoT                                                                               Data Cleaning
+
+Data Sources                                    Data Collection                                     Feature Engineering
+                                                 Data Cleaning                              Feature Scaling & Normalization
+Data Formats
+                                              Machine Learning                                   Dimensionality Reduction
+CSV                   Excel                                                                           Feature Selection
+                                           What is Machine Learning?
+JSON         Parquet                       Types of Machine Learning                                          Data Loading
+                                                                                                            Train - Test Data
+Other Data Formats                                                                                         Data Preparation
+                                                                                                            Model Selection
+   Supervised Learning                                   Scikit-learn
+  Unsupervised Learning                                                                                           Tuning
+Semi-supervised Learning                                                                                        Prediction
+Self-supervised Learning
+ Reinforcement Learning                                                                           Unsupervised Learning
+
+ What is Supervised Learning?                     Supervised Learning
+
+            Classification                         Regression
+
+  K-Nearest Neighbors (KNN)                       Linear Regression
+       Logistic Regression
+                                                  Polynomial Regression
+    Support Vector Machines
+Decision Trees, Random Forest                     Lasso       Ridge                        What is Unsupervised Learning?
+
+ Gradient Boosting Machines                ElasticNet Regularization
+
+Reinforcement Learning                       Dimensionality Reduction                                 Clustering
+                                           Principal Component Analysis
+What is Reinforcement Learning?                                                                        Exclusive
+                                                     Autoencoders                                    Overlapping
+          Deep-Q Networks                                                                            Hierarchical
+            Policy Gradient                     Model Evaluation                                     Probabilistic
+
+         Actor-Critic Methods                What is Model Evaluation?                     Accuracy  Precision
+               Q-Learning                         Why is it important?
+                                                  Metrics to Evaluate                      F1-Score  Recall
+       Deep Learning
+                                                Validation Techniques                      ROC-AUC   Log Loss
+
+                                                                                           Confusion Matrix
+
+    Neural Network (NN) Basics             Deep Learning Libraries                            K-Fold Cross Validation
+Perceptron, Multi-layer Perceptrons                                                                      LOOCV
+
+         Forward propagation                                                               Deep Learning Architectures
+           Back Propagation
+          Activation Functions             TensorFlow          Keras
+             Loss Functions                Scikit-learn       PyTorch
+
+Attention Mechanisms                       Convolution        Pooling                      Convolutional Neural Network
+                                             Padding          Strides
+      Autoencoders                                                                              Applications of CNNs
+                                           Recurrent Neural Networks                        Image & Video Recognition
+
+                                           RNN           GRU           LSMT                      Image Classification
+                                                                                                 Image Segmentation
+                                                        Self-Attention                       Recommendation Systems
+                                                        Transformers
+                                                   Multi-head Attention                       Advanced Concepts in ML
+
+                                           Generative Adversarial Networks
+
+                                                  Explainable AI                           Natural Language Processing
+
+                                     Also visit the following related roadmaps                              Tokenization
+                                                                                                          Lemmatization
+                      AI & Data Scientist  MLOps         AI Engineer            AI Agents                   Embeddings
+                                                                                                         Attention Models
+
+                                                                                                              Stemming
+

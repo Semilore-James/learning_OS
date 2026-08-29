@@ -1,0 +1,96 @@
+Related Roadmaps                                       Data Analyst                        Find the detailed version of this roadmap
+     AI and Data Scientist Roadmap                                                         along with other similar roadmaps
+     SQL Roadmap                                            Introduction
+     Python Roadmap                                                                                            roadmap.sh
+     Prompt Engineering Roadmap
+                                                                                                                  What is Data Analytics
+Building a Strong Foundation                                                                                     Types of Data Analytics
+
+Analysis / Reporting with Excel                        Key Concepts of Data                              Descriptive Analytics
+                                                                                                         Diagnostic Analytics
+IF                DATEDIF                         Collection              Cleanup                         Predictive Analytics
+                                                                                                         Prescriptive Analytics
+VLOOKUP / HLOOKUP                               Exploration          Visualisation
+
+REPLACE / SUBSTITUTE                                   Statistical Analysis
+
+UPPER / LOWER / PROPER                                 Machine Learning
+
+CONCAT               TRIM                                                                  Python        R
+
+AVERAGE             COUNT                         Charting                           Learn a Programming Lang.                Pandas
+                                                                                  1  Data Manipulation Libraries               Dplyr
+SUM          MIN / MAX                                                               Data Visualisation Libraries
+                                                Pivot Tables                                                                 Matplotlib
+                                                                                  2
+
+Learn Common Functions                            Learn SQL                  3
+
+                                                                                                                             Ggplot2
+
+                                                                                     Gain Programming Skills
+
+      Dispersion                      Databases                           Data Collection             Mastering Data Handling
+Range Variance                        CSV Files                            Data Cleanup
+Standard Deviation                                                                                      Handling Missing Data
+                                          APIs                                                           Removing Duplicates
+                                    Web Scraping
+
+Central Tendency            Distribution Space                                                                Finding Outliers
+
+Mean        Median                  Skewness                                                              Data Transformation
+                                     Kurtosis                                                         Using Libraries for Cleanup
+Mode Average                                                         Data Analysis Techniques
+
+                                                                                                         Pandas            Dplyr
+
+  Generating Statistics                        Descriptive Analysis                                      Data Visualisation
+Visualizing Distributions
+
+                                                                                               Tools               Libraries
+
+     Hypothesis Testing                   Learn to analyze relationships                       Tableau        Matplotlib ggplot2
+    Correlation Analysis                 and make data driven decisions
+                                                                                               Power BI            Seaborn
+          Regression                              Statistical Analysis
+Learn Different Techniques                                                                                    Charting
+                                               Advanced Topics
+   Machine Learning Types                                                                        Bar Charts          Histograms
+   Reinforcement Learning                         Machine Learning                               Line Chart        Stacked Charts
+   Unsupervised Learning            Model Evaluation Techniques                                 Scatter Plot
+                                                                                               Funnel Charts           Heatmap
+     Supervised Learning                                                                                              Pie Charts
+
+Popular ML Algorithms                                                                                    Big Data Technologies
+    Decision Trees
+
+Naive Byes   KNN                    CNNs               RNN                                               Big Data Concepts
+                                                                                                       Data Storage Solutions
+K-Means Clustering                  Neural Networks                                                Data Processing Frameworks
+
+Logistic Regression                 Learn the Basics
+
+                                                                                                         Hadoop              Spark
+
+Frameworks                            Deep Learning (Optional)                                        Data Processing Techniques
+ Tensorflow
+                                       Practice Training Models                                          Parallel Processing
+   Pytorch                                 Image Recognition
+                                                                                                         MPI       MapReduce
+                                    Natural Language Processing
+
+Build a portfolio of projects. Some example projects:                     Keep learning with the following relevant track
+1) Predicting sales trends 2) Customer Segmentation.                                AI and Data Scientist Roadmap
+
+Participate in Kaggle Competitions
+Participate in competitions and learn from community
+
+Online Courses and Certifications
+Platforms like Coursera, edX, Udemy and Datacamp
+offer courses in Data Analytics and related topics.
+
+Stay Updated and Network
+Join networking events, communities, seek mentorship,
+attend webinars and engage in discussions to expand
+your network.
+
