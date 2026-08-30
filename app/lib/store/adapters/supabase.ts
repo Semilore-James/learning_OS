@@ -57,6 +57,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         tools,
         declines,
         coinEvents,
+        unlockRows,
       ] = await Promise.all([
         mine(sb.from("profiles").select("*").eq("id", userId).maybeSingle()),
         mine(sb.from("node_progress").select("*").eq("user_id", userId)),
@@ -80,6 +81,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         mine(sb.from("tool_installs").select("tool_id").eq("user_id", userId)),
         mine(sb.from("pm_ai_declines").select("id").eq("user_id", userId)),
         mine(sb.from("coin_events").select("amount").eq("user_id", userId)),
+        mine(sb.from("user_unlocks").select("item_id").eq("user_id", userId)),
       ]);
 
       const heatmap: Record<string, number> = {};
@@ -119,6 +121,10 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
               sharePublic: profile.share_public,
             }
           : undefined,
+        equipped: {
+          iconSet: profile?.equipped_icon_set ?? null,
+          companion: profile?.equipped_companion ?? null,
+        },
         nodes: Object.fromEntries(
           (nodes ?? []).map((n) => [
             n.node_id,
@@ -171,7 +177,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
           }
           return { earned, spent, lastStreakDay: null };
         })(),
-        unlocks: [],
+        unlocks: (unlockRows ?? []).map((r) => r.item_id),
         review: (review ?? []).map((r) => ({
           id: r.id,
           nodeId: r.node_id,
@@ -496,6 +502,32 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
           );
           return;
 
+        case "purchaseItem": {
+          // the negative coin_events row is written by the generic spentDelta
+          // mirror above; here we just record the unlock
+          if (next.unlocks.includes(action.itemId) && !prev.unlocks.includes(action.itemId)) {
+            await mine(
+              sb.from("user_unlocks").upsert(
+                { user_id: userId, item_id: action.itemId },
+                { onConflict: "user_id,item_id", ignoreDuplicates: true },
+              ),
+            );
+          }
+          return;
+        }
+
+        case "equip":
+          await mine(
+            sb
+              .from("profiles")
+              .update({
+                equipped_icon_set: next.equipped.iconSet,
+                equipped_companion: next.equipped.companion,
+              })
+              .eq("id", userId),
+          );
+          return;
+
         case "resetProgress": {
           const tables = [
             "node_progress",
@@ -511,6 +543,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
             "game_scores",
             "game_attempts",
             "coin_events",
+            "user_unlocks",
             "review_items",
             "tool_installs",
             "pm_ai_declines",
@@ -519,6 +552,12 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
             "diagnostic_results",
           ] as const;
           await Promise.all(tables.map((t) => mine(sb.from(t).delete().eq("user_id", userId))));
+          await mine(
+            sb
+              .from("profiles")
+              .update({ equipped_icon_set: null, equipped_companion: null })
+              .eq("id", userId),
+          );
           return;
         }
 
