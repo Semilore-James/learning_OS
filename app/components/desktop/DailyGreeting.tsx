@@ -29,7 +29,9 @@ export function DailyGreeting() {
     // pickGreeting persists today's line so the bell shows it regardless
     const g = pickGreeting();
     if (dismissed || !g) return;
-    const t = setTimeout(() => setText(g.text), 2200);
+    // short delay only to clear the boot frame; a remount re-shows it just as
+    // fast, so there is never a long gap where it is missing
+    const t = setTimeout(() => setText(g.text), 400);
     return () => clearTimeout(t);
   }, [state.ready]);
 

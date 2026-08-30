@@ -39,7 +39,9 @@ export function SessionBriefing() {
       /* ignore */
     }
     if (seen) return;
-    const t = setTimeout(() => setShow(true), 1400);
+    // short delay only to clear the boot frame; on a remount it re-shows just
+    // as fast so there is never a long gap
+    const t = setTimeout(() => setShow(true), 300);
     return () => clearTimeout(t);
   }, [state.ready, today]);
 

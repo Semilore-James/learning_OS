@@ -26,7 +26,7 @@ export function IconGrid({
               if (e.key === "Enter" || e.key === " ") onOpen(a.id);
             }}
             className={cn(
-              "flex w-[84px] select-none flex-col items-center gap-1.5",
+              "chrome-press flex w-[84px] select-none flex-col items-center gap-1.5",
               isOpen ? "text-primary" : "text-muted-foreground",
             )}
           >
