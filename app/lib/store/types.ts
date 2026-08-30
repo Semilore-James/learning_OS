@@ -123,6 +123,10 @@ export interface AppState {
   /** shop item ids the learner owns */
   unlocks: string[];
 
+  /** currently-equipped cosmetics. Values are the item's asset.key
+   *  (e.g. "retro", "assassin"), or null for the default. */
+  equipped: { iconSet: string | null; companion: string | null };
+
   /** count only; the full log is loaded by the PM-AI / Decline Log window */
   declineCount: number;
 }
@@ -156,6 +160,7 @@ export const EMPTY_STATE: AppState = {
   toolInstalls: [],
   coins: { earned: 0, spent: 0, lastStreakDay: null },
   unlocks: [],
+  equipped: { iconSet: null, companion: null },
   declineCount: 0,
 };
 
@@ -191,7 +196,9 @@ export type Action =
   | { type: "addReviewItems"; items: Array<Pick<ReviewItem, "nodeId" | "concept">> }
   | { type: "setToolInstalled"; toolId: string; installed: boolean }
   | { type: "logCanvasSession"; minutes: number }
-  | { type: "logDecline"; kind: DeclineKind };
+  | { type: "logDecline"; kind: DeclineKind }
+  | { type: "purchaseItem"; itemId: string }
+  | { type: "equip"; slot: "iconSet" | "companion"; itemId: string | null };
 
 /* --------------------------------------------------------------- adapter --- */
 

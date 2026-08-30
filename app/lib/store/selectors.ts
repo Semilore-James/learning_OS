@@ -58,6 +58,16 @@ export function coinBalance(state: AppState): number {
   return Math.max(0, state.coins.earned - state.coins.spent);
 }
 
+/** equipped icon-set key ("retro"), or null for the built-in glyphs */
+export function equippedIconSet(state: AppState): string | null {
+  return state.equipped?.iconSet ?? null;
+}
+
+/** equipped desktop-companion key ("assassin"), or null for none */
+export function equippedCompanion(state: AppState): string | null {
+  return state.equipped?.companion ?? null;
+}
+
 /** accuracy 0-1 for one game, or null if never attempted */
 export function gameAccuracy(state: AppState, game: string): number | null {
   const g = state.games[game];
