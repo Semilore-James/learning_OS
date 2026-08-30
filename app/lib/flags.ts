@@ -2,10 +2,13 @@
    Feature flags. Half-built features merge to main behind a flag so main
    always builds and deploys green (Phase 0 step 2).
 
-   Read from NEXT_PUBLIC_FLAGS as a comma list, e.g.
-     NEXT_PUBLIC_FLAGS="pmAI,canvas,games"
-   Anything not listed is OFF in production and ON in development, so local
-   work sees everything and prod only sees what is finished.
+   Precedence:
+     1. NEXT_PUBLIC_FLAGS set  -> exactly that comma list is on in production
+        e.g. NEXT_PUBLIC_FLAGS="pmAI,canvas,games"
+     2. NEXT_PUBLIC_FLAGS unset -> the SHIPPED list below is on in production
+     3. development             -> everything is on regardless
+   A feature that is not finished is left out of SHIPPED (and out of the env
+   var) until it is done. Setting the env var is still the explicit override.
    ========================================================================== */
 
 export type Flag =
@@ -27,12 +30,33 @@ export type Flag =
   | "shop"
   | "pmVision";
 
-const enabled = new Set(
-  (process.env.NEXT_PUBLIC_FLAGS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
-);
+/** Finished and safe to show in production when NEXT_PUBLIC_FLAGS is not set. */
+const SHIPPED: Flag[] = [
+  "constellation",
+  "textbook",
+  "cheatcodes",
+  "dailyLog",
+  "heatmap",
+  "videoLibrary",
+  "caseFiles",
+  "pmAI",
+  "canvas",
+  "games",
+  "toolkit",
+  "reviewQueue",
+  "diagnostic",
+  "commandPalette",
+  "sharePage",
+  "shop",
+  "pmVision",
+];
+
+const fromEnv = (process.env.NEXT_PUBLIC_FLAGS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const enabled = new Set<string>(fromEnv.length > 0 ? fromEnv : SHIPPED);
 
 const isDev = process.env.NODE_ENV !== "production";
 
