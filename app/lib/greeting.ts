@@ -18,6 +18,26 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function timeWord(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  if (h < 22) return "Good evening";
+  return "Still up";
+}
+
+const MORNING_OPENER = /^(good morning|mornin['’]?|morning)([.,!?])?\s+/i;
+
+/** Many quotes hard-code a "Morning." opener. Swap it for one that fits the
+ *  learner's clock; leave time-neutral lines untouched. */
+function fitToClock(text: string): string {
+  const m = text.match(MORNING_OPENER);
+  if (!m) return text;
+  const rest = text.slice(m[0].length);
+  const word = timeWord();
+  return word === "Still up" ? `Still up? ${rest}` : `${word}. ${rest}`;
+}
+
 function read(): Stored | null {
   try {
     const raw = localStorage.getItem(KEY);
@@ -33,7 +53,7 @@ export function pickGreeting(): { id: string; text: string } | null {
   const prev = read();
   if (prev && prev.day === today()) {
     const q = QUOTES.find((x) => x.id === prev.id);
-    return q ? { id: q.id, text: q.text } : null;
+    return q ? { id: q.id, text: fitToClock(q.text) } : null;
   }
 
   const used = prev?.used ?? [];
@@ -48,7 +68,7 @@ export function pickGreeting(): { id: string; text: string } | null {
   } catch {
     /* ignore */
   }
-  return { id: q.id, text: q.text };
+  return { id: q.id, text: fitToClock(q.text) };
 }
 
 /** read-only: today's greeting if one has been generated (for the bell) */
@@ -56,5 +76,5 @@ export function todaysGreeting(): { id: string; text: string } | null {
   const prev = read();
   if (!prev || prev.day !== today()) return null;
   const q = QUOTES.find((x) => x.id === prev.id);
-  return q ? { id: q.id, text: q.text } : null;
+  return q ? { id: q.id, text: fitToClock(q.text) } : null;
 }
