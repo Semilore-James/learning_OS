@@ -36,7 +36,7 @@ function PasswordField({
   onToggleReveal: () => void;
 }) {
   return (
-    <label className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1">
       <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
       <div className="relative">
         <Input
@@ -44,19 +44,20 @@ function PasswordField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
-          className="pr-9"
+          className="pr-10"
         />
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={onToggleReveal}
           tabIndex={-1}
           aria-label={reveal ? "Hide password" : "Show password"}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="absolute inset-y-0 right-0 z-10 grid w-9 place-items-center text-muted-foreground transition-colors hover:text-primary"
         >
           {reveal ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </button>
       </div>
-    </label>
+    </div>
   );
 }
 
