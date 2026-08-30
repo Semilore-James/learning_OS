@@ -21,8 +21,17 @@ export function initAnalytics() {
   posthog.init(publicEnv.posthogKey, {
     api_host: publicEnv.posthogHost, // "/ingest"
     capture_pageview: false, // this is an app, not a site
-    autocapture: false,
+    autocapture: true, // capture clicks/inputs we didn't hand-instrument
+    capture_exceptions: true, // unhandled errors -> PostHog error tracking
     persistence: "localStorage",
+    session_recording: {
+      maskAllInputs: true, // never record what people type
+      maskTextSelector: "[data-ph-mask]",
+    },
+    // record guests too — they are the ones hitting onboarding and the
+    // blank-screen reports. Free tier is 5k recordings/month; add sampling
+    // via session_recording.sampleRate if that ever bites.
+    disable_session_recording: false,
   });
   started = true;
 }
