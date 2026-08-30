@@ -462,6 +462,8 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          equipped_companion: string | null
+          equipped_icon_set: string | null
           handle: string | null
           id: string
           onboarding_done: boolean
@@ -476,6 +478,8 @@ export type Database = {
         Insert: {
           created_at?: string
           display_name?: string | null
+          equipped_companion?: string | null
+          equipped_icon_set?: string | null
           handle?: string | null
           id: string
           onboarding_done?: boolean
@@ -490,6 +494,8 @@ export type Database = {
         Update: {
           created_at?: string
           display_name?: string | null
+          equipped_companion?: string | null
+          equipped_icon_set?: string | null
           handle?: string | null
           id?: string
           onboarding_done?: boolean
@@ -500,6 +506,24 @@ export type Database = {
           theme?: string
           updated_at?: string
           wallpaper_id?: string
+        }
+        Relationships: []
+      }
+      user_unlocks: {
+        Row: {
+          acquired_at: string
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          item_id?: string
+          user_id?: string
         }
         Relationships: []
       }
