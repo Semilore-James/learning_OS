@@ -26,6 +26,7 @@ export type Game =
   | "pivot_puzzle"
   | "chart_critiquer";
 export type DeclineKind = "decline" | "override" | "disagreement";
+export type OnboardingPhase = "mission" | "calibration" | "orientation" | "done";
 
 export interface NodeProgress {
   state: StoredNodeState;
@@ -71,6 +72,8 @@ export interface AppState {
     skin: Skin;
     wallpaperId: string;
     onboardingDone: boolean;
+    /** first-run flow: mission -> calibration -> orientation -> done */
+    onboardingPhase: OnboardingPhase;
     reduceEffects: boolean;
     /** URL slug for the public /share page; null until the learner sets one */
     handle: string | null;
@@ -133,6 +136,7 @@ export const EMPTY_STATE: AppState = {
     skin: "neobrutalism",
     wallpaperId: "starfield",
     onboardingDone: false,
+    onboardingPhase: "mission",
     reduceEffects: false,
     handle: null,
     sharePublic: false,
@@ -167,6 +171,8 @@ export type Action =
   | { type: "setHandle"; handle: string | null }
   | { type: "setSharePublic"; sharePublic: boolean }
   | { type: "completeOnboarding"; seededNodeIds: string[] }
+  | { type: "advanceOnboarding"; to: OnboardingPhase }
+  | { type: "completeFirstMission" }
   | { type: "resetProgress" }
   | { type: "startNode"; nodeId: string; level: NodeLevel; topicId: string | null }
   | { type: "completeNode"; nodeId: string; level: NodeLevel; topicId: string | null; alsoCompleteTopic?: string }

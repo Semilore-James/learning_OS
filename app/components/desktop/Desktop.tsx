@@ -19,6 +19,7 @@ import { SessionBriefing } from "./SessionBriefing";
 import { DailyGreeting } from "./DailyGreeting";
 import { Celebrations } from "./Celebrations";
 import { DiagnosticScreen } from "./DiagnosticScreen";
+import { OnboardingMission, OnboardingOrientation } from "./Onboarding";
 
 const BOOT_KEY = "da-os-booted";
 
@@ -125,7 +126,9 @@ export function Desktop() {
 
       {ready && booted && (
         <WindowActionsProvider value={winActions}>
-          {flag("diagnostic") && !state.profile.onboardingDone && <DiagnosticScreen />}
+          {flag("diagnostic") && state.profile.onboardingPhase === "mission" && <OnboardingMission />}
+          {flag("diagnostic") && state.profile.onboardingPhase === "calibration" && <DiagnosticScreen />}
+          {flag("diagnostic") && state.profile.onboardingPhase === "orientation" && <OnboardingOrientation />}
           <IconGrid openIds={wm.open} onOpen={activateFromDock} />
 
           {wm.open.map((id) => {

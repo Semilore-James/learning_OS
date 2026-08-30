@@ -111,6 +111,9 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
               skin: profile.skin as AppState["profile"]["skin"],
               wallpaperId: profile.wallpaper_id,
               onboardingDone: profile.onboarding_done,
+              onboardingPhase:
+                (profile.onboarding_phase as AppState["profile"]["onboardingPhase"] | null) ??
+                (profile.onboarding_done ? "done" : "mission"),
               reduceEffects: profile.reduce_effects,
               handle: profile.handle,
               sharePublic: profile.share_public,
@@ -209,6 +212,8 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         case "setHandle":
         case "setSharePublic":
         case "completeOnboarding":
+        case "advanceOnboarding":
+        case "completeFirstMission":
           await mine(
             sb.from("profiles").update({
               display_name: next.profile.displayName,
@@ -216,6 +221,7 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
               skin: next.profile.skin,
               wallpaper_id: next.profile.wallpaperId,
               onboarding_done: next.profile.onboardingDone,
+              onboarding_phase: next.profile.onboardingPhase,
               reduce_effects: next.profile.reduceEffects,
               handle: next.profile.handle,
               share_public: next.profile.sharePublic,

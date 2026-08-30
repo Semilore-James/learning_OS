@@ -19,6 +19,7 @@ export const XP = {
   streak_30: 500,
   review_answered: 15,
   tool_installed: 15,
+  first_mission: 40,
 } as const;
 
 export type XpAction = keyof typeof XP;
@@ -34,6 +35,8 @@ export const COINS = {
   /** streak day = base + min(consecutive prior days, cap), once per calendar day */
   streak_day_base: 10,
   streak_day_cap: 20,
+  /** paid once, on finishing the first-run guided mission */
+  first_mission: 30,
 } as const;
 
 /** heatmap contribution weight (1–4) per activity source (PRD 12.1) */

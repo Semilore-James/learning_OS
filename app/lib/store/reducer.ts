@@ -54,13 +54,30 @@ function heat(state: AppState, source: keyof typeof HEATMAP_WEIGHT): AppState {
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case "hydrate": {
-      const merged: AppState = { ...EMPTY_STATE, ...action.state, mode: action.mode, ready: true };
+      const merged: AppState = {
+        ...EMPTY_STATE,
+        ...action.state,
+        mode: action.mode,
+        ready: true,
+        profile: { ...EMPTY_STATE.profile, ...action.state.profile },
+      };
       // pre-coins state: seed the wallet from the old per-game score total
       if (!action.state.coins) {
         const legacy = Object.values(merged.games).reduce((t, g) => t + (g.score ?? 0), 0);
         merged.coins = { earned: legacy, spent: 0, lastStreakDay: null };
       }
       if (!action.state.unlocks) merged.unlocks = [];
+      // onboarding phase back-fill + fail-safe: anyone with real history or the
+      // old done flag skips the first-run flow entirely
+      const hadHistory =
+        merged.profile.onboardingDone ||
+        merged.xpTotal > 0 ||
+        Object.keys(merged.nodes).length > 0 ||
+        Object.keys(merged.chapterReads).length > 0;
+      if (!action.state.profile?.onboardingPhase) {
+        merged.profile.onboardingPhase = hadHistory ? "done" : "mission";
+      }
+      merged.profile.onboardingDone = merged.profile.onboardingPhase === "done";
       return merged;
     }
 
@@ -90,7 +107,23 @@ export function reducer(state: AppState, action: Action): AppState {
       for (const id of action.seededNodeIds) {
         nodes[id] = { state: "completed", level: "sub", topicId: null, startedAt: null, completedAt: new Date().toISOString() };
       }
-      return { ...state, nodes, profile: { ...state.profile, onboardingDone: true } };
+      // calibration done -> hand off to the orientation beat
+      return { ...state, nodes, profile: { ...state.profile, onboardingPhase: "orientation" } };
+    }
+
+    case "advanceOnboarding": {
+      const done = action.to === "done";
+      return {
+        ...state,
+        profile: { ...state.profile, onboardingPhase: action.to, onboardingDone: done },
+      };
+    }
+
+    case "completeFirstMission": {
+      let next = bump(state, XP.first_mission);
+      next = coin(next, COINS.first_mission);
+      next = heat(next, "case_submit");
+      return { ...next, profile: { ...next.profile, onboardingPhase: "calibration" } };
     }
 
     case "startNode":

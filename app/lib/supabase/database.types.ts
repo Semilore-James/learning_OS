@@ -465,6 +465,7 @@ export type Database = {
           handle: string | null
           id: string
           onboarding_done: boolean
+          onboarding_phase: string
           reduce_effects: boolean
           share_public: boolean
           skin: string
@@ -478,6 +479,7 @@ export type Database = {
           handle?: string | null
           id: string
           onboarding_done?: boolean
+          onboarding_phase?: string
           reduce_effects?: boolean
           share_public?: boolean
           skin?: string
@@ -491,6 +493,7 @@ export type Database = {
           handle?: string | null
           id?: string
           onboarding_done?: boolean
+          onboarding_phase?: string
           reduce_effects?: boolean
           share_public?: boolean
           skin?: string
