@@ -19,7 +19,8 @@ export function IconGrid({
           <button
             key={a.id}
             type="button"
-            title={`${a.hint} — double-click to open`}
+            data-app={a.id}
+            title={`${a.hint} · double-click to open`}
             onDoubleClick={() => onOpen(a.id)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") onOpen(a.id);

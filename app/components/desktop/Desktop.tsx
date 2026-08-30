@@ -77,6 +77,26 @@ export function Desktop() {
     [wm],
   );
 
+  // dock icon: open if closed, focus if open-but-behind, minimize if it's the
+  // front window. So a second double-click on the icon puts the window away.
+  const activateFromDock = useCallback(
+    (id: string) => {
+      if (!wm.open.includes(id)) {
+        openApp(id);
+        return;
+      }
+      if (wm.isMinimized(id)) {
+        wm.toggleMinimize(id);
+        wm.focusWindow(id);
+        return;
+      }
+      const front = wm.stack[wm.stack.length - 1];
+      if (front === id) wm.toggleMinimize(id);
+      else wm.focusWindow(id);
+    },
+    [wm, openApp],
+  );
+
   const textbookTarget = useRef<string | undefined>(undefined);
   const winActions = useMemo(
     () => ({
@@ -106,7 +126,7 @@ export function Desktop() {
       {ready && booted && (
         <WindowActionsProvider value={winActions}>
           {flag("diagnostic") && !state.profile.onboardingDone && <DiagnosticScreen />}
-          <IconGrid openIds={wm.open} onOpen={openApp} />
+          <IconGrid openIds={wm.open} onOpen={activateFromDock} />
 
           {wm.open.map((id) => {
             const app = resolveApp(id);

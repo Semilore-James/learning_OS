@@ -11,6 +11,7 @@
    few emails per hour.
    ========================================================================== */
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/lib/session/SessionProvider";
 import { Wallpaper } from "@/components/wallpaper";
@@ -19,6 +20,46 @@ import { Input } from "@/components/ui/input";
 
 type View = "login" | "signup" | "otp" | "forgot" | "mfa";
 
+function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete,
+  reveal,
+  onToggleReveal,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  autoComplete: string;
+  reveal: boolean;
+  onToggleReveal: () => void;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
+      <div className="relative">
+        <Input
+          type={reveal ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          className="pr-9"
+        />
+        <button
+          type="button"
+          onClick={onToggleReveal}
+          tabIndex={-1}
+          aria-label={reveal ? "Hide password" : "Show password"}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        >
+          {reveal ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
+    </label>
+  );
+}
+
 export function AuthScreen() {
   const { continueAsGuest, onSignedUp, configured } = useSession();
   const [view, setView] = useState<View>("login");
@@ -26,6 +67,7 @@ export function AuthScreen() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [mfaFactorId, setMfaFactorId] = useState("");
   const [mfaChallengeId, setMfaChallengeId] = useState("");
   const [remember, setRemember] = useState(true);
@@ -137,22 +179,25 @@ export function AuthScreen() {
           )}
 
           {(view === "login" || view === "signup") && (
-            <label className="flex flex-col gap-1">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Password</span>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={view === "login" ? "current-password" : "new-password"}
-              />
-            </label>
+            <PasswordField
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              autoComplete={view === "login" ? "current-password" : "new-password"}
+              reveal={showPw}
+              onToggleReveal={() => setShowPw((s) => !s)}
+            />
           )}
 
           {view === "signup" && (
-            <label className="flex flex-col gap-1">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Confirm password</span>
-              <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
-            </label>
+            <PasswordField
+              label="Confirm password"
+              value={confirm}
+              onChange={setConfirm}
+              autoComplete="new-password"
+              reveal={showPw}
+              onToggleReveal={() => setShowPw((s) => !s)}
+            />
           )}
 
           {(view === "otp" || view === "mfa") && (

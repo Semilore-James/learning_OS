@@ -40,6 +40,9 @@ const TASKBAR = 44;
 const MIN_W = 320;
 const MIN_H = 220;
 const KEEP_VISIBLE = 140; // px of the window that must stay on screen horizontally
+// cap simultaneously-open windows: each mounts a heavy body, and a dozen at
+// once melts the page. Opening past the cap evicts the least-recently-focused.
+const MAX_OPEN = 6;
 
 function vw() {
   return typeof window !== "undefined" ? window.innerWidth : 1440;
@@ -57,6 +60,16 @@ export function useWindows(): WindowManager {
   const [size, setSize] = useState<Record<string, Size>>({});
   const [natural, setNatural] = useState<Record<string, Size>>({});
   const openCount = useRef(0);
+
+  // latest open/stack for openWindow's eviction check without re-creating the cb
+  const openRef = useRef<string[]>([]);
+  const stackRef = useRef<string[]>([]);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+  useEffect(() => {
+    stackRef.current = stack;
+  }, [stack]);
 
   const fitViewport = useCallback(
     (s: Size): Size => ({
@@ -99,9 +112,24 @@ export function useWindows(): WindowManager {
 
   const openWindow = useCallback(
     (id: string, s?: Size) => {
-      setMinimized((m) => m.filter((w) => w !== id));
-      setOpen((o) => (o.includes(id) ? o : [...o, id]));
-      setStack((st) => [...st.filter((w) => w !== id), id]);
+      // at the cap, evict the least-recently-focused other window
+      let evict: string | null = null;
+      if (!openRef.current.includes(id) && openRef.current.length >= MAX_OPEN) {
+        evict =
+          stackRef.current.find((w) => w !== id && openRef.current.includes(w)) ??
+          openRef.current.find((w) => w !== id) ??
+          null;
+      }
+      setMinimized((m) => m.filter((w) => w !== id && w !== evict));
+      setMaximized((m) => m.filter((w) => w !== evict));
+      setOpen((o) => {
+        const base = evict ? o.filter((w) => w !== evict) : o;
+        return base.includes(id) ? base : [...base, id];
+      });
+      setStack((st) => {
+        const base = evict ? st.filter((w) => w !== evict) : st;
+        return [...base.filter((w) => w !== id), id];
+      });
       setSize((sz) => (sz[id] || !s ? sz : { ...sz, [id]: s }));
       setPos((p) => {
         if (p[id]) return p;

@@ -65,29 +65,33 @@ const QUESTIONS: Q[] = [
 export function DiagnosticScreen() {
   const { dispatch } = useStore();
   const [step, setStep] = useState(0);
-  const [seeds, setSeeds] = useState<Set<string>>(new Set());
+  // one chosen option per answered step, so Back can un-pick cleanly
+  const [picks, setPicks] = useState<(Q["options"][number] | null)[]>(
+    () => QUESTIONS.map(() => null),
+  );
 
-  const finish = (extra: string[]) => {
-    const all = new Set(seeds);
-    for (const s of extra) all.add(s);
-    dispatch({ type: "completeOnboarding", seededNodeIds: [...all] });
+  const seedsFrom = (list: (Q["options"][number] | null)[]) => {
+    const all = new Set<string>();
+    for (const p of list) if (p) for (const s of p.seeds) all.add(s);
+    return [...all];
+  };
+
+  const finish = (list: (Q["options"][number] | null)[]) => {
+    dispatch({ type: "completeOnboarding", seededNodeIds: seedsFrom(list) });
   };
 
   const q = QUESTIONS[step];
   const last = step === QUESTIONS.length - 1;
 
   const choose = (opt: Q["options"][number]) => {
-    if (last) {
-      finish(opt.seeds);
-      return;
-    }
-    setSeeds((prev) => {
-      const n = new Set(prev);
-      for (const s of opt.seeds) n.add(s);
-      return n;
-    });
-    setStep((s) => s + 1);
+    const next = picks.slice();
+    next[step] = opt;
+    setPicks(next);
+    if (last) finish(next);
+    else setStep((s) => s + 1);
   };
+
+  const back = () => setStep((s) => Math.max(0, s - 1));
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center bg-background p-6">
@@ -101,25 +105,40 @@ export function DiagnosticScreen() {
         </p>
 
         <div className="mt-4 flex flex-col gap-2">
-          {q.options.map((o) => (
-            <button
-              key={o.label}
-              type="button"
-              onClick={() => choose(o)}
-              className="chrome-flat chrome-press bg-surface-raised px-3 py-2.5 text-left text-[13px] text-foreground hover:text-primary"
-            >
-              {o.label}
-            </button>
-          ))}
+          {q.options.map((o) => {
+            const chosen = picks[step]?.label === o.label;
+            return (
+              <button
+                key={o.label}
+                type="button"
+                onClick={() => choose(o)}
+                className={`chrome-flat chrome-press bg-surface-raised px-3 py-2.5 text-left text-[13px] hover:text-primary ${
+                  chosen ? "text-primary" : "text-foreground"
+                }`}
+              >
+                {o.label}
+              </button>
+            );
+          })}
         </div>
 
-        <button
-          type="button"
-          onClick={() => finish([])}
-          className="mt-4 text-[11px] text-muted-foreground hover:text-foreground"
-        >
-          I&apos;m starting completely fresh — skip this
-        </button>
+        <div className="mt-4 flex items-center justify-between text-[11px]">
+          <button
+            type="button"
+            onClick={back}
+            disabled={step === 0}
+            className="text-muted-foreground hover:text-foreground disabled:invisible"
+          >
+            &larr; Back
+          </button>
+          <button
+            type="button"
+            onClick={() => finish(picks)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            I&apos;m starting completely fresh, skip this
+          </button>
+        </div>
       </div>
     </div>
   );
