@@ -18,6 +18,7 @@ import { CommandPalette } from "./CommandPalette";
 import { SessionBriefing } from "./SessionBriefing";
 import { DailyGreeting } from "./DailyGreeting";
 import { Celebrations } from "./Celebrations";
+import { DesktopCompanion } from "./DesktopCompanion";
 import { DiagnosticScreen } from "./DiagnosticScreen";
 import { OnboardingMission, OnboardingOrientation } from "./Onboarding";
 
@@ -196,6 +197,7 @@ export function Desktop() {
           <SessionBriefing />
           <DailyGreeting />
           <Celebrations />
+          <DesktopCompanion />
 
           <Taskbar onOpenSettings={() => openApp("settings")} />
         </WindowActionsProvider>

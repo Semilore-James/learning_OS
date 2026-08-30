@@ -26,6 +26,8 @@ export interface EventMap {
   xp_milestone: { xp_total: number };
   node_completed: { node_name: string; topic: string };
   tool_installed: { tool_id: string };
+  shop_item_purchased: { item_id: string; category: string; rarity: string; price: number };
+  shop_item_equipped: { slot: string; item_id: string | null };
 }
 
 export type EventName = keyof EventMap;
