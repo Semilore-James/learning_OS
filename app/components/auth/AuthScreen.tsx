@@ -5,10 +5,11 @@
    password, plus "Continue as guest". Full-screen, over the wallpaper, matches
    the mockup's neobrutalist card.
 
-   Sign-up sends a 6-digit code (Supabase must have its confirmation email
-   template set to use {{ .Token }} rather than {{ .ConfirmationURL }} — see
-   supabase/README.md). Without custom SMTP, the built-in sender throttles at a
-   few emails per hour.
+   Sign-up sends a numeric code (Supabase confirmation email template set to
+   {{ .Token }} rather than {{ .ConfirmationURL }} — see supabase/README.md).
+   Code length is the "Email OTP Length" project setting (6-10); the input
+   accepts up to 10. When "Confirm email" is off, signUp returns a live
+   session and the code step is skipped.
    ========================================================================== */
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
@@ -140,7 +141,7 @@ export function AuthScreen() {
         return;
       }
       setView("otp");
-      setNotice(`Enter the 6-digit code sent to ${email}.`);
+      setNotice(`Enter the code sent to ${email}.`);
     });
 
   const verify = () =>
@@ -203,13 +204,18 @@ export function AuthScreen() {
 
           {(view === "otp" || view === "mfa") && (
             <label className="flex flex-col gap-1">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">6-digit code</span>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {view === "mfa" ? "6-digit code" : "Verification code"}
+              </span>
               <Input
                 inputMode="numeric"
-                maxLength={6}
+                autoComplete="one-time-code"
+                // MFA (TOTP) is always 6; the email OTP length is a Supabase
+                // setting (6-10), so don't hard-cap it below what they receive
+                maxLength={view === "mfa" ? 6 : 10}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                className="text-center font-mono text-lg tracking-[0.4em]"
+                className="text-center font-mono text-lg tracking-[0.3em]"
               />
             </label>
           )}
