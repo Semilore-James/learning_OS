@@ -13,6 +13,7 @@
    ========================================================================== */
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { APP_VERSION, APP_AUTHOR } from "@/lib/version";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/lib/session/SessionProvider";
 import { Wallpaper } from "@/components/wallpaper";
@@ -285,6 +286,10 @@ export function AuthScreen() {
             Accounts need the Supabase env vars set on this deploy. Guest mode works now; progress saves to this browser.
           </p>
         )}
+
+        <p className="mt-6 text-center font-mono text-[10px] tracking-wide text-muted-foreground">
+          v{APP_VERSION} &middot; by {APP_AUTHOR}
+        </p>
       </div>
     </div>
   );
