@@ -19,7 +19,7 @@ import { SessionBriefing } from "./SessionBriefing";
 import { DailyGreeting } from "./DailyGreeting";
 import { Celebrations } from "./Celebrations";
 import { DiagnosticScreen } from "./DiagnosticScreen";
-import { OnboardingTour, OnboardingOrientation } from "./Onboarding";
+import { OnboardingTour } from "./Onboarding";
 
 const BOOT_KEY = "da-os-booted";
 
@@ -131,8 +131,9 @@ export function Desktop() {
           {flag("diagnostic") && state.profile.onboardingPhase === "mission" && (
             <OnboardingTour openIds={wm.open} onPulse={setTourPulse} />
           )}
-          {flag("diagnostic") && state.profile.onboardingPhase === "calibration" && <DiagnosticScreen />}
-          {flag("diagnostic") && state.profile.onboardingPhase === "orientation" && <OnboardingOrientation />}
+          {flag("diagnostic") &&
+            (state.profile.onboardingPhase === "calibration" ||
+              state.profile.onboardingPhase === "orientation") && <DiagnosticScreen />}
           <IconGrid openIds={wm.open} onOpen={activateFromDock} pulseId={tourPulse} />
 
           {wm.open.map((id) => {

@@ -26,6 +26,8 @@ export type Game =
   | "pivot_puzzle"
   | "chart_critiquer";
 export type DeclineKind = "decline" | "override" | "disagreement";
+// "orientation" is a legacy phase from the pre-tour flow; new users go
+// mission -> calibration -> done. Kept for the DB CHECK constraint (0009).
 export type OnboardingPhase = "mission" | "calibration" | "orientation" | "done";
 
 export interface NodeProgress {
@@ -72,7 +74,7 @@ export interface AppState {
     skin: Skin;
     wallpaperId: string;
     onboardingDone: boolean;
-    /** first-run flow: mission -> calibration -> orientation -> done */
+    /** first-run flow: mission (the tour) -> calibration -> done */
     onboardingPhase: OnboardingPhase;
     reduceEffects: boolean;
     /** URL slug for the public /share page; null until the learner sets one */

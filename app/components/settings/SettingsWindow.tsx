@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ProfileCard } from "./ProfileCard";
 import { TwoFactor } from "./TwoFactor";
+import { APP_VERSION, APP_AUTHOR } from "@/lib/version";
 import type { Skin, Theme } from "@/lib/store/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -244,6 +245,15 @@ export function SettingsWindow() {
             Reset all progress
           </Button>
         )}
+      </section>
+
+      <section className="p-5">
+        <SectionLabel>About</SectionLabel>
+        <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+          DA // LEARNING OS &nbsp;v{APP_VERSION}
+          <br />
+          by {APP_AUTHOR}
+        </p>
       </section>
     </div>
   );

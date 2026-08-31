@@ -8,13 +8,9 @@
    The walk advances on which windows are open (openIds), so the overlay never
    anchors to anything inside a window. Skippable at every step; the skip
    persists via advanceOnboarding("done").
-
-   OnboardingOrientation is kept as a no-op-safe fallback for anyone who was
-   mid-"orientation" when this shipped.
    ========================================================================== */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
-import { useWindowActions } from "@/lib/windowContext";
 import { INTRO } from "@/content/onboarding";
 
 type Step = "welcome" | "open-constellation" | "pick-track" | "open-lesson" | "done-card";
@@ -129,36 +125,6 @@ export function OnboardingTour({
             {INTRO.steps.done.button}
           </button>
         )}
-      </div>
-    </div>
-  );
-}
-
-export function OnboardingOrientation() {
-  const { dispatch } = useStore();
-  const win = useWindowActions();
-  const opened = useRef(false);
-
-  useEffect(() => {
-    if (opened.current) return;
-    opened.current = true;
-    win.open("constellation");
-  }, [win]);
-
-  return (
-    <div className="fixed bottom-4 right-4 z-[401] w-[360px] max-w-[92vw]">
-      <div className="chrome-panel bg-surface p-4">
-        <p className="text-[13px] leading-relaxed text-foreground">
-          This is the whole path. Everything you unlock lives here. Your first real
-          case is under <span className="text-primary">SQL</span>.
-        </p>
-        <button
-          type="button"
-          onClick={() => dispatch({ type: "advanceOnboarding", to: "done" })}
-          className="mt-3 rounded-md bg-primary px-4 py-1.5 text-[13px] font-semibold text-primary-foreground"
-        >
-          Got it
-        </button>
       </div>
     </div>
   );
