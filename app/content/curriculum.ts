@@ -194,6 +194,19 @@ const STATS_SUBNODES: SubNode[] = [
   { id: "ab-testing", label: "A/B testing fundamentals", prerequisites: ["t-tests", "p-values", "confidence-intervals"], chapters: ["15-ab-testing"], estHours: 2.5, pos: { x: 710, y: 360, r: 13 } },
 ];
 
+const DATA_CLEANING_SUBNODES: SubNode[] = [
+  { id: "dirty-data", label: "What dirty data looks like", prerequisites: [], chapters: ["01-what-dirty-data-looks-like"], estHours: 1, pos: { x: 90, y: 300, r: 12 } },
+  { id: "finding-nulls", label: "Identifying missing values", prerequisites: ["dirty-data"], chapters: ["02-identifying-missing-values"], estHours: 1.5, pos: { x: 180, y: 250, r: 12 } },
+  { id: "handling-nulls", label: "Strategies for handling nulls", prerequisites: ["finding-nulls"], chapters: ["03-handling-nulls"], estHours: 2, pos: { x: 270, y: 300, r: 13 } },
+  { id: "duplicates", label: "Duplicate detection and removal", prerequisites: ["dirty-data"], chapters: ["04-duplicates"], estHours: 1.5, pos: { x: 200, y: 400, r: 12 } },
+  { id: "standardizing", label: "Standardizing formats: dates, strings, numbers", prerequisites: ["dirty-data"], chapters: ["05-standardizing-formats"], estHours: 2.5, pos: { x: 360, y: 360, r: 13 } },
+  { id: "type-correction", label: "Data type correction", prerequisites: ["standardizing"], chapters: ["06-data-type-correction"], estHours: 1.5, pos: { x: 440, y: 300, r: 12 } },
+  { id: "outliers", label: "Outlier detection", prerequisites: ["handling-nulls", "type-correction"], chapters: ["07-outlier-detection"], estHours: 2, pos: { x: 520, y: 350, r: 13 } },
+  { id: "validation-rules", label: "Validation rules", prerequisites: ["outliers"], chapters: ["08-validation-rules"], estHours: 2, pos: { x: 600, y: 300, r: 12 } },
+  { id: "documenting-cleaning", label: "Documenting cleaning decisions", prerequisites: ["validation-rules"], chapters: ["09-documenting-decisions"], estHours: 1, pos: { x: 650, y: 400, r: 11 } },
+  { id: "cleaning-pipelines", label: "Reproducible cleaning pipelines", prerequisites: ["documenting-cleaning"], chapters: ["10-reproducible-pipelines"], estHours: 2.5, pos: { x: 730, y: 340, r: 13 } },
+];
+
 /* ----------------------------------------------------------------------------
    LEVEL 1 — topic nodes
    Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
@@ -247,19 +260,8 @@ export const TOPICS: TopicNode[] = [
     cluster: "analysis",
     prerequisites: ["sql"],
     pos: { x: 430, y: 320, r: 16 },
-    subNodes: [],
-    plannedSubNodes: [
-      "What dirty data looks like",
-      "Identifying missing values",
-      "Strategies for handling nulls",
-      "Duplicate detection and removal",
-      "Standardizing formats (dates, strings, numbers)",
-      "Outlier detection",
-      "Data type correction",
-      "Validation rules",
-      "Documenting cleaning decisions",
-      "Reproducible cleaning pipelines",
-    ],
+    book: "the-cleaning-playbook",
+    subNodes: DATA_CLEANING_SUBNODES,
   },
   {
     id: "visualization",

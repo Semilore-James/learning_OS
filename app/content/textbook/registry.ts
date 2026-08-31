@@ -153,6 +153,23 @@ export const BOOKS: Book[] = [
       { slug: "statistics/15-ab-testing", title: "A/B testing fundamentals", nodeId: "ab-testing" },
     ],
   },
+  {
+    id: "the-cleaning-playbook",
+    title: "The Cleaning Playbook",
+    subtitle: "The 80 percent of the job nobody puts on a slide.",
+    chapters: [
+      { slug: "data-cleaning/01-what-dirty-data-looks-like", title: "What dirty data looks like", nodeId: "dirty-data" },
+      { slug: "data-cleaning/02-identifying-missing-values", title: "Identifying missing values", nodeId: "finding-nulls" },
+      { slug: "data-cleaning/03-handling-nulls", title: "Strategies for handling nulls", nodeId: "handling-nulls" },
+      { slug: "data-cleaning/04-duplicates", title: "Duplicate detection and removal", nodeId: "duplicates", tryThis: { label: "Data Detective", target: "games" } },
+      { slug: "data-cleaning/05-standardizing-formats", title: "Standardizing formats: dates, strings, numbers", nodeId: "standardizing" },
+      { slug: "data-cleaning/06-data-type-correction", title: "Data type correction", nodeId: "type-correction" },
+      { slug: "data-cleaning/07-outlier-detection", title: "Outlier detection", nodeId: "outliers", tryThis: { label: "Data Detective", target: "games" } },
+      { slug: "data-cleaning/08-validation-rules", title: "Validation rules", nodeId: "validation-rules" },
+      { slug: "data-cleaning/09-documenting-decisions", title: "Documenting cleaning decisions", nodeId: "documenting-cleaning" },
+      { slug: "data-cleaning/10-reproducible-pipelines", title: "Reproducible cleaning pipelines", nodeId: "cleaning-pipelines", tryThis: { label: "Case 01: Retail Sales Audit", target: "casefiles" } },
+    ],
+  },
 ];
 
 export const BOOKS_BY_ID: Record<string, Book> = Object.fromEntries(BOOKS.map((b) => [b.id, b]));
