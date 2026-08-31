@@ -2,22 +2,26 @@
 
 /* ============================================================================
    Session briefing (build step 21). A one-time-per-day card: streak, reviews
-   due, and the track to continue. Shows a few seconds after the desktop is
-   ready; dismiss by clicking it or the X. "Seen" is stamped per calendar day
-   in localStorage so it doesn't nag on every window focus.
+   due, and the track to continue. It fades and slides away on its own after a
+   few seconds; the "Continue" action also lives on the taskbar and the review
+   count on the bell, so nothing is lost when it goes. "Seen" is stamped per
+   calendar day so it does not nag on every window focus.
    ========================================================================== */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Flame, RotateCcw, X } from "lucide-react";
 import { useStore, select } from "@/lib/store";
 import { useWindowActions } from "@/lib/windowContext";
 import { TOPICS, TOPICS_BY_ID } from "@/content/curriculum";
+import { cn } from "@/lib/utils";
 
 const KEY = "da-os-briefing-day";
+const DWELL_MS = 5000;
 
 export function SessionBriefing() {
   const { state } = useStore();
   const win = useWindowActions();
   const [show, setShow] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
   const streak = select.streak(state).current;
@@ -31,7 +35,7 @@ export function SessionBriefing() {
       : null);
 
   useEffect(() => {
-    if (!state.ready) return;
+    if (!state.ready || state.profile.onboardingPhase !== "done") return;
     let seen = false;
     try {
       seen = localStorage.getItem(KEY) === today;
@@ -39,25 +43,40 @@ export function SessionBriefing() {
       /* ignore */
     }
     if (seen) return;
-    // short delay only to clear the boot frame; on a remount it re-shows just
-    // as fast so there is never a long gap
     const t = setTimeout(() => setShow(true), 300);
     return () => clearTimeout(t);
-  }, [state.ready, today]);
+  }, [state.ready, state.profile.onboardingPhase, today]);
 
-  const dismiss = () => {
+  const dismiss = useCallback(() => {
     try {
-      localStorage.setItem(KEY, today);
+      localStorage.setItem(KEY, new Date().toISOString().slice(0, 10));
     } catch {
       /* ignore */
     }
+    setLeaving(false);
     setShow(false);
-  };
+  }, []);
+
+  // hover briefly, then fade + slide down
+  useEffect(() => {
+    if (!show) return;
+    const fade = setTimeout(() => setLeaving(true), DWELL_MS);
+    const gone = setTimeout(dismiss, DWELL_MS + 320);
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(gone);
+    };
+  }, [show, dismiss]);
 
   if (!show) return null;
 
   return (
-    <div className="absolute left-1/2 top-6 z-[180] w-[340px] max-w-[90vw] -translate-x-1/2">
+    <div
+      className={cn(
+        "absolute left-1/2 top-6 z-[180] w-[340px] max-w-[90vw] -translate-x-1/2 transition-all duration-300",
+        leaving && "translate-y-2 opacity-0",
+      )}
+    >
       <div className="chrome-panel bg-surface p-4">
         <div className="flex items-start justify-between">
           <span className="font-mono text-[9px] uppercase tracking-widest text-primary">

@@ -113,7 +113,7 @@ export function OnboardingTour({
           : INTRO.steps.done.caption;
 
   return (
-    <div className="fixed bottom-[64px] left-1/2 z-[401] w-[440px] max-w-[92vw] -translate-x-1/2">
+    <div className="fixed bottom-4 right-4 z-[401] w-[360px] max-w-[92vw]">
       <div className="chrome-panel bg-surface p-4">
         <div className="flex items-start justify-between gap-3">
           <span className="font-mono text-[9px] uppercase tracking-widest text-primary">Getting started</span>
@@ -146,7 +146,7 @@ export function OnboardingOrientation() {
   }, [win]);
 
   return (
-    <div className="fixed bottom-[64px] left-1/2 z-[401] w-[420px] max-w-[92vw] -translate-x-1/2">
+    <div className="fixed bottom-4 right-4 z-[401] w-[360px] max-w-[92vw]">
       <div className="chrome-panel bg-surface p-4">
         <p className="text-[13px] leading-relaxed text-foreground">
           This is the whole path. Everything you unlock lives here. Your first real
