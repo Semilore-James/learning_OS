@@ -12,17 +12,21 @@
 import { useMemo, useState } from "react";
 import { useStore, select } from "@/lib/store";
 import { canPurchase, ownsItem, weeklyFeatured } from "@/lib/shop";
+import { levelFromXp } from "@/lib/gamification";
 import {
   CATEGORY_LABEL,
   CATEGORY_ORDER,
   RARITY_LABEL,
   RARITY_ORDER,
   itemsInCategory,
+  type AchievementGate,
   type ShopCategory,
   type ShopItem,
 } from "@/content/shop/items";
 import { cn } from "@/lib/utils";
+import { CountUp } from "@/components/motion";
 import { ShopPreviewCard } from "./previews";
+import type { AppState } from "@/lib/store/types";
 
 const RARITY_CLASS: Record<string, string> = {
   common: "text-muted-foreground",
@@ -31,6 +35,24 @@ const RARITY_CLASS: Record<string, string> = {
   epic: "text-brand-violet",
   legendary: "text-brand-amber",
 };
+
+/** left accent bar colour per rarity — the card's identity, Fortnite-style */
+const RARITY_BAR: Record<string, string> = {
+  common: "var(--muted-foreground)",
+  uncommon: "var(--brand-cyan, #3aa0c9)",
+  rare: "var(--primary)",
+  epic: "var(--brand-violet)",
+  legendary: "var(--brand-amber)",
+};
+
+/** "Reach level 5 · you're 3" — teases the gate with live progress */
+function gateLabel(state: AppState, gate: AchievementGate): string {
+  const m = /^(level|streak)-(\d+)$/.exec(gate.key);
+  if (!m) return gate.label;
+  const have =
+    m[1] === "level" ? levelFromXp(state.xpTotal) : select.streak(state).longest;
+  return `${gate.label} · you're at ${have}`;
+}
 
 function ItemCard({ item }: { item: ShopItem }) {
   const { state, dispatch } = useStore();
@@ -55,7 +77,7 @@ function ItemCard({ item }: { item: ShopItem }) {
         title={check.reason}
       >
         {gated
-          ? `Locked · ${item.achievementGate!.label}`
+          ? `Locked · ${gateLabel(state, item.achievementGate!)}`
           : `Buy · ${item.price.toLocaleString()} coins`}
       </button>
     );
@@ -79,10 +101,15 @@ function ItemCard({ item }: { item: ShopItem }) {
   return (
     <div
       className={cn(
-        "chrome-panel flex flex-col gap-2 p-3",
+        "chrome-panel relative flex flex-col gap-2 overflow-hidden p-3 pl-3.5",
         isEquipped && "outline outline-1 outline-primary",
       )}
     >
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1"
+        style={{ background: RARITY_BAR[item.rarity] }}
+      />
       <ShopPreviewCard preview={item.preview} />
       <div className="flex items-start justify-between gap-2">
         <span className="font-display text-[13px] font-bold leading-tight text-foreground">
@@ -94,7 +121,7 @@ function ItemCard({ item }: { item: ShopItem }) {
             RARITY_CLASS[item.rarity],
           )}
         >
-          {RARITY_LABEL[item.rarity]}
+          {owned ? "Owned" : RARITY_LABEL[item.rarity]}
         </span>
       </div>
       <p className="text-[11px] leading-snug text-muted-foreground">{item.blurb}</p>
@@ -131,7 +158,7 @@ export function ShopWindow() {
         </div>
         <div className="text-right">
           <div className="chrome-flat bg-surface-raised px-3 py-1.5 text-sm font-bold text-brand-amber">
-            {coins.toLocaleString()} coins
+            <CountUp value={coins} /> coins
           </div>
           {ownedCount > 0 && (
             <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">

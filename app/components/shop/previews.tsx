@@ -3,6 +3,7 @@
 /* ============================================================================
    Live shop-card previews, one per category.
    ========================================================================== */
+import { useState } from "react";
 import { iconSetSampleIds, renderIcon } from "@/lib/shop/iconSets";
 import { CompanionSprite } from "./CompanionSprite";
 import type { ShopPreview } from "@/content/shop/items";
@@ -31,10 +32,13 @@ function IconSetPreview({ setKey }: { setKey: string }) {
 }
 
 function CompanionPreview({ name }: { name: string }) {
+  const [hover, setHover] = useState(false);
   return (
-    <Frame>
-      <CompanionSprite name={name} anim="idle" size={64} />
-    </Frame>
+    <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <Frame>
+        <CompanionSprite name={name} anim={hover ? "walk" : "idle"} size={64} />
+      </Frame>
+    </div>
   );
 }
 

@@ -11,6 +11,7 @@ import type { AppState } from "@/lib/store/types";
 import {
   ITEMS,
   ITEMS_BY_ID,
+  CATEGORY_ORDER,
   RARITY_ORDER,
   type ShopItem,
 } from "@/content/shop/items";
@@ -80,23 +81,26 @@ function weekIndex(now = Date.now()): number {
 }
 
 /**
- * Three items to feature this week, one from each of the three mid rarities
- * (uncommon / rare / epic), rotating weekly. Falls back to filling from any
- * rarity if a band is short.
+ * Three items to feature this week, rotating weekly. Takes one from each
+ * category first (so the strip always shows variety), then fills the rest by
+ * ascending rarity. Never features a legendary (those are the long-game goal,
+ * not an impulse buy).
  */
 export function weeklyFeatured(now = Date.now()): ShopItem[] {
   const wk = weekIndex(now);
-  const bands: ShopItem["rarity"][] = ["uncommon", "rare", "epic"];
+  const eligible = ITEMS.filter((i) => i.rarity !== "legendary");
   const pick: ShopItem[] = [];
-  for (const band of bands) {
-    const pool = ITEMS.filter((i) => i.rarity === band).sort((a, b) => a.id.localeCompare(b.id));
-    if (pool.length) pick.push(pool[wk % pool.length]);
+
+  for (const cat of CATEGORY_ORDER) {
+    const pool = eligible
+      .filter((i) => i.category === cat)
+      .sort((a, b) => a.id.localeCompare(b.id));
+    if (pool.length && pick.length < 3) pick.push(pool[wk % pool.length]);
   }
-  if (pick.length < 3) {
-    const rest = ITEMS.filter((i) => !pick.includes(i)).sort(
-      (a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity],
-    );
-    while (pick.length < 3 && rest.length) pick.push(rest[(wk + pick.length) % rest.length]);
-  }
+  const rest = eligible
+    .filter((i) => !pick.includes(i))
+    .sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]);
+  while (pick.length < 3 && rest.length) pick.push(rest[(wk + pick.length) % rest.length]);
+
   return pick;
 }

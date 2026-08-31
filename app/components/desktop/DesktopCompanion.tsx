@@ -300,7 +300,7 @@ export function DesktopCompanion() {
           type="button"
           aria-label="Hide the companion for this session"
           onClick={() => sessionHideCompanion(true)}
-          className="chrome-flat absolute -right-1 -top-1 hidden size-4 place-items-center bg-surface-raised text-muted-foreground group-hover:grid hover:text-foreground"
+          className="chrome-flat pointer-events-auto absolute -right-1 -top-1 hidden size-4 place-items-center bg-surface-raised text-muted-foreground group-hover:grid hover:text-foreground"
         >
           <X className="size-2.5" />
         </button>
