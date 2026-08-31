@@ -32,6 +32,14 @@ export const BOOKS: Book[] = [
     chapters: [
       { slug: "field-guide/01-what-a-data-analyst-actually-does", title: "What a data analyst actually does" },
       { slug: "field-guide/02-the-shape-of-a-question", title: "The shape of a question" },
+      { slug: "field-guide/03-the-workflow", title: "The workflow, start to finish" },
+      { slug: "field-guide/04-making-a-request-precise", title: "Making a vague request precise" },
+      { slug: "field-guide/05-where-the-data-lives", title: "Where the data lives" },
+      { slug: "field-guide/06-exploratory-vs-explanatory", title: "Exploratory vs explanatory" },
+      { slug: "field-guide/07-is-the-answer-real", title: "Is the answer real?" },
+      { slug: "field-guide/08-working-with-the-people-who-asked", title: "Working with the people who asked" },
+      { slug: "field-guide/09-how-the-tracks-fit-together", title: "How the tracks fit together" },
+      { slug: "field-guide/10-how-to-use-this-os", title: "How to use this OS" },
     ],
   },
   {

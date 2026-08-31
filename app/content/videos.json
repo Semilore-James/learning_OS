@@ -13,5 +13,11 @@
   { "id": "7mz73uXD9DA", "title": "SQL for Data Analytics - Learn SQL in 4 Hours", "channel": "Luke Barousse", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["sql"] },
   { "id": "rGx1QNdYzvs", "title": "FREE Data Analyst Bootcamp", "channel": "Alex The Analyst", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["sql", "excel", "visualization"] },
   { "id": "r-uOLxNrNk8", "title": "Data Analysis with Python - Full Course for Beginners (Numpy, Pandas, Matplotlib, Seaborn)", "channel": "freeCodeCamp.org", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["python", "statistics"] },
-  { "id": "GPVsHOlRBBI", "title": "Data Analysis with Python Course - Numpy, Pandas, Data Visualization", "channel": "freeCodeCamp.org", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["python", "visualization"] }
+  { "id": "GPVsHOlRBBI", "title": "Data Analysis with Python Course - Numpy, Pandas, Data Visualization", "channel": "freeCodeCamp.org", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["python", "visualization"] },
+  { "id": "keDIUQCVhtA", "title": "Learn Power BI - Full Data Analyst Course for 2026", "channel": "Alex The Analyst", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["power-bi"] },
+  { "id": "yinVakkgSp8", "title": "Power BI Full Data Analyst Course With Project", "channel": "Alex The Analyst", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["power-bi"] },
+  { "id": "GxbeIZ2wGMM", "title": "Learn Excel for FREE from this Microsoft expert", "channel": "Leila Gharani", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["excel"] },
+  { "id": "TPMlZxRRaBQ", "title": "Tableau for Data Science and Data Visualization - Crash Course Tutorial", "channel": "freeCodeCamp.org", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["visualization"] },
+  { "id": "ZyhVh-qRZPA", "title": "Python Pandas Tutorial (Part 1): Getting Started with Data Analysis", "channel": "Corey Schafer", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["python"] },
+  { "id": "xxpc-HPKN28", "title": "Statistics - A Full University Course on Data Science Basics", "channel": "freeCodeCamp.org", "durationSeconds": null, "difficulty": "beginner", "skillTags": ["statistics"] }
 ]
