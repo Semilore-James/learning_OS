@@ -19,7 +19,7 @@ import { SessionBriefing } from "./SessionBriefing";
 import { DailyGreeting } from "./DailyGreeting";
 import { Celebrations } from "./Celebrations";
 import { DiagnosticScreen } from "./DiagnosticScreen";
-import { OnboardingMission, OnboardingOrientation } from "./Onboarding";
+import { OnboardingTour, OnboardingOrientation } from "./Onboarding";
 
 const BOOT_KEY = "da-os-booted";
 
@@ -27,6 +27,8 @@ export function Desktop() {
   const { state } = useStore();
   const { phase, exitGuest } = useSession();
   const wm = useWindows();
+  // dock icon the intro tour wants the learner to notice (null = none)
+  const [tourPulse, setTourPulse] = useState<string | null>(null);
 
   // whether the boot sequence already played this browser session
   const persistedBoot = useSyncExternalStore(
@@ -126,10 +128,12 @@ export function Desktop() {
 
       {ready && booted && (
         <WindowActionsProvider value={winActions}>
-          {flag("diagnostic") && state.profile.onboardingPhase === "mission" && <OnboardingMission />}
+          {flag("diagnostic") && state.profile.onboardingPhase === "mission" && (
+            <OnboardingTour openIds={wm.open} onPulse={setTourPulse} />
+          )}
           {flag("diagnostic") && state.profile.onboardingPhase === "calibration" && <DiagnosticScreen />}
           {flag("diagnostic") && state.profile.onboardingPhase === "orientation" && <OnboardingOrientation />}
-          <IconGrid openIds={wm.open} onOpen={activateFromDock} />
+          <IconGrid openIds={wm.open} onOpen={activateFromDock} pulseId={tourPulse} />
 
           {wm.open.map((id) => {
             const app = resolveApp(id);

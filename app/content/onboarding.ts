@@ -1,30 +1,41 @@
 /* ============================================================================
-   The first-run mission. One tiny real analysis loop: read a short brief,
-   notice one thing, tell the PM, get a reply. Kept self-contained so it works
-   with the AI route down (cannedReply is the fallback).
+   First-run intro. A short guided walk that ends with the learner reading
+   their first lesson, then hands off to the calibration question. Every step
+   is skippable and the skip persists.
+
+   Steps after the welcome modal are driven by which windows are open, so the
+   overlay never has to anchor to anything inside a window.
    ========================================================================== */
 
-export const FIRST_MISSION = {
-  title: "Your first case",
-  brief:
-    "Northwind runs four corner shops. Head office pulled last Saturday's sales " +
-    "and wants to know if anything looks off before the weekly review. That's it. " +
-    "One glance, one flag, move on.",
-  columns: ["Store", "Customers", "Sales", "Sales / customer"],
-  rows: [
-    ["Ikeja", "180", "£2,700", "£15.00"],
-    ["Yaba", "165", "£2,560", "£15.52"],
-    ["Lekki", "172", "£2,640", "£15.35"],
-    ["Surulere", "158", "£1,180", "£7.47"],
-  ],
-  /** what a good first observation is in the neighbourhood of */
-  hint: "Compare the last column across the four stores.",
-  placeholder: "One thing you notice about this table",
-  /** offline fallback when the PM route is unreachable or rate-limited */
-  cannedReply:
-    "Surulere's sales per customer is half everyone else's, same footfall. That's " +
-    "the flag. Could be discounting off the books, a broken till, or staff ringing " +
-    "sales through their own accounts. You don't know which yet, and you don't have " +
-    "to. You noticed the number that doesn't fit. That's the whole job on repeat. " +
-    "Case Files has twenty of these, longer and messier. Go.",
+export const INTRO = {
+  welcome: {
+    title: "Welcome to DA // LEARNING OS",
+    body:
+      "This is a desktop where you learn data analysis by doing the actual work. " +
+      "Everything you need is on this screen: your learning path, real case files, " +
+      "a set of games, and a PM who reviews what you produce. Nothing here is a video " +
+      "you watch. You read a little, then you do a lot.",
+    continueLabel: "Continue tutorial",
+    skipLabel: "Skip tutorial",
+  },
+  steps: {
+    openConstellation: {
+      caption:
+        "Start with your map. Double-click the Constellation Map on the dock to open it.",
+    },
+    pickTrack: {
+      caption:
+        "Every star is a skill. The bright ones are open now, the dim ones unlock as you finish what comes before. Click a bright track, then hit Enter this track.",
+    },
+    openLesson: {
+      caption:
+        "These are the lessons in that track, in order. Open the first one to start reading.",
+    },
+    done: {
+      caption:
+        "That's the whole loop: read a lesson, then prove it on a case. Everything else lives on the dock, open it when you get stuck. One quick thing so we start you at the right level.",
+      button: "Got it",
+    },
+  },
+  skipLabel: "Skip the rest",
 } as const;
