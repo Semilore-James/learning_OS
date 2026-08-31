@@ -222,6 +222,23 @@ const VIZ_SUBNODES: SubNode[] = [
   { id: "chart-accessibility", label: "Accessibility in charts", prerequisites: ["color-in-charts", "annotations"], chapters: ["12-accessibility"], estHours: 1.5, pos: { x: 700, y: 250, r: 12 } },
 ];
 
+const POWERBI_SUBNODES: SubNode[] = [
+  { id: "pbi-interface", label: "Power BI interface orientation", prerequisites: [], chapters: ["01-interface-orientation"], estHours: 1, pos: { x: 80, y: 300, r: 12 } },
+  { id: "pbi-connect", label: "Connecting to data sources", prerequisites: ["pbi-interface"], chapters: ["02-connecting-to-data"], estHours: 1.5, pos: { x: 150, y: 240, r: 12 } },
+  { id: "pbi-pq-shape", label: "Power Query (M): shaping data in the query editor", prerequisites: ["pbi-connect"], chapters: ["03-power-query-shaping"], estHours: 3, pos: { x: 230, y: 290, r: 13 } },
+  { id: "pbi-pq-advanced", label: "Power Query (M): custom columns, parameters, and reuse", prerequisites: ["pbi-pq-shape"], chapters: ["04-power-query-advanced"], estHours: 3, pos: { x: 300, y: 360, r: 12 } },
+  { id: "pbi-model", label: "Data model basics: tables, relationships, star schema", prerequisites: ["pbi-pq-shape"], chapters: ["05-data-model"], estHours: 3, pos: { x: 350, y: 250, r: 14 } },
+  { id: "pbi-context", label: "DAX: row context vs filter context (the core idea)", prerequisites: ["pbi-model"], chapters: ["06-dax-context"], estHours: 3, pos: { x: 440, y: 300, r: 14 } },
+  { id: "pbi-dax-basics", label: "DAX basics: calculated columns, measures", prerequisites: ["pbi-context"], chapters: ["07-dax-basics"], estHours: 2.5, pos: { x: 500, y: 240, r: 13 } },
+  { id: "pbi-dax-intermediate", label: "DAX intermediate: CALCULATE, FILTER, ALL", prerequisites: ["pbi-dax-basics"], chapters: ["08-dax-intermediate"], estHours: 3, pos: { x: 560, y: 300, r: 13 } },
+  { id: "pbi-dax-advanced", label: "DAX advanced: variables, iterators (SUMX), time intelligence", prerequisites: ["pbi-dax-intermediate"], chapters: ["09-dax-advanced"], estHours: 3.5, pos: { x: 630, y: 250, r: 13 } },
+  { id: "pbi-visuals", label: "Building visuals in Power BI", prerequisites: ["pbi-dax-basics"], chapters: ["10-building-visuals"], estHours: 2, pos: { x: 470, y: 400, r: 12 } },
+  { id: "pbi-slicers", label: "Slicers and filters", prerequisites: ["pbi-visuals"], chapters: ["11-slicers-and-filters"], estHours: 1.5, pos: { x: 550, y: 430, r: 11 } },
+  { id: "pbi-drillthrough", label: "Drill-through and report navigation", prerequisites: ["pbi-slicers"], chapters: ["12-drill-through-and-navigation"], estHours: 1.5, pos: { x: 630, y: 390, r: 11 } },
+  { id: "pbi-publish", label: "Publishing and sharing", prerequisites: ["pbi-visuals"], chapters: ["13-publishing-and-sharing"], estHours: 1.5, pos: { x: 700, y: 330, r: 12 } },
+  { id: "pbi-design", label: "Dashboard design principles", prerequisites: ["pbi-drillthrough", "pbi-publish"], chapters: ["14-dashboard-design"], estHours: 2, pos: { x: 730, y: 260, r: 13 } },
+];
+
 /* ----------------------------------------------------------------------------
    LEVEL 1 — topic nodes
    Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
@@ -295,23 +312,8 @@ export const TOPICS: TopicNode[] = [
     cluster: "analysis",
     prerequisites: ["visualization"],
     pos: { x: 460, y: 180, r: 14 },
-    subNodes: [],
-    plannedSubNodes: [
-      "Power BI interface orientation",
-      "Connecting to data sources",
-      "Power Query (M): shaping data in the query editor",
-      "Power Query (M): custom columns, parameters, and reuse",
-      "Data model basics (tables, relationships, star schema)",
-      "DAX: row context vs filter context (the core idea)",
-      "DAX basics (calculated columns, measures)",
-      "DAX intermediate (CALCULATE, FILTER, ALL)",
-      "DAX advanced: variables, iterators (SUMX), time intelligence",
-      "Building visuals in Power BI",
-      "Slicers and filters",
-      "Drill-through and report navigation",
-      "Publishing and sharing",
-      "Dashboard design principles",
-    ],
+    book: "power-bi-from-scratch",
+    subNodes: POWERBI_SUBNODES,
   },
   {
     id: "git",

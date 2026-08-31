@@ -189,6 +189,27 @@ export const BOOKS: Book[] = [
       { slug: "visualization/12-accessibility", title: "Accessibility in charts", nodeId: "chart-accessibility", tryThis: { label: "Chart Critiquer", target: "games" } },
     ],
   },
+  {
+    id: "power-bi-from-scratch",
+    title: "Power BI from Scratch",
+    subtitle: "From one-off analysis to something a team refreshes every Monday.",
+    chapters: [
+      { slug: "power-bi/01-interface-orientation", title: "Power BI interface orientation", nodeId: "pbi-interface" },
+      { slug: "power-bi/02-connecting-to-data", title: "Connecting to data sources", nodeId: "pbi-connect" },
+      { slug: "power-bi/03-power-query-shaping", title: "Power Query (M): shaping data in the query editor", nodeId: "pbi-pq-shape" },
+      { slug: "power-bi/04-power-query-advanced", title: "Power Query (M): custom columns, parameters, and reuse", nodeId: "pbi-pq-advanced" },
+      { slug: "power-bi/05-data-model", title: "Data model basics: tables, relationships, star schema", nodeId: "pbi-model" },
+      { slug: "power-bi/06-dax-context", title: "DAX: row context vs filter context (the core idea)", nodeId: "pbi-context" },
+      { slug: "power-bi/07-dax-basics", title: "DAX basics: calculated columns, measures", nodeId: "pbi-dax-basics" },
+      { slug: "power-bi/08-dax-intermediate", title: "DAX intermediate: CALCULATE, FILTER, ALL", nodeId: "pbi-dax-intermediate" },
+      { slug: "power-bi/09-dax-advanced", title: "DAX advanced: variables, iterators, time intelligence", nodeId: "pbi-dax-advanced" },
+      { slug: "power-bi/10-building-visuals", title: "Building visuals in Power BI", nodeId: "pbi-visuals" },
+      { slug: "power-bi/11-slicers-and-filters", title: "Slicers and filters", nodeId: "pbi-slicers" },
+      { slug: "power-bi/12-drill-through-and-navigation", title: "Drill-through and report navigation", nodeId: "pbi-drillthrough" },
+      { slug: "power-bi/13-publishing-and-sharing", title: "Publishing and sharing", nodeId: "pbi-publish" },
+      { slug: "power-bi/14-dashboard-design", title: "Dashboard design principles", nodeId: "pbi-design" },
+    ],
+  },
 ];
 
 export const BOOKS_BY_ID: Record<string, Book> = Object.fromEntries(BOOKS.map((b) => [b.id, b]));
