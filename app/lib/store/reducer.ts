@@ -107,8 +107,8 @@ export function reducer(state: AppState, action: Action): AppState {
       for (const id of action.seededNodeIds) {
         nodes[id] = { state: "completed", level: "sub", topicId: null, startedAt: null, completedAt: new Date().toISOString() };
       }
-      // calibration done -> hand off to the orientation beat
-      return { ...state, nodes, profile: { ...state.profile, onboardingPhase: "orientation" } };
+      // calibration is the last step of the intro
+      return { ...state, nodes, profile: { ...state.profile, onboardingPhase: "done", onboardingDone: true } };
     }
 
     case "advanceOnboarding": {
@@ -117,13 +117,6 @@ export function reducer(state: AppState, action: Action): AppState {
         ...state,
         profile: { ...state.profile, onboardingPhase: action.to, onboardingDone: done },
       };
-    }
-
-    case "completeFirstMission": {
-      let next = bump(state, XP.first_mission);
-      next = coin(next, COINS.first_mission);
-      next = heat(next, "case_submit");
-      return { ...next, profile: { ...next.profile, onboardingPhase: "calibration" } };
     }
 
     case "startNode":

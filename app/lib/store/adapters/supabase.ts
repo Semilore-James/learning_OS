@@ -213,7 +213,6 @@ export function supabaseAdapter(sb: DB, userId: string): StoreAdapter {
         case "setSharePublic":
         case "completeOnboarding":
         case "advanceOnboarding":
-        case "completeFirstMission":
           await mine(
             sb.from("profiles").update({
               display_name: next.profile.displayName,

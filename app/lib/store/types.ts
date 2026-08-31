@@ -172,7 +172,6 @@ export type Action =
   | { type: "setSharePublic"; sharePublic: boolean }
   | { type: "completeOnboarding"; seededNodeIds: string[] }
   | { type: "advanceOnboarding"; to: OnboardingPhase }
-  | { type: "completeFirstMission" }
   | { type: "resetProgress" }
   | { type: "startNode"; nodeId: string; level: NodeLevel; topicId: string | null }
   | { type: "completeNode"; nodeId: string; level: NodeLevel; topicId: string | null; alsoCompleteTopic?: string }
