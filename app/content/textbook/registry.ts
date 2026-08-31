@@ -210,6 +210,23 @@ export const BOOKS: Book[] = [
       { slug: "power-bi/14-dashboard-design", title: "Dashboard design principles", nodeId: "pbi-design" },
     ],
   },
+  {
+    id: "storytelling-with-data",
+    title: "Storytelling with Data",
+    subtitle: "The analysis is worthless if the room does not act on it.",
+    chapters: [
+      { slug: "storytelling/01-who-is-your-audience", title: "Who is your audience", nodeId: "audience" },
+      { slug: "storytelling/02-the-one-insight", title: "What is the one insight", nodeId: "one-insight" },
+      { slug: "storytelling/03-structuring-a-narrative", title: "Structuring a data narrative", nodeId: "narrative-structure" },
+      { slug: "storytelling/04-slide-design", title: "Slide design for data", nodeId: "slide-design", tryThis: { label: "Chart Critiquer", target: "games" } },
+      { slug: "storytelling/05-executive-summary", title: "Executive summary writing", nodeId: "exec-summary" },
+      { slug: "storytelling/06-what-not-to-show", title: "Choosing what NOT to show", nodeId: "what-not-to-show" },
+      { slug: "storytelling/07-annotation-and-context", title: "Annotation and context", nodeId: "story-annotation" },
+      { slug: "storytelling/08-presenting-uncertainty", title: "Presenting uncertainty", nodeId: "presenting-uncertainty" },
+      { slug: "storytelling/09-chart-rewrites", title: "Before and after: chart rewrites", nodeId: "chart-rewrites", tryThis: { label: "Chart Critiquer", target: "games" } },
+      { slug: "storytelling/10-presentation-deconstruction", title: "Case study: real presentation deconstruction", nodeId: "presentation-deconstruction", tryThis: { label: "Case 20: Portfolio Piece", target: "casefiles" } },
+    ],
+  },
 ];
 
 export const BOOKS_BY_ID: Record<string, Book> = Object.fromEntries(BOOKS.map((b) => [b.id, b]));

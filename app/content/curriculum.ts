@@ -239,6 +239,19 @@ const POWERBI_SUBNODES: SubNode[] = [
   { id: "pbi-design", label: "Dashboard design principles", prerequisites: ["pbi-drillthrough", "pbi-publish"], chapters: ["14-dashboard-design"], estHours: 2, pos: { x: 730, y: 260, r: 13 } },
 ];
 
+const STORYTELLING_SUBNODES: SubNode[] = [
+  { id: "audience", label: "Who is your audience", prerequisites: [], chapters: ["01-who-is-your-audience"], estHours: 1, pos: { x: 90, y: 300, r: 12 } },
+  { id: "one-insight", label: "What is the one insight", prerequisites: ["audience"], chapters: ["02-the-one-insight"], estHours: 1, pos: { x: 180, y: 250, r: 12 } },
+  { id: "narrative-structure", label: "Structuring a data narrative", prerequisites: ["one-insight"], chapters: ["03-structuring-a-narrative"], estHours: 2, pos: { x: 270, y: 300, r: 13 } },
+  { id: "slide-design", label: "Slide design for data", prerequisites: ["narrative-structure"], chapters: ["04-slide-design"], estHours: 2, pos: { x: 360, y: 250, r: 12 } },
+  { id: "exec-summary", label: "Executive summary writing", prerequisites: ["one-insight"], chapters: ["05-executive-summary"], estHours: 1.5, pos: { x: 260, y: 410, r: 12 } },
+  { id: "what-not-to-show", label: "Choosing what NOT to show", prerequisites: ["narrative-structure"], chapters: ["06-what-not-to-show"], estHours: 1, pos: { x: 400, y: 360, r: 12 } },
+  { id: "story-annotation", label: "Annotation and context", prerequisites: ["slide-design"], chapters: ["07-annotation-and-context"], estHours: 1.5, pos: { x: 470, y: 290, r: 12 } },
+  { id: "presenting-uncertainty", label: "Presenting uncertainty", prerequisites: ["what-not-to-show", "exec-summary"], chapters: ["08-presenting-uncertainty"], estHours: 2, pos: { x: 500, y: 400, r: 13 } },
+  { id: "chart-rewrites", label: "Before and after: chart rewrites", prerequisites: ["story-annotation"], chapters: ["09-chart-rewrites"], estHours: 2, pos: { x: 580, y: 320, r: 12 } },
+  { id: "presentation-deconstruction", label: "Case study: real presentation deconstruction", prerequisites: ["chart-rewrites", "presenting-uncertainty"], chapters: ["10-presentation-deconstruction"], estHours: 2, pos: { x: 670, y: 350, r: 13 } },
+];
+
 /* ----------------------------------------------------------------------------
    LEVEL 1 — topic nodes
    Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
@@ -332,19 +345,8 @@ export const TOPICS: TopicNode[] = [
     cluster: "output",
     prerequisites: ["visualization"],
     pos: { x: 670, y: 160, r: 13 },
-    subNodes: [],
-    plannedSubNodes: [
-      "Who is your audience",
-      "What is the one insight",
-      "Structuring a data narrative",
-      "Slide design for data",
-      "Executive summary writing",
-      "Choosing what NOT to show",
-      "Annotation and context",
-      "Presenting uncertainty",
-      "Before and after: chart rewrites",
-      "Case study: real presentation deconstruction",
-    ],
+    book: "storytelling-with-data",
+    subNodes: STORYTELLING_SUBNODES,
   },
   {
     id: "data-collection",
