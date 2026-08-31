@@ -131,6 +131,28 @@ export const BOOKS: Book[] = [
       { slug: "python/15-project-structure", title: "Writing output and structuring an end-to-end project", nodeId: "py-project" },
     ],
   },
+  {
+    id: "statistics-without-fear",
+    title: "Statistics Without Fear",
+    subtitle: "The difference between a number and an insight.",
+    chapters: [
+      { slug: "statistics/01-types-of-data", title: "Types of data: nominal, ordinal, interval, ratio", nodeId: "data-types" },
+      { slug: "statistics/02-central-tendency", title: "Measures of central tendency", nodeId: "central-tendency" },
+      { slug: "statistics/03-measures-of-spread", title: "Measures of spread", nodeId: "spread" },
+      { slug: "statistics/04-distributions", title: "Distributions: normal, skewed, uniform", nodeId: "distributions", tryThis: { label: "Data Detective", target: "games" } },
+      { slug: "statistics/05-probability-basics", title: "Probability basics", nodeId: "probability-basics" },
+      { slug: "statistics/06-conditional-probability", title: "Conditional probability", nodeId: "conditional-probability" },
+      { slug: "statistics/07-sampling-and-bias", title: "Sampling and sampling bias", nodeId: "sampling" },
+      { slug: "statistics/08-hypothesis-testing", title: "Hypothesis testing: what it is and why", nodeId: "hypothesis-testing" },
+      { slug: "statistics/09-t-tests", title: "T-tests", nodeId: "t-tests" },
+      { slug: "statistics/10-chi-square-tests", title: "Chi-square tests", nodeId: "chi-square" },
+      { slug: "statistics/11-correlation-vs-causation", title: "Correlation vs causation", nodeId: "correlation-causation", tryThis: { label: "Chart Critiquer", target: "games" } },
+      { slug: "statistics/12-linear-regression", title: "Regression basics (linear)", nodeId: "regression" },
+      { slug: "statistics/13-interpreting-p-values", title: "Interpreting p-values", nodeId: "p-values" },
+      { slug: "statistics/14-confidence-intervals", title: "Confidence intervals", nodeId: "confidence-intervals" },
+      { slug: "statistics/15-ab-testing", title: "A/B testing fundamentals", nodeId: "ab-testing" },
+    ],
+  },
 ];
 
 export const BOOKS_BY_ID: Record<string, Book> = Object.fromEntries(BOOKS.map((b) => [b.id, b]));

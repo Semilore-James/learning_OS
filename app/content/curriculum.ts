@@ -176,6 +176,24 @@ const PYTHON_SUBNODES: SubNode[] = [
   { id: "py-project", label: "Writing output and structuring an end-to-end project", prerequisites: ["pd-clean", "py-plotting"], chapters: ["15-project-structure"], estHours: 2, pos: { x: 750, y: 300, r: 12 } },
 ];
 
+const STATS_SUBNODES: SubNode[] = [
+  { id: "data-types", label: "Types of data: nominal, ordinal, interval, ratio", prerequisites: [], chapters: ["01-types-of-data"], estHours: 1, pos: { x: 80, y: 300, r: 12 } },
+  { id: "central-tendency", label: "Measures of central tendency (mean, median, mode)", prerequisites: ["data-types"], chapters: ["02-central-tendency"], estHours: 1.5, pos: { x: 160, y: 240, r: 12 } },
+  { id: "spread", label: "Measures of spread (variance, standard deviation, IQR)", prerequisites: ["central-tendency"], chapters: ["03-measures-of-spread"], estHours: 2, pos: { x: 240, y: 290, r: 13 } },
+  { id: "distributions", label: "Distributions: normal, skewed, uniform", prerequisites: ["spread"], chapters: ["04-distributions"], estHours: 2, pos: { x: 330, y: 240, r: 13 } },
+  { id: "probability-basics", label: "Probability basics", prerequisites: ["data-types"], chapters: ["05-probability-basics"], estHours: 1.5, pos: { x: 150, y: 410, r: 12 } },
+  { id: "conditional-probability", label: "Conditional probability", prerequisites: ["probability-basics"], chapters: ["06-conditional-probability"], estHours: 2, pos: { x: 260, y: 440, r: 12 } },
+  { id: "sampling", label: "Sampling and sampling bias", prerequisites: ["distributions", "probability-basics"], chapters: ["07-sampling-and-bias"], estHours: 2, pos: { x: 400, y: 350, r: 13 } },
+  { id: "hypothesis-testing", label: "Hypothesis testing: what it is and why", prerequisites: ["sampling", "conditional-probability"], chapters: ["08-hypothesis-testing"], estHours: 2.5, pos: { x: 480, y: 400, r: 14 } },
+  { id: "t-tests", label: "T-tests", prerequisites: ["hypothesis-testing"], chapters: ["09-t-tests"], estHours: 2, pos: { x: 580, y: 360, r: 12 } },
+  { id: "chi-square", label: "Chi-square tests", prerequisites: ["hypothesis-testing"], chapters: ["10-chi-square-tests"], estHours: 2, pos: { x: 570, y: 460, r: 12 } },
+  { id: "correlation-causation", label: "Correlation vs causation", prerequisites: ["distributions"], chapters: ["11-correlation-vs-causation"], estHours: 1.5, pos: { x: 440, y: 230, r: 13 } },
+  { id: "regression", label: "Regression basics (linear)", prerequisites: ["correlation-causation", "spread"], chapters: ["12-linear-regression"], estHours: 3, pos: { x: 550, y: 250, r: 13 } },
+  { id: "p-values", label: "Interpreting p-values", prerequisites: ["hypothesis-testing"], chapters: ["13-interpreting-p-values"], estHours: 1.5, pos: { x: 640, y: 410, r: 12 } },
+  { id: "confidence-intervals", label: "Confidence intervals", prerequisites: ["sampling", "spread"], chapters: ["14-confidence-intervals"], estHours: 2, pos: { x: 540, y: 310, r: 12 } },
+  { id: "ab-testing", label: "A/B testing fundamentals", prerequisites: ["t-tests", "p-values", "confidence-intervals"], chapters: ["15-ab-testing"], estHours: 2.5, pos: { x: 710, y: 360, r: 13 } },
+];
+
 /* ----------------------------------------------------------------------------
    LEVEL 1 — topic nodes
    Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
@@ -220,24 +238,7 @@ export const TOPICS: TopicNode[] = [
     prerequisites: ["python"],
     pos: { x: 90, y: 270, r: 19 },
     book: "statistics-without-fear",
-    subNodes: [],
-    plannedSubNodes: [
-      "Types of data (nominal, ordinal, interval, ratio)",
-      "Measures of central tendency",
-      "Measures of spread (variance, standard deviation, IQR)",
-      "Distributions (normal, skewed, uniform)",
-      "Probability basics",
-      "Conditional probability",
-      "Sampling and sampling bias",
-      "Hypothesis testing (what it is and why)",
-      "T-tests",
-      "Chi-square tests",
-      "Correlation vs causation",
-      "Regression basics (linear)",
-      "Interpreting p-values",
-      "Confidence intervals",
-      "A/B testing fundamentals",
-    ],
+    subNodes: STATS_SUBNODES,
   },
   {
     id: "data-cleaning",
