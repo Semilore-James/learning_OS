@@ -3,7 +3,6 @@
    mirrors the same action to the backing store.
    ========================================================================== */
 import { XP, COINS, HEATMAP_WEIGHT } from "@/content/xp";
-import { ITEMS_BY_ID, canPurchase, ownsItem } from "@/lib/shop";
 import type { Action, AppState, CaseState, ReviewItem } from "./types";
 import { EMPTY_STATE } from "./types";
 import { schedule } from "./srs";
@@ -68,7 +67,6 @@ export function reducer(state: AppState, action: Action): AppState {
         merged.coins = { earned: legacy, spent: 0, lastStreakDay: null };
       }
       if (!action.state.unlocks) merged.unlocks = [];
-      if (!action.state.equipped) merged.equipped = { iconSet: null, companion: null };
       // onboarding phase back-fill + fail-safe: anyone with real history or the
       // old done flag skips the first-run flow entirely
       const hadHistory =
@@ -422,30 +420,6 @@ export function reducer(state: AppState, action: Action): AppState {
 
     case "logDecline":
       return { ...state, declineCount: state.declineCount + 1 };
-
-    case "purchaseItem": {
-      const item = ITEMS_BY_ID[action.itemId];
-      if (!item) return state;
-      // re-check on the reducer side: balance, achievement gate, not already owned
-      if (!canPurchase(state, item).ok) return state;
-      return {
-        ...state,
-        unlocks: state.unlocks.includes(item.id)
-          ? state.unlocks
-          : [...state.unlocks, item.id],
-        coins: { ...state.coins, spent: state.coins.spent + item.price },
-      };
-    }
-
-    case "equip": {
-      const slot = action.slot;
-      if (action.itemId == null) {
-        return { ...state, equipped: { ...state.equipped, [slot]: null } };
-      }
-      const item = ITEMS_BY_ID[action.itemId];
-      if (!item || item.slot !== slot || !ownsItem(state, item)) return state;
-      return { ...state, equipped: { ...state.equipped, [slot]: item.asset.key } };
-    }
 
     case "resetProgress":
       // wipe learning progress, keep identity + appearance + onboarding flag

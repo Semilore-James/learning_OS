@@ -130,10 +130,10 @@ export const APPS: AppDef[] = [
   {
     id: "shop",
     label: "Shop",
-    hint: "Spend coins on cosmetics",
+    hint: "Spend XP on cosmetics (soon)",
     glyph: <GlyphShop />,
     flag: "shop",
-    win: { title: "Shop", subtitle: "COSMETICS", width: 700, height: 620 },
+    win: { title: "Shop", subtitle: "COMING SOON", width: 620, height: 480 },
     Body: ShopWindow,
   },
   {

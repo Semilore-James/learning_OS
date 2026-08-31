@@ -47,10 +47,8 @@ const SHIPPED: Flag[] = [
   "diagnostic",
   "commandPalette",
   "sharePage",
+  "shop",
   "pmVision",
-  // "shop" — built but not launched. On in dev; off in prod until the shop
-  //   pass lands (branch: shop-followups). Flip on here, or add to
-  //   NEXT_PUBLIC_FLAGS, when ready.
 ];
 
 const fromEnv = (process.env.NEXT_PUBLIC_FLAGS ?? "")

@@ -9,7 +9,6 @@
    ========================================================================== */
 import type { Action, AppState } from "@/lib/store/types";
 import { VIDEOS } from "@/lib/video";
-import { ITEMS_BY_ID } from "@/content/shop/items";
 import { CASES } from "@/content/cases/registry";
 import { chapterBySlug } from "@/content/textbook/registry";
 import type { EventMap, EventName } from "./events";
@@ -118,24 +117,6 @@ export function eventsForAction(action: Action, next: AppState): Ev[] {
 
     case "logDecline":
       return [{ name: "pm_ai_declined", props: { decline_reason: action.kind } }];
-
-    case "purchaseItem": {
-      // only fires when the reducer actually granted it (the item is now owned)
-      if (!next.unlocks.includes(action.itemId)) return [];
-      const it = ITEMS_BY_ID[action.itemId];
-      if (!it) return [];
-      return [
-        {
-          name: "shop_item_purchased",
-          props: { item_id: it.id, category: it.category, rarity: it.rarity, price: it.price },
-        },
-      ];
-    }
-
-    case "equip":
-      return [
-        { name: "shop_item_equipped", props: { slot: action.slot, item_id: action.itemId } },
-      ];
 
     default:
       return [];

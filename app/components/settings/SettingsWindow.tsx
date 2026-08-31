@@ -6,12 +6,10 @@
    persists through the store adapter.
    ========================================================================== */
 import { useState } from "react";
-import { useStore, select } from "@/lib/store";
+import { useStore } from "@/lib/store";
 import { useSession } from "@/lib/session/SessionProvider";
 import { SKINS } from "@/lib/skins";
 import { WALLPAPERS } from "@/components/wallpaper";
-import { COMPANIONS, companionLabel } from "@/lib/shop/companions";
-import { sessionHideCompanion, useSessionHidden } from "@/components/desktop/DesktopCompanion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,10 +33,6 @@ export function SettingsWindow() {
   const [name, setName] = useState(displayName ?? "");
   const [confirmReset, setConfirmReset] = useState(false);
   const [handleDraft, setHandleDraft] = useState(handle ?? "");
-
-  const ownedCompanions = COMPANIONS.filter((c) => state.unlocks.includes(`companion-${c}`));
-  const equippedCompanion = select.equippedCompanion(state);
-  const companionHidden = useSessionHidden();
   const handleValid = /^[a-z0-9_-]{3,30}$/.test(handleDraft);
   const shareUrl = typeof window !== "undefined" && handle ? `${window.location.origin}/share/${handle}` : "";
 
@@ -102,10 +96,10 @@ export function SettingsWindow() {
               skin === s.id ? "chrome-flat bg-surface-raised" : "border-border",
             )}
           >
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <span className="text-xs font-semibold text-foreground">
               {s.label}
               {skin === s.id && (
-                <span className="ml-1 font-mono text-[9px] text-primary">ACTIVE</span>
+                <span className="ml-2 font-mono text-[9px] text-primary">ACTIVE</span>
               )}
             </span>
             <span className="text-[11px] font-light text-muted-foreground">{s.blurb}</span>
@@ -125,54 +119,6 @@ export function SettingsWindow() {
           onCheckedChange={(v) => dispatch({ type: "setReduceEffects", reduceEffects: v })}
         />
       </section>
-
-      {ownedCompanions.length > 0 && (
-        <section className="flex flex-col gap-3 border-b border-border p-5">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <SectionLabel>Desktop companion</SectionLabel>
-              <span className="text-[11px] font-light text-muted-foreground">
-                A small character that wanders the desktop and reacts to milestones.
-                Hidden automatically when celebration effects are reduced.
-              </span>
-            </div>
-            <Switch
-              checked={!!equippedCompanion}
-              onCheckedChange={(v) =>
-                dispatch({
-                  type: "equip",
-                  slot: "companion",
-                  itemId: v ? `companion-${ownedCompanions[0]}` : null,
-                })
-              }
-            />
-          </div>
-          {!!equippedCompanion && ownedCompanions.length > 1 && (
-            <div className="flex flex-wrap gap-1.5">
-              {ownedCompanions.map((c) => (
-                <Button
-                  key={c}
-                  size="sm"
-                  variant={equippedCompanion === c ? "default" : "outline"}
-                  onClick={() =>
-                    dispatch({ type: "equip", slot: "companion", itemId: `companion-${c}` })
-                  }
-                >
-                  {companionLabel(c)}
-                </Button>
-              ))}
-            </div>
-          )}
-          {!!equippedCompanion && companionHidden && (
-            <Button
-              variant="outline"
-              onClick={() => sessionHideCompanion(false)}
-            >
-              Companion hidden for this session — show it now
-            </Button>
-          )}
-        </section>
-      )}
 
       <section className="flex flex-col gap-3 p-5">
         <SectionLabel>Wallpaper</SectionLabel>

@@ -35,13 +35,6 @@ supabase db push
    - Sender email on your verified domain
 3. Send yourself a test signup and confirm the code arrives.
 
-## Storage buckets
-
-`0010_shop.sql` creates a public-read **`shop-assets`** bucket for large shop
-assets (desktop-companion sprite strips). The migration only creates the bucket +
-read policy; the sprite files are uploaded separately — see
-[`../docs/shop-assets.md`](../docs/shop-assets.md).
-
 ## Regenerate the TypeScript types after any schema change
 
 ```bash

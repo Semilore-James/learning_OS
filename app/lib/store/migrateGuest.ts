@@ -26,19 +26,7 @@ export async function migrateGuestToAccount(sb: DB, userId: string): Promise<boo
         wallpaper_id: s.profile.wallpaperId,
         onboarding_done: s.profile.onboardingDone,
         reduce_effects: s.profile.reduceEffects,
-        equipped_icon_set: s.equipped?.iconSet ?? null,
-        equipped_companion: s.equipped?.companion ?? null,
       }).eq("id", userId),
-    );
-  }
-
-  // owned shop items -> user_unlocks rows
-  if (s.unlocks?.length) {
-    ins.push(
-      sb.from("user_unlocks").upsert(
-        s.unlocks.map((item_id) => ({ user_id: userId, item_id })),
-        { onConflict: "user_id,item_id", ignoreDuplicates: true },
-      ),
     );
   }
 

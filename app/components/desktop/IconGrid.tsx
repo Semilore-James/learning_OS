@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import { APPS } from "@/lib/appRegistry";
 import { flag } from "@/lib/flags";
-import { AppGlyph } from "./AppGlyph";
 
 export function IconGrid({
   openIds,
@@ -39,7 +38,7 @@ export function IconGrid({
                 boxShadow: "var(--shadow-sm)",
               }}
             >
-              <AppGlyph appId={a.id} glyph={a.glyph} />
+              {a.glyph}
             </span>
             <span className="whitespace-pre-line text-center font-mono text-[10px]/[1.2] text-muted-foreground">
               {a.label}

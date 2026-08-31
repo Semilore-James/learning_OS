@@ -34,24 +34,10 @@ week adds 100. Call it **~2,000 coins in a busy month**.
 Milestones (level-up, streak 7/30/100) as coin windfalls are **phase 2** — cheap
 to add later through the same path.
 
-## 2. Spending — LIVE (v1 shop shipped)
-
-Implemented in migration `0010_shop.sql` + `lib/shop/` + `content/shop/items.ts`
-+ the rebuilt `components/shop/ShopWindow.tsx`. See also `docs/shop-assets.md`.
-
-v1 sells **2** categories: **icon sets** (3: retro, pixel, solid) and **desktop
-companions** (10, Ninja Adventure / CC0). Wallpapers and design skins stay FREE —
-the shipped ones are not re-sold; the shop's wallpaper/skin slots are reserved
-for future *original* art. Cursor trails, boot sequences, sound packs and window
-themes have reducer/adapter plumbing but no renderer yet.
+## 2. Spending — schema only for now
 
 - `state.coins = { earned, spent, lastStreakDay }`; balance = `earned - spent`.
 - `state.unlocks: string[]` — item ids the learner owns.
-- `state.equipped = { iconSet, companion }` — equipped cosmetic keys (or null).
-- Account mirror: `user_unlocks(user_id, item_id)` + `profiles.equipped_icon_set`
-  / `equipped_companion`. A purchase also appends the negative `coin_events` row.
-- Reducer actions: `{type:"purchaseItem", itemId}` (re-checks balance + gate +
-  not-owned) and `{type:"equip", slot, itemId}`.
 - Account: `coin_events(user_id, reason, amount, created_at)` append-only, positive
   for earns, negative for purchases; balance = `sum(amount)`. Existing accounts
   seed `earned` from their old game score so nobody loses a balance.
@@ -101,14 +87,7 @@ the shop alive without inflation.
 reducer helper, `select.coinBalance`, `coin_events` table, ProfileCard + Shop
 showing the real balance.
 
-**Done (v1 shop):** the `content/shop/items.ts` catalog, `purchaseItem` /`equip`
-actions + reducer guards, the achievement-gate check (`lib/shop`), the rebuilt
-Shop window with live previews + weekly featured strip; icon-set swap
-(`lib/shop/iconSets.tsx` + `AppGlyph`) and the desktop companion
-(`components/desktop/DesktopCompanion.tsx` — CSS-driven sprite, rAF movement,
-idle / walk / cheer / doze / sit / glum / peek states).
-
-**Still later:** original premium wallpapers + skins; cursor trails, boot
-sequences, sound packs, window themes (plumbing only); companion interaction with
-desktop furniture (Council'd 2026-08-31 — see docs/shop-work-log-2026-08-31.md);
-milestone coin windfalls (phase 2).
+**Later (needs your item designs):** the `ITEMS` catalog file, the `purchaseItem`
+action + reducer guard, the achievement-gate check, the rebuilt Shop window with
+equip logic, wiring each unlock into its subsystem (wallpaper picker, skin
+picker, cursor renderer, sound player, ...).
