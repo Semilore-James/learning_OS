@@ -18,7 +18,7 @@ import { CommandPalette } from "./CommandPalette";
 import { SessionBriefing } from "./SessionBriefing";
 import { DailyGreeting } from "./DailyGreeting";
 import { Celebrations } from "./Celebrations";
-import { DesktopCompanion } from "./DesktopCompanion";
+import { DesktopCompanion, WINDOW_OPENED_EVENT } from "./DesktopCompanion";
 import { DiagnosticScreen } from "./DiagnosticScreen";
 import { OnboardingMission, OnboardingOrientation } from "./Onboarding";
 
@@ -73,6 +73,9 @@ export function Desktop() {
       if (!wm.open.includes(id)) {
         const label = resolveApp(id)?.win.title ?? id;
         track("module_opened", { module_name: label });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event(WINDOW_OPENED_EVENT));
+        }
       }
       wm.openWindow(id, size ?? resolveApp(id)?.win);
     },
