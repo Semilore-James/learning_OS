@@ -291,9 +291,11 @@
 .da-msg-in { animation: daMsgIn 160ms ease-out both; }
 .da-dot { display: inline-block; animation: daDot 900ms ease-in-out infinite; }
 
-/* desktop companion: sprite-strip playback (see components/shop/CompanionSprite) */
-@keyframes companion-play { to { transform: translateX(-100%); } }
-@keyframes companion-bob  { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+/* desktop companion: sprite-strip playback (see components/shop/CompanionSprite).
+   One keyframe per frame count so switching anim restarts cleanly. */
+@keyframes companion-a2 { to { background-position-x: var(--cg-end); } }
+@keyframes companion-a4 { to { background-position-x: var(--cg-end); } }
+@keyframes companion-bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
 .companion-zzz { animation: companion-bob 2.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {

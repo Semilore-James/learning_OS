@@ -5,9 +5,13 @@
    JS frame timer). Shared by the Shop card preview and the live
    DesktopCompanion.
 
-   Strips are horizontal, 80px frames. The keyframe `companion-play` (globals.css)
-   translates the inner track by -100% (its full width); steps(<frames>) walks it
-   one frame at a time. Left-facing is a CSS scaleX(-1).
+   The element is always size x size. The strip is set as an over-wide
+   background (`backgroundSize` = frames*size) and `background-position-x` is
+   stepped one frame at a time by the `companion-a2` / `companion-a4` keyframes
+   (globals.css). Because the node, its size, and its transform never change
+   between animations, switching anim (e.g. walk -> idle when the companion
+   stops) is a plain in-place style update with no remount and no snap.
+   Left-facing is a CSS scaleX(-1).
    ========================================================================== */
 import { useEffect, useRef } from "react";
 import {
@@ -36,8 +40,12 @@ export function CompanionSprite({
   const url = companionSheetUrl(name, anim);
   const animate = frames > 1 && !paused;
   const durationS = frames / fps;
+  const stripW = frames * size;
+  // distinct keyframe name per frame count -> changing anim restarts the
+  // animation cleanly instead of retiming a running one
+  const keyframe = frames === 4 ? "companion-a4" : frames === 2 ? "companion-a2" : "";
 
-  // preload the other anims for this companion so switching doesn't flash
+  // preload every anim for this companion so switching never flashes
   const preloaded = useRef<string | null>(null);
   useEffect(() => {
     if (preloaded.current === name) return;
@@ -60,20 +68,22 @@ export function CompanionSprite({
       aria-hidden
     >
       <div
-        // key on anim so React swaps the node and the animation restarts clean
-        key={anim}
-        style={{
-          width: frames * size,
-          height: size,
-          backgroundImage: `url(${url})`,
-          backgroundSize: "100% 100%",
-          backgroundRepeat: "no-repeat",
-          imageRendering: "pixelated",
-          animation: animate
-            ? `companion-play ${durationS}s steps(${frames}) infinite`
-            : "none",
-          transform: animate ? undefined : "translateX(0)",
-        }}
+        style={
+          {
+            width: size,
+            height: size,
+            backgroundImage: `url(${url})`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: `${stripW}px ${size}px`,
+            backgroundPositionX: 0,
+            imageRendering: "pixelated",
+            "--cg-end": `-${stripW}px`,
+            animation:
+              animate && keyframe
+                ? `${keyframe} ${durationS}s steps(${frames}) infinite`
+                : "none",
+          } as React.CSSProperties
+        }
       />
     </div>
   );
