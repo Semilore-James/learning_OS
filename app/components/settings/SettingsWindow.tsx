@@ -6,15 +6,11 @@
    persists through the store adapter.
    ========================================================================== */
 import { useState } from "react";
-import { Lock } from "lucide-react";
 import { useStore, select } from "@/lib/store";
 import { useSession } from "@/lib/session/SessionProvider";
-import { useWindowActions } from "@/lib/windowContext";
 import { SKINS } from "@/lib/skins";
 import { WALLPAPERS } from "@/components/wallpaper";
-import { ownsItem } from "@/lib/shop";
-import { ITEMS_BY_ID, FREE_SKIN_IDS } from "@/content/shop/items";
-import { COMPANIONS } from "@/lib/shop/companions";
+import { COMPANIONS, companionLabel } from "@/lib/shop/companions";
 import { sessionHideCompanion, useSessionHidden } from "@/components/desktop/DesktopCompanion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,18 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ProfileCard } from "./ProfileCard";
 import { TwoFactor } from "./TwoFactor";
-import type { AppState, Skin, Theme } from "@/lib/store/types";
-
-/** a wallpaper is free, or its wp-<id> unlock is owned */
-function wallpaperOwned(state: AppState, id: string): boolean {
-  const item = ITEMS_BY_ID[`wp-${id}`];
-  return !item || ownsItem(state, item);
-}
-function skinOwned(state: AppState, id: string): boolean {
-  if (FREE_SKIN_IDS.includes(id)) return true;
-  const item = ITEMS_BY_ID[`skin-${id}`];
-  return !item || ownsItem(state, item);
-}
+import type { Skin, Theme } from "@/lib/store/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -46,7 +31,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export function SettingsWindow() {
   const { state, dispatch } = useStore();
   const { phase } = useSession();
-  const win = useWindowActions();
   const { theme, skin, wallpaperId, reduceEffects, displayName, handle, sharePublic } = state.profile;
   const [name, setName] = useState(displayName ?? "");
   const [confirmReset, setConfirmReset] = useState(false);
@@ -108,35 +92,25 @@ export function SettingsWindow() {
 
       <section className="flex flex-col gap-2 border-b border-border p-5">
         <SectionLabel>Design language</SectionLabel>
-        {SKINS.map((s) => {
-          const locked = !skinOwned(state, s.id);
-          return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() =>
-                locked ? win.open("shop") : dispatch({ type: "setSkin", skin: s.id as Skin })
-              }
-              className={cn(
-                "flex flex-col gap-1 rounded-[var(--radius-control)] border p-3 text-left",
-                skin === s.id ? "chrome-flat bg-surface-raised" : "border-border",
-                locked && "opacity-70",
+        {SKINS.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => dispatch({ type: "setSkin", skin: s.id as Skin })}
+            className={cn(
+              "flex flex-col gap-1 rounded-[var(--radius-control)] border p-3 text-left",
+              skin === s.id ? "chrome-flat bg-surface-raised" : "border-border",
+            )}
+          >
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              {s.label}
+              {skin === s.id && (
+                <span className="ml-1 font-mono text-[9px] text-primary">ACTIVE</span>
               )}
-            >
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                {locked && <Lock className="size-3 text-muted-foreground" />}
-                {s.label}
-                {skin === s.id && !locked && (
-                  <span className="ml-1 font-mono text-[9px] text-primary">ACTIVE</span>
-                )}
-                {locked && (
-                  <span className="ml-1 font-mono text-[9px] text-brand-amber">GET IT IN THE SHOP</span>
-                )}
-              </span>
-              <span className="text-[11px] font-light text-muted-foreground">{s.blurb}</span>
-            </button>
-          );
-        })}
+            </span>
+            <span className="text-[11px] font-light text-muted-foreground">{s.blurb}</span>
+          </button>
+        ))}
       </section>
 
       <section className="flex items-center justify-between gap-4 border-b border-border p-5">
@@ -174,17 +148,17 @@ export function SettingsWindow() {
             />
           </div>
           {!!equippedCompanion && ownedCompanions.length > 1 && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {ownedCompanions.map((c) => (
                 <Button
                   key={c}
+                  size="sm"
                   variant={equippedCompanion === c ? "default" : "outline"}
-                  className="flex-1 capitalize"
                   onClick={() =>
                     dispatch({ type: "equip", slot: "companion", itemId: `companion-${c}` })
                   }
                 >
-                  {c}
+                  {companionLabel(c)}
                 </Button>
               ))}
             </div>
@@ -203,45 +177,33 @@ export function SettingsWindow() {
       <section className="flex flex-col gap-3 p-5">
         <SectionLabel>Wallpaper</SectionLabel>
         <div className="grid grid-cols-3 gap-2">
-          {WALLPAPERS.map((w) => {
-            const locked = !wallpaperOwned(state, w.id);
-            return (
-              <button
-                key={w.id}
-                type="button"
-                title={locked ? `${w.label} — get it in the Shop` : w.blurb}
-                onClick={() =>
-                  locked ? win.open("shop") : dispatch({ type: "setWallpaper", wallpaperId: w.id })
-                }
-                className={cn(
-                  "relative flex aspect-[16/10] items-end overflow-hidden rounded-[var(--radius-control)] border bg-surface-raised p-0",
-                  wallpaperId === w.id ? "border-2 border-primary" : "border-border",
-                )}
+          {WALLPAPERS.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              title={w.blurb}
+              onClick={() => dispatch({ type: "setWallpaper", wallpaperId: w.id })}
+              className={cn(
+                "relative flex aspect-[16/10] items-end overflow-hidden rounded-[var(--radius-control)] border bg-surface-raised p-0",
+                wallpaperId === w.id ? "border-2 border-primary" : "border-border",
+              )}
+            >
+              {w.kind === "svg" && w.Component && (
+                <div className="pointer-events-none absolute inset-0">
+                  <w.Component theme={theme} reducedMotion />
+                </div>
+              )}
+              <span
+                className="relative w-full px-1.5 py-[3px] font-mono text-[9px] text-foreground"
+                style={{ background: "color-mix(in srgb, var(--bg) 70%, transparent)" }}
               >
-                {w.kind === "svg" && w.Component && (
-                  <div
-                    className={cn("pointer-events-none absolute inset-0", locked && "opacity-40")}
-                  >
-                    <w.Component theme={theme} reducedMotion />
-                  </div>
-                )}
-                {locked && (
-                  <span className="absolute right-1 top-1 rounded-full bg-[color-mix(in_srgb,var(--bg)_75%,transparent)] p-0.5">
-                    <Lock className="size-2.5 text-brand-amber" />
-                  </span>
-                )}
-                <span
-                  className="relative w-full px-1.5 py-[3px] font-mono text-[9px] text-foreground"
-                  style={{ background: "color-mix(in srgb, var(--bg) 70%, transparent)" }}
-                >
-                  {locked ? "Shop" : w.label}
-                </span>
-              </button>
-            );
-          })}
+                {w.label}
+              </span>
+            </button>
+          ))}
         </div>
         <p className="text-[11px] font-light text-muted-foreground">
-          Locked wallpapers unlock in the Shop. Your own art drops into the same picker later.
+          More wallpapers, including your own art, drop into the same picker later.
         </p>
       </section>
 

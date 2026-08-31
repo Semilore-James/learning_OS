@@ -5,12 +5,11 @@
    earned from chapters read, nodes and cases completed, game clears and streak
    days. Nothing here touches learning; XP is never spendable.
 
-   v1 categories (Council shop-scope verdict): icon sets, desktop companions,
-   wallpapers, design skins. Each card previews itself live and offers Buy /
-   Equip / a locked button with the achievement requirement.
+   v1 categories: desktop companions + icon sets. Wallpapers and design skins
+   stay free (see content/shop/items.ts). Each card previews itself live and
+   offers Buy / Equip / a locked button with the achievement requirement.
    ========================================================================== */
 import { useMemo, useState } from "react";
-import type { Skin } from "@/lib/store/types";
 import { useStore, select } from "@/lib/store";
 import { canPurchase, ownsItem, weeklyFeatured } from "@/lib/shop";
 import {
@@ -27,7 +26,7 @@ import { ShopPreviewCard } from "./previews";
 
 const RARITY_CLASS: Record<string, string> = {
   common: "text-muted-foreground",
-  uncommon: "text-[color:var(--brand-cyan,#22d3ee)]",
+  uncommon: "text-[color:var(--brand-cyan,#3aa0c9)]",
   rare: "text-primary",
   epic: "text-brand-violet",
   legendary: "text-brand-amber",
@@ -37,12 +36,7 @@ function ItemCard({ item }: { item: ShopItem }) {
   const { state, dispatch } = useStore();
   const owned = ownsItem(state, item);
   const check = canPurchase(state, item);
-  const equippedKey = item.slot ? state.equipped[item.slot] : null;
-  const isEquipped = !!item.slot && equippedKey === item.asset.key;
-
-  const wallpaperActive =
-    item.category === "wallpaper" && state.profile.wallpaperId === item.asset.wallpaperId;
-  const skinActive = item.category === "skin" && state.profile.skin === item.asset.key;
+  const isEquipped = !!item.slot && state.equipped[item.slot] === item.asset.key;
 
   let action: React.ReactNode;
   if (!owned) {
@@ -65,7 +59,7 @@ function ItemCard({ item }: { item: ShopItem }) {
           : `Buy · ${item.price.toLocaleString()} coins`}
       </button>
     );
-  } else if (item.slot) {
+  } else {
     action = (
       <button
         type="button"
@@ -80,38 +74,15 @@ function ItemCard({ item }: { item: ShopItem }) {
         {isEquipped ? "Equipped · remove" : "Equip"}
       </button>
     );
-  } else if (item.category === "wallpaper") {
-    action = (
-      <button
-        type="button"
-        disabled={wallpaperActive}
-        onClick={() => dispatch({ type: "setWallpaper", wallpaperId: item.asset.wallpaperId })}
-        className={cn(
-          "chrome-flat chrome-press w-full px-3 py-1.5 text-[11px] font-bold",
-          wallpaperActive ? "bg-surface-raised text-muted-foreground" : "bg-primary text-primary-foreground",
-        )}
-      >
-        {wallpaperActive ? "Current wallpaper" : "Set as wallpaper"}
-      </button>
-    );
-  } else {
-    action = (
-      <button
-        type="button"
-        disabled={skinActive}
-        onClick={() => dispatch({ type: "setSkin", skin: item.asset.key as Skin })}
-        className={cn(
-          "chrome-flat chrome-press w-full px-3 py-1.5 text-[11px] font-bold",
-          skinActive ? "bg-surface-raised text-muted-foreground" : "bg-primary text-primary-foreground",
-        )}
-      >
-        {skinActive ? "Current skin" : "Apply skin"}
-      </button>
-    );
   }
 
   return (
-    <div className="chrome-panel flex flex-col gap-2 p-3">
+    <div
+      className={cn(
+        "chrome-panel flex flex-col gap-2 p-3",
+        isEquipped && "outline outline-1 outline-primary",
+      )}
+    >
       <ShopPreviewCard preview={item.preview} />
       <div className="flex items-start justify-between gap-2">
         <span className="font-display text-[13px] font-bold leading-tight text-foreground">
@@ -135,8 +106,9 @@ function ItemCard({ item }: { item: ShopItem }) {
 export function ShopWindow() {
   const { state } = useStore();
   const coins = select.coinBalance(state);
-  const [tab, setTab] = useState<ShopCategory>("icons");
+  const [tab, setTab] = useState<ShopCategory>(CATEGORY_ORDER[0]);
   const featured = useMemo(() => weeklyFeatured(), []);
+  const ownedCount = state.unlocks.length;
 
   const rows = useMemo(() => {
     const byRarity = new Map<ShopItem["rarity"], ShopItem[]>();
@@ -150,16 +122,23 @@ export function ShopWindow() {
 
   return (
     <div className="flex h-full flex-col overflow-auto">
-      <div className="flex items-center justify-between gap-3 border-b border-border p-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-surface p-4">
         <div>
           <h2 className="font-display text-base font-bold text-foreground">Shop</h2>
           <p className="text-[11px] text-muted-foreground">
             Cosmetic only. Everything that affects learning stays free.
           </p>
         </div>
-        <span className="chrome-flat bg-surface-raised px-3 py-1.5 text-sm font-bold text-brand-amber">
-          {coins.toLocaleString()} coins
-        </span>
+        <div className="text-right">
+          <div className="chrome-flat bg-surface-raised px-3 py-1.5 text-sm font-bold text-brand-amber">
+            {coins.toLocaleString()} coins
+          </div>
+          {ownedCount > 0 && (
+            <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+              {ownedCount} owned
+            </div>
+          )}
+        </div>
       </div>
 
       {/* weekly featured */}
@@ -196,8 +175,13 @@ export function ShopWindow() {
       <div className="flex flex-col gap-5 p-4">
         {rows.map(([rarity, items]) => (
           <section key={rarity} className="flex flex-col gap-2">
-            <span className={cn("font-mono text-[9px] uppercase tracking-widest", RARITY_CLASS[rarity])}>
-              {RARITY_LABEL[rarity as ShopItem["rarity"]]}
+            <span
+              className={cn(
+                "font-mono text-[9px] uppercase tracking-widest",
+                RARITY_CLASS[rarity],
+              )}
+            >
+              {RARITY_LABEL[rarity]}
             </span>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((it) => (

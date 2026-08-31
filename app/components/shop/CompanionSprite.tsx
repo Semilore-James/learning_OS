@@ -1,13 +1,15 @@
 "use client";
 
 /* ============================================================================
-   One companion animation strip, played frame by frame. Shared by the Shop
-   card preview (idle loop) and the live DesktopCompanion.
+   One companion animation strip, played with a pure-CSS steps() animation (no
+   JS frame timer). Shared by the Shop card preview and the live
+   DesktopCompanion.
 
-   Strips are horizontal, 96px frames, served from the shop-assets bucket.
-   Left-facing is a CSS flip of the Right-facing art.
+   Strips are horizontal, 80px frames. The keyframe `companion-play` (globals.css)
+   translates the inner track by -100% (its full width); steps(<frames>) walks it
+   one frame at a time. Left-facing is a CSS scaleX(-1).
    ========================================================================== */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   COMPANION_ANIMS,
   FRAME_PX,
@@ -31,18 +33,9 @@ export function CompanionSprite({
   className?: string;
 }) {
   const { frames, fps } = COMPANION_ANIMS[anim];
-  const [tick, setTick] = useState(0);
   const url = companionSheetUrl(name, anim);
-
-  // one monotonic counter; the displayed frame is tick % frames, so switching
-  // animations (which changes `frames`) needs no explicit reset
-  useEffect(() => {
-    if (paused) return;
-    const id = window.setInterval(() => setTick((t) => t + 1), Math.max(30, 1000 / fps));
-    return () => window.clearInterval(id);
-  }, [fps, paused]);
-
-  const frame = tick % frames;
+  const animate = frames > 1 && !paused;
+  const durationS = frames / fps;
 
   // preload the other anims for this companion so switching doesn't flash
   const preloaded = useRef<string | null>(null);
@@ -66,17 +59,20 @@ export function CompanionSprite({
       }}
       aria-hidden
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={url}
-        alt=""
-        draggable={false}
+      <div
+        // key on anim so React swaps the node and the animation restarts clean
+        key={anim}
         style={{
           width: frames * size,
           height: size,
-          maxWidth: "none",
-          transform: `translateX(${-frame * size}px)`,
-          userSelect: "none",
+          backgroundImage: `url(${url})`,
+          backgroundSize: "100% 100%",
+          backgroundRepeat: "no-repeat",
+          imageRendering: "pixelated",
+          animation: animate
+            ? `companion-play ${durationS}s steps(${frames}) infinite`
+            : "none",
+          transform: animate ? undefined : "translateX(0)",
         }}
       />
     </div>

@@ -1,25 +1,25 @@
 /* ============================================================================
    Shop catalog — the ITEMS the learner can buy with coins (docs/coin-economy.md).
 
-   v1 ships 4 of the 8 taxonomy categories (Council: shop-scope verdict,
-   2026-08-29): icon sets, desktop companions, wallpapers, design skins. The
-   other four (cursor trails, boot sequences, sound packs, window themes) have
-   plumbing but no renderer yet — they are deliberately absent from this list.
+   Live categories (Council shop-scope verdict, 2026-08-29): icon sets and
+   desktop companions. Wallpapers and design skins stay FREE for now — the
+   shipped ones are not re-sold; new wallpaper art drops into the free picker,
+   and the shop's wallpaper tab is reserved for future original art.
 
    Shape (frozen for the reducer + adapter):
      id             stable key, also the row id in public.user_unlocks
      category       which tab / subsystem
      name / blurb   card copy
-     rarity         drives price band + sort order (see coin-economy.md §3)
+     rarity         drives price band + sort order (coin-economy.md §3)
      price          coins
      achievementGate?  a lib/milestones key that must also be earned (legendary)
      slot?          "iconSet" | "companion" — equippable items only
      preview        how ShopWindow renders the live card preview
-     asset          what the subsystem consumes. `asset.key` is the value written
-                    to state.equipped[slot] / read by the picker.
+     asset          what the subsystem consumes. `asset.key` is written to
+                    state.equipped[slot].
    ========================================================================== */
 
-export type ShopCategory = "icons" | "companion" | "wallpaper" | "skin";
+export type ShopCategory = "icons" | "companion";
 export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 export type EquipSlot = "iconSet" | "companion";
 
@@ -30,10 +30,8 @@ export interface AchievementGate {
 }
 
 export type ShopPreview =
-  | { kind: "iconSheet"; src: string }
-  | { kind: "companion"; name: string }
-  | { kind: "wallpaper"; wallpaperId: string }
-  | { kind: "skin"; skin: string };
+  | { kind: "iconSet"; setKey: string }
+  | { kind: "companion"; name: string };
 
 export interface ShopItem {
   id: string;
@@ -64,133 +62,85 @@ export const RARITY_LABEL: Record<Rarity, string> = {
   legendary: "Legendary",
 };
 
-/* -------------------------------------------------------- icon sets (1) --- */
+/* -------------------------------------------------------- icon sets --- */
 
 const ICON_SETS: ShopItem[] = [
   {
     id: "icons-retro",
     category: "icons",
     name: "Retro Computer Icons",
-    blurb:
-      "Every desktop and taskbar glyph becomes a hand-drawn 32px pixel icon. Beige-box energy.",
+    blurb: "Every desktop and taskbar glyph becomes a hand-drawn 32px pixel icon. Beige-box energy.",
     rarity: "uncommon",
     price: 180,
     slot: "iconSet",
-    preview: { kind: "iconSheet", src: "/shop/icons/retro/sheet.png" },
+    preview: { kind: "iconSet", setKey: "retro" },
     asset: { key: "retro" },
   },
-];
-
-/* ------------------------------------------------------- companions (3) --- */
-
-const COMPANION_ITEMS: ShopItem[] = [
   {
-    id: "companion-assassin",
-    category: "companion",
-    name: "The Assassin",
-    blurb: "A hooded desktop companion. Paces the taskbar, celebrates your level-ups.",
+    id: "icons-pixel",
+    category: "icons",
+    name: "Pixel Mono",
+    blurb: "Crisp one-colour pixel glyphs (pixelarticons). Reads like an early GUI.",
+    rarity: "uncommon",
+    price: 150,
+    slot: "iconSet",
+    preview: { kind: "iconSet", setKey: "pixel" },
+    asset: { key: "pixel" },
+  },
+  {
+    id: "icons-solid",
+    category: "icons",
+    name: "Phosphor Solid",
+    blurb: "Bold filled shapes instead of hairline strokes. Heavier, friendlier.",
     rarity: "rare",
-    price: 600,
-    slot: "companion",
-    preview: { kind: "companion", name: "assassin" },
-    asset: { key: "assassin" },
-  },
-  {
-    id: "companion-robber",
-    category: "companion",
-    name: "The Robber",
-    blurb: "Same idle-and-wander loop, lighter palette. Sulks when your streak breaks.",
-    rarity: "epic",
-    price: 1500,
-    slot: "companion",
-    preview: { kind: "companion", name: "robber" },
-    asset: { key: "robber" },
-  },
-  {
-    id: "companion-thug",
-    category: "companion",
-    name: "The Enforcer",
-    blurb: "The heavyweight companion. Earns his keep once you've put the work in.",
-    rarity: "legendary",
-    price: 9000,
-    achievementGate: { key: "level-5", label: "Reach level 5" },
-    slot: "companion",
-    preview: { kind: "companion", name: "thug" },
-    asset: { key: "thug" },
+    price: 300,
+    slot: "iconSet",
+    preview: { kind: "iconSet", setKey: "solid" },
+    asset: { key: "solid" },
   },
 ];
 
-/* ------------------------------------------------------- wallpapers (13) --- */
-/* starfield / grid-horizon / dot-grid stay free (the shipped defaults). The
-   other 13 procedural scenes are priced by vibe. */
+/* ------------------------------------------------------- companions --- */
+/* Ninja Adventure Asset Pack (pixel-boy, CC0). */
 
-type WpSeed = [id: string, name: string, rarity: Rarity, price: number];
-const WALLPAPER_SEEDS: WpSeed[] = [
-  ["aurora", "Aurora", "common", 40],
-  ["contour", "Contour", "common", 50],
-  ["star-chart", "Star Chart", "common", 60],
-  ["nebula", "Nebula", "uncommon", 120],
-  ["luna", "Luna", "uncommon", 150],
-  ["nightside", "Nightside", "uncommon", 180],
-  ["orbital", "Orbital", "uncommon", 200],
-  ["saturn", "Saturn", "rare", 350],
-  ["milky-way", "Milky Way", "rare", 450],
-  ["galaxy", "Galaxy", "rare", 550],
-  ["space-station", "Space Station", "rare", 650],
-  ["quasar", "Quasar", "epic", 1600],
-  ["black-hole", "Black Hole", "epic", 2400],
+type CoSeed = [key: string, name: string, rarity: Rarity, price: number, blurb: string];
+const COMPANION_SEEDS: CoSeed[] = [
+  ["ninja-green", "Green Ninja", "common", 40, "Standard-issue shinobi. Paces the taskbar, cheers your level-ups."],
+  ["ninja-red", "Red Ninja", "common", 50, "Same moveset, warmer palette."],
+  ["villager", "Villager", "common", 60, "Off-duty. Wanders, dozes when you step away."],
+  ["scout", "Scout", "uncommon", 120, "Cap and pack. Always looks like they're mid-errand."],
+  ["ninja-grey", "Grey Ninja", "uncommon", 160, "Scarfed and stealthy. Blends into a dark wallpaper."],
+  ["wanderer", "Wanderer", "uncommon", 200, "Broad hat, long road. Unbothered."],
+  ["ember", "Ember", "rare", 350, "Fire-lit hair. Cheer animation actually lands."],
+  ["knight", "Knight", "rare", 550, "Full helm. Stomps rather than pads."],
+  ["sentinel", "Sentinel", "epic", 1800, "A walking chassis. Whirs when it wakes from a doze."],
+  [
+    "crimson",
+    "The Crimson",
+    "legendary",
+    9000,
+    "The one you work toward. Coins alone won't buy it.",
+  ],
 ];
 
-const WALLPAPER_ITEMS: ShopItem[] = WALLPAPER_SEEDS.map(([wid, name, rarity, price]) => ({
-  id: `wp-${wid}`,
-  category: "wallpaper" as const,
+const COMPANION_ITEMS: ShopItem[] = COMPANION_SEEDS.map(([key, name, rarity, price, blurb]) => ({
+  id: `companion-${key}`,
+  category: "companion" as const,
   name,
-  blurb: "Procedural wallpaper. Unlocks in the Settings picker once bought.",
+  blurb,
   rarity,
   price,
-  preview: { kind: "wallpaper" as const, wallpaperId: wid },
-  asset: { key: wid, wallpaperId: wid },
+  slot: "companion" as const,
+  preview: { kind: "companion" as const, name: key },
+  asset: { key },
+  ...(key === "crimson"
+    ? { achievementGate: { key: "level-5", label: "Reach level 5" } }
+    : {}),
 }));
-
-/** wallpaper ids that never need buying */
-export const FREE_WALLPAPER_IDS = ["starfield", "grid-horizon", "dot-grid"];
-
-/* ---------------------------------------------------------- skins (2) --- */
-/* neobrutalism is free (the PRD default). */
-
-const SKIN_ITEMS: ShopItem[] = [
-  {
-    id: "skin-swiss",
-    category: "skin",
-    name: "Swiss / International",
-    blurb: "Thin hairlines, no shadows, strict grid. Nothing decorative.",
-    rarity: "rare",
-    price: 400,
-    preview: { kind: "skin", skin: "swiss" },
-    asset: { key: "swiss", skin: "swiss" },
-  },
-  {
-    id: "skin-glassmorphism",
-    category: "skin",
-    name: "Viewport / Glass",
-    blurb: "Frosted translucent panels, blur, big soft radius. Reads as HUD.",
-    rarity: "epic",
-    price: 1200,
-    preview: { kind: "skin", skin: "glassmorphism" },
-    asset: { key: "glassmorphism", skin: "glassmorphism" },
-  },
-];
-
-export const FREE_SKIN_IDS = ["neobrutalism"];
 
 /* ------------------------------------------------------------- exports --- */
 
-export const ITEMS: ShopItem[] = [
-  ...ICON_SETS,
-  ...COMPANION_ITEMS,
-  ...WALLPAPER_ITEMS,
-  ...SKIN_ITEMS,
-];
+export const ITEMS: ShopItem[] = [...ICON_SETS, ...COMPANION_ITEMS];
 
 export const ITEMS_BY_ID: Record<string, ShopItem> = Object.fromEntries(
   ITEMS.map((i) => [i.id, i]),
@@ -199,11 +149,9 @@ export const ITEMS_BY_ID: Record<string, ShopItem> = Object.fromEntries(
 export const CATEGORY_LABEL: Record<ShopCategory, string> = {
   icons: "Icon sets",
   companion: "Companions",
-  wallpaper: "Wallpapers",
-  skin: "Design skins",
 };
 
-export const CATEGORY_ORDER: ShopCategory[] = ["icons", "companion", "wallpaper", "skin"];
+export const CATEGORY_ORDER: ShopCategory[] = ["companion", "icons"];
 
 /** items in a category, cheapest rarity first then price */
 export function itemsInCategory(category: ShopCategory): ShopItem[] {

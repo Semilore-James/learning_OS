@@ -1,28 +1,40 @@
 /* ============================================================================
    Desktop companion sprite metadata.
 
-   The sheets are horizontal strips of 96×96 frames, one PNG per animation,
-   served from the Supabase Storage bucket "shop-assets" (public read) at
+   Art: Ninja Adventure Asset Pack by pixel-boy (CC0). Each character is sliced
+   from the pack's 4x7 (16px) sheet into per-animation horizontal strips of
+   80px frames, served from the Supabase Storage bucket "shop-assets" at
      <base>/companions/<name>/<anim>.png
    base = NEXT_PUBLIC_SHOP_ASSET_BASE, falling back to the project's own
-   Supabase URL + the public-object path. Source art: "Free Medieval Bandit"
-   pack (Right-facing frames only; Left is a CSS scaleX(-1)).
+   Supabase URL. The companion only ever faces left/right on the desktop, so
+   only the pack's RIGHT-facing frames are used; LEFT is a CSS scaleX(-1).
    ========================================================================== */
 import { publicEnv } from "@/lib/env";
 
-export const COMPANIONS = ["assassin", "robber", "thug"] as const;
+export const COMPANIONS = [
+  "ninja-green",
+  "ninja-red",
+  "ninja-grey",
+  "scout",
+  "villager",
+  "wanderer",
+  "ember",
+  "knight",
+  "sentinel",
+  "crimson",
+] as const;
 export type CompanionName = (typeof COMPANIONS)[number];
 
-export type CompanionAnim = "idle" | "idle-blinking" | "walking" | "running";
+export type CompanionAnim = "idle" | "walk" | "cheer" | "sit";
 
-export const FRAME_PX = 96;
+export const FRAME_PX = 80;
 
 /** frame count + playback rate per animation strip */
 export const COMPANION_ANIMS: Record<CompanionAnim, { frames: number; fps: number }> = {
-  idle: { frames: 16, fps: 9 },
-  "idle-blinking": { frames: 16, fps: 9 },
-  walking: { frames: 20, fps: 14 },
-  running: { frames: 12, fps: 16 },
+  idle: { frames: 1, fps: 1 },
+  walk: { frames: 4, fps: 7 },
+  cheer: { frames: 2, fps: 5 },
+  sit: { frames: 1, fps: 1 },
 };
 
 export function shopAssetBase(): string {
@@ -38,4 +50,12 @@ export function companionSheetUrl(name: string, anim: CompanionAnim): string {
 
 export function isCompanionName(v: string | null | undefined): v is CompanionName {
   return !!v && (COMPANIONS as readonly string[]).includes(v);
+}
+
+/** display label for a companion key */
+export function companionLabel(name: string): string {
+  return name
+    .split("-")
+    .map((s) => s[0].toUpperCase() + s.slice(1))
+    .join(" ");
 }

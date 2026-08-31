@@ -11,8 +11,6 @@ import type { AppState } from "@/lib/store/types";
 import {
   ITEMS,
   ITEMS_BY_ID,
-  FREE_WALLPAPER_IDS,
-  FREE_SKIN_IDS,
   RARITY_ORDER,
   type ShopItem,
 } from "@/content/shop/items";
@@ -51,10 +49,7 @@ export function hasAchievement(state: AppState, key: string): boolean {
   return longestStreak(state.heatmap) >= n;
 }
 
-/** free-by-default items (shipped wallpapers, the default skin) count as owned */
 export function ownsItem(state: AppState, item: ShopItem): boolean {
-  if (item.category === "wallpaper" && FREE_WALLPAPER_IDS.includes(item.asset.key)) return true;
-  if (item.category === "skin" && FREE_SKIN_IDS.includes(item.asset.key)) return true;
   return state.unlocks.includes(item.id);
 }
 
@@ -79,7 +74,7 @@ export function equippedItem(
 
 /* ------------------------------------------------- weekly featured strip --- */
 
-/** ISO-ish week index since epoch — changes once a week, same for all viewers */
+/** week index since epoch — changes once a week, same for all viewers */
 function weekIndex(now = Date.now()): number {
   return Math.floor(now / (7 * 86_400_000));
 }
