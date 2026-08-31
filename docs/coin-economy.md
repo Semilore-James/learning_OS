@@ -39,10 +39,11 @@ to add later through the same path.
 Implemented in migration `0010_shop.sql` + `lib/shop/` + `content/shop/items.ts`
 + the rebuilt `components/shop/ShopWindow.tsx`. See also `docs/shop-assets.md`.
 
-v1 ships 4 of the 8 taxonomy categories (Council shop-scope verdict, 2026-08-29):
-**icon sets, desktop companions, wallpapers, design skins**. Cursor trails, boot
-sequences, sound packs and window themes have the reducer/adapter plumbing but no
-renderer yet.
+v1 sells **2** categories: **icon sets** (3: retro, pixel, solid) and **desktop
+companions** (10, Ninja Adventure / CC0). Wallpapers and design skins stay FREE —
+the shipped ones are not re-sold; the shop's wallpaper/skin slots are reserved
+for future *original* art. Cursor trails, boot sequences, sound packs and window
+themes have reducer/adapter plumbing but no renderer yet.
 
 - `state.coins = { earned, spent, lastStreakDay }`; balance = `earned - spent`.
 - `state.unlocks: string[]` — item ids the learner owns.
@@ -102,10 +103,12 @@ showing the real balance.
 
 **Done (v1 shop):** the `content/shop/items.ts` catalog, `purchaseItem` /`equip`
 actions + reducer guards, the achievement-gate check (`lib/shop`), the rebuilt
-Shop window with live previews + weekly featured strip, and wiring for the four
-live categories — icon-set swap (`lib/shop/iconSets.ts` + `AppGlyph`), desktop
-companion (`components/desktop/DesktopCompanion.tsx`), and gated wallpaper / skin
-pickers in Settings.
+Shop window with live previews + weekly featured strip; icon-set swap
+(`lib/shop/iconSets.tsx` + `AppGlyph`) and the desktop companion
+(`components/desktop/DesktopCompanion.tsx` — CSS-driven sprite, rAF movement,
+idle / walk / cheer / doze / sit / glum / peek states).
 
-**Still later:** cursor trails, boot sequences, sound packs, window themes
-(plumbing only, no renderer); milestone coin windfalls (phase 2).
+**Still later:** original premium wallpapers + skins; cursor trails, boot
+sequences, sound packs, window themes (plumbing only); companion interaction with
+desktop furniture (Council'd 2026-08-31 — see docs/shop-work-log-2026-08-31.md);
+milestone coin windfalls (phase 2).
