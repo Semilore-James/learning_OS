@@ -207,6 +207,21 @@ const DATA_CLEANING_SUBNODES: SubNode[] = [
   { id: "cleaning-pipelines", label: "Reproducible cleaning pipelines", prerequisites: ["documenting-cleaning"], chapters: ["10-reproducible-pipelines"], estHours: 2.5, pos: { x: 730, y: 340, r: 13 } },
 ];
 
+const VIZ_SUBNODES: SubNode[] = [
+  { id: "chart-choice", label: "Choosing the right chart type", prerequisites: [], chapters: ["01-choosing-the-right-chart"], estHours: 1.5, pos: { x: 90, y: 300, r: 13 } },
+  { id: "visual-hierarchy", label: "Principles of visual hierarchy", prerequisites: ["chart-choice"], chapters: ["02-visual-hierarchy"], estHours: 1.5, pos: { x: 180, y: 240, r: 12 } },
+  { id: "color-in-charts", label: "Color use in charts", prerequisites: ["visual-hierarchy"], chapters: ["03-color-in-charts"], estHours: 1.5, pos: { x: 270, y: 290, r: 12 } },
+  { id: "misleading-charts", label: "Avoiding misleading charts", prerequisites: ["chart-choice"], chapters: ["04-avoiding-misleading-charts"], estHours: 2, pos: { x: 200, y: 400, r: 13 } },
+  { id: "bar-charts", label: "Bar charts done right", prerequisites: ["visual-hierarchy"], chapters: ["05-bar-charts"], estHours: 1.5, pos: { x: 360, y: 250, r: 12 } },
+  { id: "line-charts", label: "Line charts done right", prerequisites: ["visual-hierarchy"], chapters: ["06-line-charts"], estHours: 1.5, pos: { x: 350, y: 360, r: 12 } },
+  { id: "scatter-plots", label: "Scatter plots and correlation", prerequisites: ["bar-charts", "line-charts"], chapters: ["07-scatter-plots"], estHours: 1.5, pos: { x: 460, y: 300, r: 12 } },
+  { id: "heatmaps", label: "Heatmaps for data", prerequisites: ["color-in-charts"], chapters: ["08-heatmaps"], estHours: 1.5, pos: { x: 470, y: 420, r: 11 } },
+  { id: "tables-as-viz", label: "Tables as visualization", prerequisites: ["visual-hierarchy"], chapters: ["09-tables-as-visualization"], estHours: 1.5, pos: { x: 540, y: 380, r: 12 } },
+  { id: "annotations", label: "Annotations and callouts", prerequisites: ["scatter-plots"], chapters: ["10-annotations-and-callouts"], estHours: 1, pos: { x: 560, y: 270, r: 12 } },
+  { id: "dashboard-layout", label: "Dashboard layout principles", prerequisites: ["annotations", "tables-as-viz"], chapters: ["11-dashboard-layout"], estHours: 2, pos: { x: 650, y: 330, r: 13 } },
+  { id: "chart-accessibility", label: "Accessibility in charts", prerequisites: ["color-in-charts", "annotations"], chapters: ["12-accessibility"], estHours: 1.5, pos: { x: 700, y: 250, r: 12 } },
+];
+
 /* ----------------------------------------------------------------------------
    LEVEL 1 — topic nodes
    Positions adapted from docs/DA Learning OS.dc.html (cNodes array).
@@ -271,21 +286,7 @@ export const TOPICS: TopicNode[] = [
     prerequisites: ["data-cleaning"],
     pos: { x: 520, y: 250, r: 15 },
     book: "data-visualization-field-manual",
-    subNodes: [],
-    plannedSubNodes: [
-      "Choosing the right chart type",
-      "Principles of visual hierarchy",
-      "Color use in charts",
-      "Avoiding misleading charts",
-      "Bar charts done right",
-      "Line charts done right",
-      "Scatter plots and correlation",
-      "Heatmaps for data",
-      "Tables as visualization",
-      "Annotations and callouts",
-      "Dashboard layout principles",
-      "Accessibility in charts",
-    ],
+    subNodes: VIZ_SUBNODES,
   },
   {
     id: "power-bi",

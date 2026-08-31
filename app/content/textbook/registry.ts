@@ -170,6 +170,25 @@ export const BOOKS: Book[] = [
       { slug: "data-cleaning/10-reproducible-pipelines", title: "Reproducible cleaning pipelines", nodeId: "cleaning-pipelines", tryThis: { label: "Case 01: Retail Sales Audit", target: "casefiles" } },
     ],
   },
+  {
+    id: "data-visualization-field-manual",
+    title: "Data Visualization Field Manual",
+    subtitle: "Make the chart the argument, not the decoration.",
+    chapters: [
+      { slug: "visualization/01-choosing-the-right-chart", title: "Choosing the right chart type", nodeId: "chart-choice" },
+      { slug: "visualization/02-visual-hierarchy", title: "Principles of visual hierarchy", nodeId: "visual-hierarchy" },
+      { slug: "visualization/03-color-in-charts", title: "Color use in charts", nodeId: "color-in-charts" },
+      { slug: "visualization/04-avoiding-misleading-charts", title: "Avoiding misleading charts", nodeId: "misleading-charts", tryThis: { label: "Chart Critiquer", target: "games" } },
+      { slug: "visualization/05-bar-charts", title: "Bar charts done right", nodeId: "bar-charts" },
+      { slug: "visualization/06-line-charts", title: "Line charts done right", nodeId: "line-charts" },
+      { slug: "visualization/07-scatter-plots", title: "Scatter plots and correlation", nodeId: "scatter-plots" },
+      { slug: "visualization/08-heatmaps", title: "Heatmaps for data", nodeId: "heatmaps" },
+      { slug: "visualization/09-tables-as-visualization", title: "Tables as visualization", nodeId: "tables-as-viz" },
+      { slug: "visualization/10-annotations-and-callouts", title: "Annotations and callouts", nodeId: "annotations" },
+      { slug: "visualization/11-dashboard-layout", title: "Dashboard layout principles", nodeId: "dashboard-layout" },
+      { slug: "visualization/12-accessibility", title: "Accessibility in charts", nodeId: "chart-accessibility", tryThis: { label: "Chart Critiquer", target: "games" } },
+    ],
+  },
 ];
 
 export const BOOKS_BY_ID: Record<string, Book> = Object.fromEntries(BOOKS.map((b) => [b.id, b]));
