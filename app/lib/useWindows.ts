@@ -2,9 +2,12 @@
 
 /* ============================================================================
    Window manager. Open / close / focus / minimise / maximise / resize, z-stack,
-   and pointer drag by the title bar. Windows spawn centred with a small
-   deterministic stagger, are clamped so the title bar can never leave the
-   screen, and can be resized from any edge or corner.
+   and pointer drag by the title bar.
+
+   Fit-to-screen: a window can never open larger than the viewport, all open
+   windows re-clamp when the viewport changes (rotate / resize / mobile
+   keyboard), and below MOBILE_BP every window renders maximised (a phone-app
+   stack) so there are no unreachable off-screen windows on a small device.
    ========================================================================== */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -19,6 +22,8 @@ export interface WindowManager {
   open: string[];
   stack: string[];
   minimized: string[];
+  /** true on small screens: every window renders maximised, no drag/resize */
+  compact: boolean;
   isOpen: (id: string) => boolean;
   isMinimized: (id: string) => boolean;
   isMaximized: (id: string) => boolean;
@@ -39,16 +44,17 @@ const Z_BASE = 10;
 const TASKBAR = 44;
 const MIN_W = 320;
 const MIN_H = 220;
-const KEEP_VISIBLE = 140; // px of the window that must stay on screen horizontally
+const MARGIN = 24; // gap kept between a fitted window and the viewport edge
+const KEEP_VISIBLE = 140; // px of a window that must stay on screen horizontally
+const MOBILE_BP = 900; // at or below this width, windows are a maximised stack
+                       // (phones + tablets in portrait); laptops/desktops float
 // cap simultaneously-open windows: each mounts a heavy body, and a dozen at
 // once melts the page. Opening past the cap evicts the least-recently-focused.
 const MAX_OPEN = 6;
 
-function vw() {
-  return typeof window !== "undefined" ? window.innerWidth : 1440;
-}
-function vh() {
-  return typeof window !== "undefined" ? window.innerHeight : 900;
+function initialViewport() {
+  if (typeof window === "undefined") return { w: 1440, h: 900 };
+  return { w: window.innerWidth, h: window.innerHeight };
 }
 
 export function useWindows(): WindowManager {
@@ -59,25 +65,79 @@ export function useWindows(): WindowManager {
   const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
   const [size, setSize] = useState<Record<string, Size>>({});
   const [natural, setNatural] = useState<Record<string, Size>>({});
+  const [vp, setVp] = useState(initialViewport);
   const openCount = useRef(0);
 
-  // latest open/stack for openWindow's eviction check without re-creating the cb
+  const compact = vp.w <= MOBILE_BP;
+
+  // the largest a window may be right now, and how to squeeze one into that
+  const maxW = Math.max(MIN_W, vp.w - MARGIN);
+  const maxH = Math.max(MIN_H, vp.h - TASKBAR - MARGIN);
+  const fit = useCallback(
+    (s: Size): Size => ({
+      width: Math.min(s.width, Math.max(MIN_W, vp.w - MARGIN)),
+      height: Math.min(s.height, Math.max(MIN_H, vp.h - TASKBAR - MARGIN)),
+    }),
+    [vp.w, vp.h],
+  );
+
+  const clampPos = useCallback(
+    (x: number, y: number, w: number) => ({
+      x: Math.min(vp.w - KEEP_VISIBLE, Math.max(KEEP_VISIBLE - w, x)),
+      y: Math.min(vp.h - TASKBAR - 20, Math.max(0, y)),
+    }),
+    [vp.w, vp.h],
+  );
+
+  // latest open/stack/size for callbacks that must not be recreated on change
   const openRef = useRef<string[]>([]);
   const stackRef = useRef<string[]>([]);
+  const sizeRef = useRef<Record<string, Size>>({});
   useEffect(() => {
     openRef.current = open;
   }, [open]);
   useEffect(() => {
     stackRef.current = stack;
   }, [stack]);
+  useEffect(() => {
+    sizeRef.current = size;
+  }, [size]);
 
-  const fitViewport = useCallback(
-    (s: Size): Size => ({
-      width: Math.min(s.width, vw() - 24),
-      height: Math.min(s.height, vh() - TASKBAR - 24),
-    }),
-    [],
-  );
+  // track the viewport and re-fit every window when it changes
+  useEffect(() => {
+    const onResize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setVp({ w, h });
+      const capW = Math.max(MIN_W, w - MARGIN);
+      const capH = Math.max(MIN_H, h - TASKBAR - MARGIN);
+      setSize((sz) => {
+        let changed = false;
+        const next: Record<string, Size> = {};
+        for (const [id, s] of Object.entries(sz)) {
+          const nw = Math.min(s.width, capW);
+          const nh = Math.min(s.height, capH);
+          if (nw !== s.width || nh !== s.height) changed = true;
+          next[id] = { width: nw, height: nh };
+        }
+        return changed ? next : sz;
+      });
+      setPos((p) => {
+        let changed = false;
+        const next: Record<string, { x: number; y: number }> = {};
+        for (const [id, pt] of Object.entries(p)) {
+          const wd = Math.min(sizeRef.current[id]?.width ?? 640, capW);
+          const nx = Math.min(w - KEEP_VISIBLE, Math.max(KEEP_VISIBLE - wd, pt.x));
+          const ny = Math.min(h - TASKBAR - 20, Math.max(0, pt.y));
+          if (nx !== pt.x || ny !== pt.y) changed = true;
+          next[id] = { x: nx, y: ny };
+        }
+        return changed ? next : p;
+      });
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const reportNatural = useCallback((id: string, s: Size) => {
     setNatural((n) => {
@@ -99,19 +159,19 @@ export function useWindows(): WindowManager {
     py: number;
   } | null>(null);
 
-  const clampPos = useCallback((x: number, y: number, w: number) => {
-    return {
-      x: Math.min(vw() - KEEP_VISIBLE, Math.max(KEEP_VISIBLE - w, x)),
-      y: Math.min(vh() - TASKBAR - 20, Math.max(0, y)),
-    };
-  }, []);
-
   const focusWindow = useCallback((id: string) => {
     setStack((s) => [...s.filter((w) => w !== id), id]);
   }, []);
 
   const openWindow = useCallback(
     (id: string, s?: Size) => {
+      // never spawn bigger than the screen
+      const req = s ?? { width: 640, height: 520 };
+      const fitted: Size = {
+        width: Math.min(req.width, maxW),
+        height: Math.min(req.height, maxH),
+      };
+
       // at the cap, evict the least-recently-focused other window
       let evict: string | null = null;
       if (!openRef.current.includes(id) && openRef.current.length >= MAX_OPEN) {
@@ -126,27 +186,22 @@ export function useWindows(): WindowManager {
         const base = evict ? o.filter((w) => w !== evict) : o;
         return base.includes(id) ? base : [...base, id];
       });
-      setStack((st) => {
-        const base = evict ? st.filter((w) => w !== evict) : st;
-        return [...base.filter((w) => w !== id), id];
-      });
-      setSize((sz) => (sz[id] || !s ? sz : { ...sz, [id]: s }));
+      setStack((st) => [...st.filter((w) => w !== id && w !== evict), id]);
+      setSize((sz) => (sz[id] ? sz : { ...sz, [id]: fitted }));
       setPos((p) => {
         if (p[id]) return p;
         const n = openCount.current++;
-        const w = s?.width ?? 640;
-        const h = s?.height ?? 520;
-        const stagger = (n % 5) * 26;
+        const stagger = (n % 5) * 22;
         return {
           ...p,
           [id]: {
-            x: Math.max(12, Math.round((vw() - w) / 2) + stagger - 52),
-            y: Math.max(12, Math.round((vh() - TASKBAR - h) / 2) + stagger - 40),
+            x: Math.max(12, Math.round((vp.w - fitted.width) / 2) + stagger - 40),
+            y: Math.max(12, Math.round((vp.h - TASKBAR - fitted.height) / 2) + stagger - 30),
           },
         };
       });
     },
-    [],
+    [maxW, maxH, vp.w, vp.h],
   );
 
   const closeWindow = useCallback((id: string) => {
@@ -170,37 +225,28 @@ export function useWindows(): WindowManager {
 
   const startDrag = useCallback(
     (id: string, e: React.PointerEvent) => {
-      if (maximized.includes(id)) return;
+      if (compact || maximized.includes(id)) return;
       e.preventDefault();
       focusWindow(id);
       const cur = pos[id] ?? { x: 0, y: 0 };
       drag.current = { id, dx: e.clientX - cur.x, dy: e.clientY - cur.y };
       document.body.style.userSelect = "none";
     },
-    [focusWindow, pos, maximized],
+    [focusWindow, pos, maximized, compact],
   );
 
   const startResize = useCallback(
     (id: string, edge: ResizeEdge, e: React.PointerEvent) => {
-      if (maximized.includes(id)) return;
+      if (compact || maximized.includes(id)) return;
       e.preventDefault();
       e.stopPropagation();
       focusWindow(id);
       const p = pos[id] ?? { x: 0, y: 0 };
       const s = size[id] ?? { width: 640, height: 520 };
-      resize.current = {
-        id,
-        edge,
-        x0: p.x,
-        y0: p.y,
-        w0: s.width,
-        h0: s.height,
-        px: e.clientX,
-        py: e.clientY,
-      };
+      resize.current = { id, edge, x0: p.x, y0: p.y, w0: s.width, h0: s.height, px: e.clientX, py: e.clientY };
       document.body.style.userSelect = "none";
     },
-    [focusWindow, pos, size, maximized],
+    [focusWindow, pos, size, maximized, compact],
   );
 
   useEffect(() => {
@@ -215,19 +261,18 @@ export function useWindows(): WindowManager {
       if (r) {
         const ddx = e.clientX - r.px;
         const ddy = e.clientY - r.py;
-        // can't shrink below what the content needs (capped at viewport)
         const nat = natural[r.id];
-        const minW = Math.max(MIN_W, Math.min(nat?.width ?? 0, vw() - 40));
-        const minH = Math.max(MIN_H, Math.min(nat?.height ?? 0, vh() - TASKBAR - 40));
+        const minW = Math.max(MIN_W, Math.min(nat?.width ?? 0, maxW));
+        const minH = Math.max(MIN_H, Math.min(nat?.height ?? 0, maxH));
         let { x0: x, y0: y, w0: w, h0: h } = r;
-        if (r.edge.includes("e")) w = Math.max(minW, r.w0 + ddx);
-        if (r.edge.includes("s")) h = Math.max(minH, r.h0 + ddy);
+        if (r.edge.includes("e")) w = Math.min(maxW, Math.max(minW, r.w0 + ddx));
+        if (r.edge.includes("s")) h = Math.min(maxH, Math.max(minH, r.h0 + ddy));
         if (r.edge.includes("w")) {
-          w = Math.max(minW, r.w0 - ddx);
+          w = Math.min(maxW, Math.max(minW, r.w0 - ddx));
           x = r.x0 + (r.w0 - w);
         }
         if (r.edge.includes("n")) {
-          h = Math.max(minH, r.h0 - ddy);
+          h = Math.min(maxH, Math.max(minH, r.h0 - ddy));
           y = Math.max(0, r.y0 + (r.h0 - h));
         }
         setSize((sz) => ({ ...sz, [r.id]: { width: w, height: h } }));
@@ -245,19 +290,23 @@ export function useWindows(): WindowManager {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
     };
-  }, [size, natural, clampPos]);
+  }, [size, natural, clampPos, maxW, maxH]);
 
   return {
     open,
     stack,
     minimized,
+    compact,
     isOpen: (id) => open.includes(id),
     isMinimized: (id) => minimized.includes(id),
     isMaximized: (id) => maximized.includes(id),
     zOf: (id) => Z_BASE + Math.max(0, stack.indexOf(id)),
     posOf: (id) => pos[id],
-    // user-set size wins; otherwise fit the measured content to the viewport
-    sizeOf: (id) => size[id] ?? (natural[id] ? fitViewport(natural[id]) : undefined),
+    // user-set size wins; either way, never report bigger than the viewport
+    sizeOf: (id) => {
+      const s = size[id] ?? natural[id];
+      return s ? fit(s) : undefined;
+    },
     reportNatural,
     openWindow,
     closeWindow,

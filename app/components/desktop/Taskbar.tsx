@@ -55,10 +55,10 @@ export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
 
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-[200] flex h-11 items-center justify-between px-4"
+      className="absolute inset-x-0 bottom-0 z-[200] flex h-11 items-center justify-between gap-2 px-3 sm:px-4"
       style={{ background: "var(--surface)", borderTop: "var(--bd)" }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <span className="font-mono text-[13px] font-bold tracking-tight text-primary">DA // OS</span>
         {track && (
           <button
@@ -67,23 +67,23 @@ export function Taskbar({ onOpenSettings }: { onOpenSettings: () => void }) {
               win.open("constellation");
               win.open(`subconstellation:${track.id}`);
             }}
-            className="chrome-flat chrome-press flex items-center gap-1.5 bg-surface-raised px-2.5 py-1 text-[11px] font-semibold text-foreground"
+            className="chrome-flat chrome-press hidden min-w-0 items-center gap-1.5 bg-surface-raised px-2.5 py-1 text-[11px] font-semibold text-foreground sm:flex"
           >
-            <Play className="size-3 fill-primary text-primary" />
-            Continue: {track.label.replace(/\n/g, " ")}
+            <Play className="size-3 shrink-0 fill-primary text-primary" />
+            <span className="truncate">Continue: {track.label.replace(/\n/g, " ")}</span>
           </button>
         )}
       </div>
 
-      <span className="font-mono text-[13px] text-foreground">{clock}</span>
+      <span className="hidden font-mono text-[13px] text-foreground sm:block">{clock}</span>
 
-      <div className="flex items-center gap-3.5">
-        {syncing && <span className="font-mono text-[9px] text-muted-foreground">saving…</span>}
+      <div className="flex shrink-0 items-center gap-3 sm:gap-3.5">
+        {syncing && <span className="hidden font-mono text-[9px] text-muted-foreground sm:inline">saving…</span>}
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-bold text-brand-amber">
             <CountUp value={xp} /> XP
           </span>
-          <span className="block h-1 w-14 bg-surface-raised">
+          <span className="hidden h-1 w-14 bg-surface-raised sm:block">
             <span className="block h-full bg-brand-amber transition-[width] duration-500" style={{ width: `${(xpInLevel / 1000) * 100}%` }} />
           </span>
         </div>

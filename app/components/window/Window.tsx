@@ -64,6 +64,7 @@ export function Window({
   width,
   height,
   maximized,
+  compact = false,
   onClose,
   onFocus,
   onMinimize,
@@ -83,6 +84,8 @@ export function Window({
   width: number;
   height: number;
   maximized: boolean;
+  /** small screen: window fills the viewport, no drag / resize / maximise */
+  compact?: boolean;
   onClose: () => void;
   onFocus: () => void;
   onMinimize: () => void;
@@ -123,11 +126,11 @@ export function Window({
       style={{ zIndex: z, animation: "fadeIn .16s ease", ...geom }}
     >
       <header
-        onPointerDown={onDragStart}
-        onDoubleClick={onMaximize}
+        onPointerDown={compact ? undefined : onDragStart}
+        onDoubleClick={compact ? undefined : onMaximize}
         className={cn(
           "flex h-11 min-h-11 touch-none items-center gap-2 pr-2.5",
-          maximized ? "cursor-default" : "cursor-grab",
+          maximized || compact ? "cursor-default" : "cursor-grab",
         )}
         style={{ background: "var(--titlebar)", borderBottom: "var(--bd)" }}
       >
@@ -138,9 +141,11 @@ export function Window({
           <ControlButton label="Minimise" onClick={onMinimize}>
             <Minus className="size-2.5" strokeWidth={2.5} />
           </ControlButton>
-          <ControlButton label={maximized ? "Restore" : "Maximise"} onClick={onMaximize}>
-            <Square className="size-2" strokeWidth={2.5} />
-          </ControlButton>
+          {!compact && (
+            <ControlButton label={maximized ? "Restore" : "Maximise"} onClick={onMaximize}>
+              <Square className="size-2" strokeWidth={2.5} />
+            </ControlButton>
+          )}
           <ControlButton label="Close" onClick={onClose} danger>
             <X className="size-2.5" strokeWidth={2.5} />
           </ControlButton>
