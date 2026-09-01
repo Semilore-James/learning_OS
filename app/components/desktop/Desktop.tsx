@@ -153,7 +153,8 @@ export function Desktop() {
                 z={wm.zOf(id)}
                 width={size.width}
                 height={size.height}
-                maximized={wm.isMaximized(id)}
+                maximized={wm.isMaximized(id) || wm.compact}
+                compact={wm.compact}
                 onClose={() => wm.closeWindow(id)}
                 onFocus={() => wm.focusWindow(id)}
                 onMinimize={() => wm.toggleMinimize(id)}
